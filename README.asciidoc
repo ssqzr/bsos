@@ -1,0 +1,89 @@
+
+# 文档
+
+## 背景说明
+
+## 需求
+
+### 选项配置化
+
+安装的选项第一次询问后，后续不需要再次询问，记录配置。
+
+用户可以通过参数控制是否重新询问安装选项。
+
+所有的选项配置明确记录在配置里，不能有默认的配置不写。
+
+### 指定运行某一些安装
+
+### 可以反复运行
+
+反复运行可能导致配置文件不完全一样，但是反复运行不会影响最终的结果。
+
+反复运行也不会导致冲突。
+
+### 结果展示
+
+最后需要展示安装的结果。
+
+安装了哪些模块，这些模块都依赖哪些模块。
+
+
+## 设计
+
+### 语言
+
+shell
+
+### 功能依赖
+
+
+## 问题记录
+
+### pamac安装卡住
+
+执行安装脚本，间歇性卡住。
+
+每次卡住都是通过pamac安装应用时卡住。
+
+卡住的子进程都是 `pkttyagent` 。这个进程是客户端向服务端 `polkitd` 获取权限。
+
+后面排查发现是 pamac 获取锁失败。
+
+```bash
+sudo rm /var/lib/pacman/db.lck
+
+```
+
+当存在那个锁文件时，执行如下的脚本 `test.sh` 会有相同的现象。
+当没有那个锁文件时，执行如下的脚本 `test.sh` 不会有问题。
+```
+#!/bin/bash
+# test.sh
+
+source ./lib/utils/all.sh
+
+cmd::run_cmd_with_history pamac install --no-confirm pot-translation-bin || exit 1
+cmd::run_cmd_with_history pamac install --no-confirm hyprpicker || exit 2
+
+echo "all success"
+```
+
+查看有问题情况时执行的命令列表，使用 `pamac` 安装的应用只有 `pot-translation-bin` 和 `hyprpicker` ， `pot-translation-bin` 安装成功， `hyprpicker` 安装失败。
+
+为什么执行 `test.sh` 又没有问题呢？？那么锁文件残留是谁残留的呢？？
+
+目前还不确定，只能采用规避的手段。每次执行 `pacman` 和 `pamac` 时清理锁文件。
+
+后面又遇到 `pamac` 安装应用的时候，卡在下载某个包了，看日志记录的 `pamac` 的安装输出，最后一条信息是下载某个包成功。
+不知道接下来是下载其他的包卡住了还是执行什么操作。 `ps` 查看也只是输出 `restart_syscall` 。
+
+后面使用yay安装就没有问题了。
+
+
+## 引用
+
+https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html[Bash 文档]
+
+https://www.gnu.org/software/bash/manual/bash.html[Bash Reference Manual]
+
+https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/#links[asciidoc 文档]

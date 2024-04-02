@@ -1,0 +1,10 @@
+/*
+https://wiki.archlinux.org/title/Polkit
+
+为了让执行pamac时不需要输入密码，临时添加这个配置文件，安装全部完成后会删除
+*/
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.manjaro.pamac.commit" && subject.isInGroup("usergroup")) {
+        return polkit.Result.YES;
+    }
+});

@@ -1,0 +1,5 @@
+*.log
+*.history
+test.*
+build
+config.yml

@@ -1,0 +1,21 @@
+
+[manager]
+scrolloffsort_by = "natural"
+sort_dir_first = true
+show_hidden = true
+show_symlink = true
+
+
+[opener]
+# text = [{ run = 'vim "$@"', block = true }]
+
+[plugin]
+prepend_previewers = [
+    # Archive previewer
+    { mime = "application/*zip", run = "ouch" },
+    { mime = "application/x-tar", run = "ouch" },
+    { mime = "application/x-bzip2", run = "ouch" },
+    { mime = "application/x-7z-compressed", run = "ouch" },
+    { mime = "application/x-rar", run = "ouch" },
+    { mime = "application/x-xz", run = "ouch" },
+]

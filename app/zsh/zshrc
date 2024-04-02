@@ -1,0 +1,53 @@
+# https://wiki.archlinuxcn.org/wiki/Zsh
+
+# 配置自动不全
+autoload -U compinit promptinit
+compinit
+promptinit
+
+# 设置 walters 主题的默认命令行提示符
+#prompt walters
+
+# 方向键控制的自动补全
+zstyle ':completion:*' menu select
+# 命令行别名的自动补全
+setopt completealiases
+# 消除历史记录中的重复条目
+setopt HIST_IGNORE_DUPS
+
+# 刷新自动补全
+zstyle ':completion:*' rehash true
+
+# 快捷键的设置
+# https://wiki.zshell.dev/zh-Hans/docs/guides/syntax/bindkey
+# https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html
+# Alt-j
+bindkey "^[j" backward-char
+# Alt-l
+bindkey "^[l" forward-char
+# Alt-i
+bindkey "^[i" up-line-or-history
+# Alt-k
+bindkey "^[k" down-line-or-history
+# Alt-;
+bindkey "^[;" end-of-line
+# Alt-h
+bindkey "^[h" beginning-of-line
+
+# 去掉默认的LESS=-R
+unset LESS
+
+# https://unix.stackexchange.com/questions/557486/allowing-comments-in-interactive-zsh-commands
+# 允许在交互模式中使用注释
+# `echo "abc" # 这是注释` 将输出 abc
+# 否则会报错
+setopt INTERACTIVE_COMMENTS
+
+# alias 配置
+alias ll='ls -l -h --group-directories-first --color=auto'
+alias rm="rm -i"
+alias mv="mv -i"
+
+# fzf 配置
+# Set up fzf key bindings and fuzzy completion
+eval "$(fzf --zsh)"
