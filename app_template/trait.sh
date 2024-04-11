@@ -36,6 +36,11 @@ function template::trait::_env() {
         return "$SHELL_FALSE"
     fi
 
+    if [ -z "${ROOT_PASSWORD}" ]; then
+        println_error "env ROOT_PASSWORD is not set"
+        return "$SHELL_FALSE"
+    fi
+
     return "$SHELL_TRUE"
 }
 

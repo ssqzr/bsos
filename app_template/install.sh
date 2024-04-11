@@ -29,6 +29,7 @@ source "${SRC_ROOT_DIR}/lib/package_manager/pacman.sh" || exit 1
 # 2. PM_APP_NAME 模板
 # 3. BUILD_TEMP_DIR 安装流程的临时构建根目录
 # 4. XDG_CONFIG_HOME 用户配置文件的根目录
+# 5. ROOT_PASSWORD root用户的密码
 function template::_env() {
 
     if [ -z "$HOME" ]; then
@@ -38,6 +39,11 @@ function template::_env() {
 
     if [ -z "$XDG_CONFIG_HOME" ]; then
         export XDG_CONFIG_HOME="$HOME/.config"
+    fi
+
+    if [ -z "$ROOT_PASSWORD" ]; then
+        println_error "env ROOT_PASSWORD is not set"
+        return "$SHELL_FALSE"
     fi
 
     # export PM_APP_NAME

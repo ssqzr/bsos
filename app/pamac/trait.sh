@@ -107,7 +107,7 @@ function pamac::trait::finally() {
 # 2. 包管理器安装处理了依赖，但是这个依赖有额外的配置或者其他设置的
 # NOTE: 这里填写的依赖是必须要安装的
 function pamac::trait::dependencies() {
-    local apps=("custom:libpamac" "custom:polkit")
+    local apps=("custom:libpamac" "pacman:polkit-kde-agent")
     array::print apps
     return "${SHELL_TRUE}"
 }

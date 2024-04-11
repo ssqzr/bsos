@@ -64,22 +64,30 @@ function config::global::installed_apps::clear() {
     config::array::clear ".global.installed_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
+function config::global::installed_apps::is_contain() {
+    local app="$1"
+    config::array::is_contain ".global.installed_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 function config::global::installed_apps::rpush() {
     local app="$1"
     config::array::rpush ".global.installed_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
-function config::global::installed_apps::rpop() {
-    config::array::rpop ".global.installed_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+function config::global::uninstalled_apps::clear() {
+    config::array::clear ".global.uninstalled_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
-function config::global::installed_apps::last() {
-    config::array::last ".global.installed_apps" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::global::installed_apps::remove() {
+function config::global::uninstalled_apps::is_contain() {
     local app="$1"
-    config::array::remove ".global.installed_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::is_contain ".global.uninstalled_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function config::global::uninstalled_apps::rpush() {
+    local app="$1"
+    config::array::rpush ".global.uninstalled_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
 function config::global::top_install_apps::get() {

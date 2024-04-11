@@ -26,6 +26,11 @@ function sudo::trait::_env() {
         return "$SHELL_FALSE"
     fi
 
+    if [ -z "$ROOT_PASSWORD" ]; then
+        println_error "env ROOT_PASSWORD is not set"
+        return "$SHELL_FALSE"
+    fi
+
     return "$SHELL_TRUE"
 }
 
@@ -59,22 +64,12 @@ function sudo::trait::pre_install() {
 # 安装的操作
 function sudo::trait::do_install() {
     # 执行 su 需要输入密码
-    local password
-    read -r -s -ep "Please input your root password to install $(sudo::trait::package_name): " password
-
-    cmd::run_cmd_with_history printf "${password}" "|" su - root -c \""pacman -S --needed --noconfirm  $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -S --needed --noconfirm  $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
 function sudo::trait::post_install() {
-    local username
-    username=$(id -un)
-    local dst_filepath="/etc/sudoers.d/10-${username}"
-
-    cmd::run_cmd_with_history sudo cp -f "${SCRIPT_DIR_3c59328b}/10-sudo" "${dst_filepath}" || return "${SHELL_FALSE}"
-
-    cmd::run_cmd_with_history sudo sed -i "'s/^username/${username}/g'" "${dst_filepath}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -93,18 +88,7 @@ function sudo::trait::do_uninstall() {
     fi
 
     # 执行 su 需要输入密码
-    local password
-    read -r -s -ep "Please input your root password to uninstall $(sudo::trait::package_name): " password
-
-    cmd::run_cmd_with_history printf "${password}" "|" su - root -c \""pacman -R --noconfirm $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
-
-    # 为了避免重复输入密码，将所有卸载的操作都放到一起
-    local username
-    username=$(id -un)
-    local dst_filepath="/etc/sudoers.d/10-${username}"
-
-    cmd::run_cmd_with_history printf "${password}" "|" su - root -c \""rm -f ${dst_filepath}"\" || return "${SHELL_FALSE}"
-
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -R --noconfirm $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -115,13 +99,6 @@ function sudo::trait::post_uninstall() {
 
 # 全部安装完成后的操作
 function sudo::trait::finally() {
-    local username
-    username=$(id -un)
-
-    local sudoers_dst_filepath="/etc/sudoers.d/10-${username}"
-
-    cmd::run_cmd_with_history sudo sed -i "'s/^${username}/#${username}/g'" "${sudoers_dst_filepath}"
-    cmd::run_cmd_with_history sudo sed -i "'s/^#username/${username}/g'" "${sudoers_dst_filepath}"
     return "${SHELL_TRUE}"
 }
 

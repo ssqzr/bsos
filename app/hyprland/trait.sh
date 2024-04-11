@@ -120,7 +120,7 @@ function hyprland::trait::dependencies() {
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
     # TODO: 这些依赖需要处理，处理到swaync
-    local apps=("custom:fonts" "custom:polkit" "custom:fcitx5" "custom:wezterm" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
+    local apps=("custom:fonts" "pacman:polkit-kde-agent" "custom:fcitx5" "custom:wezterm" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
 
     # xdg-desktop-portal
     apps+=("default:xdg-desktop-portal-hyprland" "default:xdg-desktop-portal-gtk")

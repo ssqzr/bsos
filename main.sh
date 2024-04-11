@@ -38,11 +38,27 @@ function main::_lock() {
     return "$SHELL_TRUE"
 }
 
+function main::input_password() {
+    # 执行 su 需要输入密码
+    local password
+    while true; do
+        read -r -s -ep "Please input your root password:" password
+        if [ -z "$password" ]; then
+            println_warn "password is required to continue."
+            continue
+        fi
+        break
+    done
+    export ROOT_PASSWORD="${password}"
+}
+
 # 导出全局的变量
 function main::_export_env() {
     export LC_ALL="C"
     export SRC_ROOT_DIR="${SCRIPT_DIR_8dac019e}"
     export BUILD_ROOT_DIR="/var/tmp/arch_os_install/build"
+
+    main::input_password
 }
 
 function main::app::parse_package_manager() {
@@ -129,114 +145,6 @@ function main::app::run_script() {
     return "$SHELL_TRUE"
 }
 
-# 使用包管理器直接安装
-function main::app::_install_self_use_pm() {
-    local pm_app="$1"
-    local print_indent="$2"
-
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
-
-    local package_manager
-    local package
-
-    package_manager=$(main::app::parse_package_manager "$pm_app")
-    package=$(main::app::parse_app_name "$pm_app")
-
-    linfo "${pm_app}: direct installing app with ${package_manager}"
-    println_info "${print_indent}${pm_app}: direct installing app with ${package_manager}"
-
-    package_manager::install "${package_manager}" "${package}" || return "$SHELL_FALSE"
-    if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "${pm_app}: direct install app with ${package_manager} failed"
-        println_error "${print_indent}${pm_app}: direct install app with ${package_manager} failed"
-        return "$SHELL_FALSE"
-    fi
-
-    linfo "${pm_app}: direct install app with ${package_manager} success"
-    println_info "${print_indent}${pm_app}: direct install app with ${package_manager} success"
-
-    return "$SHELL_TRUE"
-}
-
-# 使用包管理器直接卸载
-function main::app::_uninstall_self_use_pm() {
-    local pm_app="$1"
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
-
-    local package_manager
-    local package
-
-    package_manager=$(main::app::parse_package_manager "$pm_app")
-    package=$(main::app::parse_app_name "$pm_app")
-
-    linfo "start direct uninstall app(${package}) with ${package_manager}"
-    manager::uninstall "${package_manager}" "${package}" || return "$SHELL_FALSE"
-    if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "uninstall app(${package}) with ${package_manager} failed"
-        return "$SHELL_FALSE"
-    fi
-
-    return "$SHELL_TRUE"
-}
-
-function main::app::_do_install_custom() {
-    local pm_app="$1"
-    local print_indent="$2"
-
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
-
-    if [ ! -e "$(main::app::directory "${pm_app}")" ]; then
-        lerror "app(${pm_app}) is not exist."
-        return "$SHELL_FALSE"
-    fi
-
-    # 安装所有 dependencies
-    linfo "start install app(${pm_app}) dependencies..."
-    println_info "${print_indent}${pm_app}: install dependencies..."
-
-    local dependencies
-    array::readarray dependencies < <(main::app::run_script "${pm_app}" "dependencies")
-
-    for item in "${dependencies[@]}"; do
-        main::app::do_install "${item}" "  ${print_indent}" || return "$SHELL_FALSE"
-    done
-
-    linfo "app(${pm_app}) all dependencies install success..."
-    println_info "${print_indent}${pm_app}: all dependencies install success..."
-
-    # 安装自己
-    linfo "start install app(${pm_app}) ..."
-    println_info "${print_indent}${pm_app}: installing self... "
-    main::app::run_script "${pm_app}" "install"
-    if [ $? -ne "${SHELL_TRUE}" ]; then
-        lerror "install app(${pm_app}) failed"
-        println_error "${print_indent}${pm_app}: install failed."
-        return "$SHELL_FALSE"
-    fi
-
-    # 安装所有 features
-    linfo "start install app(${pm_app}) features..."
-    println_info "${print_indent}${pm_app}: install features..."
-    local features
-    array::readarray features < <(main::app::run_script "${pm_app}" "features")
-
-    for item in "${features[@]}"; do
-        main::app::do_install "${item}" "  ${print_indent}" || return "$SHELL_FALSE"
-    done
-    linfo "app(${pm_app}) all features install success..."
-    println_info "${print_indent}${pm_app}: all features install success..."
-    return "$SHELL_TRUE"
-}
-
 # 运行安装向导
 function main::app::do_install_guide() {
     local pm_app="$1"
@@ -293,6 +201,128 @@ function main::app::do_install_guide() {
     return "${SHELL_TRUE}"
 }
 
+# 使用包管理器直接安装
+function main::app::_install_self_use_pm() {
+    local pm_app="$1"
+    local print_indent="$2"
+
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    local package_manager
+    local package
+
+    package_manager=$(main::app::parse_package_manager "$pm_app")
+    package=$(main::app::parse_app_name "$pm_app")
+
+    linfo "${pm_app}: direct installing app with ${package_manager}"
+    println_info "${print_indent}${pm_app}: direct installing app with ${package_manager}"
+
+    package_manager::install "${package_manager}" "${package}" || return "$SHELL_FALSE"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "${pm_app}: direct install app with ${package_manager} failed"
+        println_error "${print_indent}${pm_app}: direct install app with ${package_manager} failed"
+        return "$SHELL_FALSE"
+    fi
+
+    linfo "${pm_app}: direct install app with ${package_manager} success"
+    println_success "${print_indent}${pm_app}: direct install app with ${package_manager} success"
+
+    return "$SHELL_TRUE"
+}
+
+function main::app::_do_install_custom() {
+    local pm_app="$1"
+    local print_indent="$2"
+
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -e "$(main::app::directory "${pm_app}")" ]; then
+        lerror "app(${pm_app}) is not exist."
+        return "$SHELL_FALSE"
+    fi
+
+    # 安装所有 dependencies
+    linfo "start install app(${pm_app}) dependencies..."
+    println_info "${print_indent}${pm_app}: install dependencies..."
+
+    local dependencies
+    array::readarray dependencies < <(main::app::run_script "${pm_app}" "dependencies")
+
+    for item in "${dependencies[@]}"; do
+        main::app::do_install "${item}" "  ${print_indent}" || return "$SHELL_FALSE"
+    done
+
+    linfo "app(${pm_app}) all dependencies install success"
+    println_success "${print_indent}${pm_app}: all dependencies install success"
+
+    # 安装自己
+    linfo "start install app(${pm_app}) ..."
+    println_info "${print_indent}${pm_app}: installing self... "
+    main::app::run_script "${pm_app}" "install"
+    if [ $? -ne "${SHELL_TRUE}" ]; then
+        lerror "install app(${pm_app}) failed"
+        println_error "${print_indent}${pm_app}: install failed."
+        return "$SHELL_FALSE"
+    fi
+
+    # 安装所有 features
+    linfo "start install app(${pm_app}) features..."
+    println_info "${print_indent}${pm_app}: install features..."
+    local features
+    array::readarray features < <(main::app::run_script "${pm_app}" "features")
+
+    for item in "${features[@]}"; do
+        main::app::do_install "${item}" "  ${print_indent}" || return "$SHELL_FALSE"
+    done
+    linfo "app(${pm_app}) all features install success..."
+    println_success "${print_indent}${pm_app}: all features install success"
+    return "$SHELL_TRUE"
+}
+
+# 安装一个APP，附带其他的操作
+function main::app::do_install() {
+    local pm_app="$1"
+    local print_indent="$2"
+
+    if [ -z "$pm_app" ]; then
+        lerror "param pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    println_info "${print_indent}${pm_app}: install..."
+    linfo "start install app(${pm_app})..."
+
+    if config::global::installed_apps::is_contain "${pm_app}"; then
+        linfo "app(${pm_app}) has installed. dont need install again."
+        println_success "${print_indent}${pm_app}: installed. dont need install again."
+        return "${SHELL_TRUE}"
+    fi
+
+    if ! main::app::is_custom "$pm_app"; then
+        main::app::_install_self_use_pm "$pm_app" "$print_indent" || return "$SHELL_FALSE"
+    else
+        main::app::_do_install_custom "$pm_app" "$print_indent" || return "$SHELL_FALSE"
+    fi
+
+    if ! config::global::pre_install_apps::is_contain "${pm_app}"; then
+        # pre_install_apps 里的APP
+        # 只需要安装不需要记载下来，卸载的时候不会卸载
+        # 因为卸载后会导致程序运行异常
+        # 例如卸载 go-yq 后脚本就读写不了配置文件了
+        config::global::installed_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
+    fi
+
+    linfo "install app(${pm_app}) success."
+    println_success "${print_indent}${pm_app}: install success."
+    return "${SHELL_TRUE}"
+}
+
 # 运行安装向导
 function main::app::do_finally() {
     local pm_app="$1"
@@ -342,72 +372,6 @@ function main::app::do_finally() {
     return "${SHELL_TRUE}"
 }
 
-# 安装一个APP，附带其他的操作
-function main::app::do_install() {
-    local pm_app="$1"
-    local print_indent="$2"
-
-    if [ -z "$pm_app" ]; then
-        lerror "param pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
-
-    println_info "${print_indent}${pm_app}: install..."
-    linfo "start install app(${pm_app})..."
-
-    if ! main::app::is_custom "$pm_app"; then
-        main::app::_install_self_use_pm "$pm_app" "$print_indent" || return "$SHELL_FALSE"
-    else
-        main::app::_do_install_custom "$pm_app" "$print_indent" || return "$SHELL_FALSE"
-    fi
-
-    if ! config::global::pre_install_apps::is_contain "${pm_app}"; then
-        # pre_install_apps 里的APP
-        # 只需要安装不需要记载下来，卸载的时候不会卸载
-        # 因为卸载后会导致程序运行异常
-        # 例如卸载 go-yq 后脚本就读写不了配置文件了
-        config::global::installed_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
-    fi
-
-    linfo "install app(${pm_app}) success."
-    println_info "${print_indent}${pm_app}: install success."
-    return "${SHELL_TRUE}"
-}
-
-# 不处理依赖的卸载，依赖的可能也被其他人依赖
-function main::app::uninstall_self() {
-    local pm_app="$1"
-    if [ -z "$pm_app" ]; then
-        lerror "param pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
-    local package_manager
-    local app_name
-
-    package_manager=$(main::app::parse_package_manager "$pm_app")
-    app_name=$(main::app::parse_app_name "$pm_app")
-
-    linfo "start uninstall app(${pm_app})..."
-
-    if [ "$package_manager" != "custom" ]; then
-        package_manager::uninstall "$package_manager" "$app_name" || return "$SHELL_FALSE"
-    else
-        if [ ! -e "$(main::app::directory "${pm_app}")" ]; then
-            lerror "app(${pm_app}) directory is not exist."
-            return "$SHELL_FALSE"
-        fi
-
-        main::app::run_script "$pm_app" "uninstall"
-        if [ $? -ne "${SHELL_TRUE}" ]; then
-            lerror "uninstall app(${pm_app}) failed"
-            return "$SHELL_FALSE"
-        fi
-    fi
-
-    linfo "uninstall app(${pm_app}) success."
-    return "${SHELL_TRUE}"
-}
-
 function main::app::is_no_loop_dependencies() {
     local pm_app="$1"
     local link_path="$2"
@@ -448,6 +412,59 @@ function main::app::is_no_loop_dependencies() {
     return "$SHELL_TRUE"
 }
 
+# 启用无需密码
+function main::global::enable_no_password() {
+    # NOTE: 此时不一定有sudo，只能通过su root来执行
+    linfo "enable no password..."
+    println_info "enable no password..."
+
+    local username
+    username=$(id -un)
+    local dst_filepath="/etc/sudoers.d/10-${username}"
+    linfo "enable user(${username}) no password to run sudo"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${dst_filepath}")"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) NOPASSWD:ALL\" \> "${dst_filepath}"\' || return "${SHELL_FALSE}"
+    linfo "enable user(${username}) no password to run sudo success"
+
+    # 设置当前组内的用户执行pamac不需要输入密码
+    local group_name
+    group_name="$(id -ng)"
+    linfo "enable no password for group(${group_name}) to run pamac"
+    dst_filepath="/etc/polkit-1/rules.d/10-pamac.rules"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'cp -f \""${SCRIPT_DIR_8dac019e}/10-pamac.rules"\" \""${dst_filepath}"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'sed -i \"s/usergroup/"${group_name}"/g\" \""${dst_filepath}"\"\' || return "${SHELL_FALSE}"
+    linfo "enable no password for group(${group_name}) to run pamac success"
+
+    linfo "enable no password success"
+    println_success "enable no password success"
+
+    return "$SHELL_TRUE"
+}
+
+# 禁用无需密码
+function main::global::disable_no_password() {
+    # NOTE: 此时不一定有sudo，只能通过su root来执行
+
+    linfo "disable no password..."
+    println_info "disable no password..."
+
+    local username
+    username=$(id -un)
+    local dst_filepath="/etc/sudoers.d/10-${username}"
+    linfo "disable no password for user(${username}), delete filepath=${dst_filepath}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'rm -f \""${dst_filepath}"\"\' || return "${SHELL_FALSE}"
+    linfo "disable no password for user(${username}) success"
+
+    dst_filepath="/etc/polkit-1/rules.d/10-pamac.rules"
+    linfo "disable no password for pamac, delete filepath=${dst_filepath}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'rm -f \""${dst_filepath}"\"\' || return "${SHELL_FALSE}"
+    linfo "disable no password for pamac success"
+
+    linfo "disable no password success"
+    println_success "disable no password success"
+    return "$SHELL_TRUE"
+}
+
 # 检查循环依赖
 function main::global::check_loop_dependencies() {
 
@@ -460,39 +477,6 @@ function main::global::check_loop_dependencies() {
 
         main::app::is_no_loop_dependencies "${pm_app}" || return "$SHELL_FALSE"
     done
-    return "$SHELL_TRUE"
-}
-
-# 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
-# 这些模块应该是没什么依赖的
-# 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
-function main::global::pre_install_dependencies() {
-
-    linfo "start install global pre dependencies..."
-    # 避免每次运行都安装，耗时并且没有必要
-    if config::global::has_pre_installed::get; then
-        linfo "global pre install apps has installed. dont need install again."
-        return "$SHELL_TRUE"
-    fi
-
-    local pm_app
-    for pm_app in "${__pre_install_apps[@]}"; do
-        main::app::do_install "${pm_app}" || return "$SHELL_FALSE"
-    done
-
-    config::global::has_pre_installed::set_true || return "$SHELL_FALSE"
-
-    linfo "install global pre dependencies success."
-    return "$SHELL_TRUE"
-}
-
-# 安装前置操作
-function main::global::pre_install() {
-    # 将当前用户添加到wheel组
-    cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
-
-    # 先安装全局都需要的包
-    main::global::pre_install_dependencies || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -591,7 +575,7 @@ function main::global::generate_pre_install_list() {
     done
 
     linfo "generate global pre install app list success."
-    println_info "generate global pre install app list success."
+    println_success "generate global pre install app list success."
     return "$SHELL_TRUE"
 }
 
@@ -650,8 +634,41 @@ function main::global::generate_top_install_list() {
     done
 
     linfo "generate top install app list success"
-    println_info "generate top install app list success"
+    println_success "generate top install app list success"
 
+    return "$SHELL_TRUE"
+}
+
+# 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
+# 这些模块应该是没什么依赖的
+# 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
+function main::global::pre_install_dependencies() {
+
+    linfo "start install global pre dependencies..."
+    # 避免每次运行都安装，耗时并且没有必要
+    if config::global::has_pre_installed::get; then
+        linfo "global pre install apps has installed. dont need install again."
+        return "$SHELL_TRUE"
+    fi
+
+    local pm_app
+    for pm_app in "${__pre_install_apps[@]}"; do
+        main::app::do_install "${pm_app}" || return "$SHELL_FALSE"
+    done
+
+    config::global::has_pre_installed::set_true || return "$SHELL_FALSE"
+
+    linfo "install global pre dependencies success."
+    return "$SHELL_TRUE"
+}
+
+# 安装前置操作
+function main::global::pre_install() {
+    # 将当前用户添加到wheel组
+    cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
+
+    # 先安装全局都需要的包
+    main::global::pre_install_dependencies || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -719,7 +736,13 @@ function main::global::command::install() {
     # 先更新系统
     println_info "upgrade system first..."
     package_manager::upgrade "pacman" || return "$SHELL_FALSE"
-    println_info "upgrade system success."
+    println_success "upgrade system success."
+
+    # 这个列表目前只用作过滤判断用
+    main::global::generate_pre_install_list || return "$SHELL_FALSE"
+
+    # 生成安装列表
+    main::global::generate_top_install_list || return "$SHELL_FALSE"
 
     main::global::pre_install || return "$SHELL_FALSE"
 
@@ -740,22 +763,117 @@ function main::global::command::install() {
     return "$SHELL_TRUE"
 }
 
-function main::global::command::uninstall() {
+# 使用包管理器直接卸载
+function main::app::_uninstall_self_use_pm() {
+    local pm_app="$1"
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
 
-    local pm_app
+    local package_manager
+    local package
 
-    while true; do
-        pm_app="$(config::global::installed_apps::last)"
-        if [ -z "${pm_app}" ]; then
-            break
-        fi
-        main::app::uninstall_self "${pm_app}"
-        if [ $? -ne "${SHELL_TRUE}" ]; then
-            config::global::installed_apps::rpush "${pm_app}"
+    package_manager=$(main::app::parse_package_manager "$pm_app")
+    package=$(main::app::parse_app_name "$pm_app")
+
+    linfo "start direct uninstall app(${package}) with ${package_manager}"
+    println_info "$pm_app: start uninstall app(${package}) with ${package_manager}"
+
+    manager::uninstall "${package_manager}" "${package}" || return "$SHELL_FALSE"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "uninstall app(${package}) with ${package_manager} failed"
+        println_error "$pm_app: uninstall app(${package}) with ${package_manager} failed"
+        return "$SHELL_FALSE"
+    fi
+
+    linfo "$pm_app uninstall app(${package}) with ${package_manager} success"
+    println_success "$pm_app: uninstall app(${package}) with ${package_manager} success"
+
+    return "$SHELL_TRUE"
+}
+
+# 不处理依赖的卸载，依赖的可能也被其他人依赖
+function main::app::_uninstall_self_custom_without_dependencies() {
+    local pm_app="$1"
+    if [ -z "$pm_app" ]; then
+        lerror "param pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+    local package_manager
+    local app_name
+
+    package_manager=$(main::app::parse_package_manager "$pm_app")
+    app_name=$(main::app::parse_app_name "$pm_app")
+
+    linfo "start uninstall app(${pm_app})..."
+    println_info "${pm_app}: start uninstall app(${pm_app})..."
+
+    if [ "$package_manager" != "custom" ]; then
+        package_manager::uninstall "$package_manager" "$app_name" || return "$SHELL_FALSE"
+    else
+        if [ ! -e "$(main::app::directory "${pm_app}")" ]; then
+            lerror "app(${pm_app}) directory is not exist."
             return "$SHELL_FALSE"
         fi
-        config::global::installed_apps::rpop "${pm_app}" >/dev/null 2>&1 || return "$SHELL_FALSE"
-    done
+
+        main::app::run_script "$pm_app" "uninstall"
+        if [ $? -ne "${SHELL_TRUE}" ]; then
+            lerror "uninstall app(${pm_app}) failed"
+            return "$SHELL_FALSE"
+        fi
+    fi
+
+    linfo "uninstall app(${pm_app}) success."
+    return "${SHELL_TRUE}"
+}
+
+function main::global::pre_uninstall() {
+    # 处理权限的问题
+    return "$SHELL_TRUE"
+}
+
+function main::global::uninstall_single_app() {
+
+    return "$SHELL_TRUE"
+}
+
+function main::global::uninstall_all_app() {
+
+    config::global::uninstalled_apps::clear || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function main::global::post_uninstall() {
+    return "$SHELL_TRUE"
+}
+
+function main::global::command::uninstall() {
+    local app_name="$1"
+    local pm_app
+
+    if [ -n "${app_name}" ]; then
+        pm_app="custom:${app_name}"
+    fi
+
+    main::global::pre_uninstall || return "$SHELL_FALSE"
+
+    if [ -n "${pm_app}" ]; then
+        main::global::uninstall_single_app "${pm_app}" || return "$SHELL_FALSE"
+        # 运行单个卸载往往是为了测试
+
+        println_success "uninstall app($pm_app) success."
+        println_warn "you should check uninstall result."
+    else
+        main::global::uninstall_all_app || return "$SHELL_FALSE"
+        main::global::post_uninstall || return "$SHELL_FALSE"
+
+        println_success "all success."
+        println_warn "you should reboot you system."
+    fi
+
+    return "$SHELL_TRUE"
 }
 
 function main::main() {
@@ -782,32 +900,32 @@ function main::main() {
     # 导出全局变量
     main::_export_env || return "$SHELL_FALSE"
 
+    main::global::enable_no_password || return "$SHELL_FALSE"
+
     # FIXME: 测试需要注释掉，后面要还原
     # 判断循环依赖
     # main::global::check_loop_dependencies || return "$SHELL_FALSE"
 
-    # 这个列表目前只用作过滤判断用
-    main::global::generate_pre_install_list || return "$SHELL_FALSE"
-
-    # 生成安装列表
-    main::global::generate_top_install_list || return "$SHELL_FALSE"
-
+    local code
     case "${command}" in
     "install")
-        main::global::command::install "${command_params[@]}" || return "$SHELL_FALSE"
+        main::global::command::install "${command_params[@]}"
+        code=$?
         ;;
 
     "uninstall")
-        # TODO: 这个命令还没有实现和测试
-        main::global::command::uninstall || return "$SHELL_FALSE"
+        main::global::command::uninstall "${command_params[@]}"
+        code=$?
         ;;
     *)
         lerror "unknown cmd(${command})"
-        return "$SHELL_FALSE"
+        code="$SHELL_FALSE"
         ;;
     esac
 
-    return "${SHELL_TRUE}"
+    main::global::disable_no_password || return "$SHELL_FALSE"
+
+    return "${code}"
 }
 
 main::main "$@"

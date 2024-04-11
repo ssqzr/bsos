@@ -8,7 +8,7 @@
 # 3. 如果采用 source 引入的方式，那么就需要引入太多的模块了，并且每次添加一个模块都需要source一次，也就需要修改一次这个脚本
 
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
-SCRIPT_DIR_6dabcb56="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
+SCRIPT_DIR_7282f4de="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # NOTE: 因为 source 需要用到路径，所以这个只能在最开始判断
 if [ -z "${SRC_ROOT_DIR}" ]; then
@@ -29,6 +29,7 @@ source "${SRC_ROOT_DIR}/lib/package_manager/pacman.sh" || exit 1
 # 2. PM_APP_NAME 模板
 # 3. BUILD_TEMP_DIR 安装流程的临时构建根目录
 # 4. XDG_CONFIG_HOME 用户配置文件的根目录
+# 5. ROOT_PASSWORD root用户的密码
 function google_chrome::_env() {
 
     if [ -z "$HOME" ]; then
@@ -40,9 +41,14 @@ function google_chrome::_env() {
         export XDG_CONFIG_HOME="$HOME/.config"
     fi
 
+    if [ -z "$ROOT_PASSWORD" ]; then
+        println_error "env ROOT_PASSWORD is not set"
+        return "$SHELL_FALSE"
+    fi
+
     # export PM_APP_NAME
     local name
-    name="$(basename "${SCRIPT_DIR_6dabcb56}")"
+    name="$(basename "${SCRIPT_DIR_7282f4de}")"
     export PM_APP_NAME="custom:${name}"
 
     # export BUILD_TEMP_DIR
@@ -164,7 +170,7 @@ function google_chrome::main() {
     google_chrome::_env || return 1
 
     # shellcheck source=/dev/null
-    source "${SCRIPT_DIR_6dabcb56}/trait.sh" || return "$SHELL_FALSE"
+    source "${SCRIPT_DIR_7282f4de}/trait.sh" || return "$SHELL_FALSE"
 
     local subcommand="$1"
     if [ -z "${subcommand}" ]; then
