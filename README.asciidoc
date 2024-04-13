@@ -36,6 +36,30 @@ shell
 
 ### 功能依赖
 
+每一个自定义的APP都需要定义 dependencies 和 features 列表。
+
+注意 dependencies 和 features 并不是安装依赖，安装依赖有专门的包管理器进行处理（例如：pacman），它们是安装依赖的超集，可以理解为功能依赖。
+
+dependencies 和 features：
+
+1. 安装依赖
+2. 功能依赖
+
+dependencies 列表是当前APP依赖的APP列表，安装当前APP必须要安装 dependencies 列表里的APP，否则基本功能有问题。
+当然安装依赖也可以写到dependencies中，例如包管理器虽然处理了依赖，但是依赖的APP需要自定义配置。
+
+features 列表是当前APP功能扩展的APP列表，安装当前APP不需要安装它们也可以正常使用，但是如果需要它们提供的额外的功能，就需要安装。
+
+例如一个应用的插件，就应该列到 features 里。
+
+但是 features 里的应用并不一定依赖当前APP，例如：zsh的features里有pkgfile用于提供 command not found 的功能，但是 pkgfile 并不依赖 zsh。pkgfile 是一个相对独立的应用。
+
+它们的安装顺序是：
+
+1. dependencies 里的所有应用
+2. 应用本身
+3. features 里的所有应用
+
 
 ## 问题记录
 

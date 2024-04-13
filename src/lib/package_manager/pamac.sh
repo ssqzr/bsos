@@ -22,14 +22,18 @@ function package_manager::pamac::install() {
         return "$SHELL_TRUE"
     fi
 
-    local install_cmd="pamac install --no-confirm"
-
-    cmd::run_cmd_with_history "$install_cmd" "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history pamac install --no-confirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pamac::uninstall() {
     local package="$1"
-    package_manager::pacman::uninstall "$package"
+
+    if ! package_manager::pamac::is_installed "$package"; then
+        ldebug "package($package) is not installed."
+        return "$SHELL_TRUE"
+    fi
+
+    cmd::run_cmd_with_history pamac remove --cascade --no-confirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pamac::package_description() {

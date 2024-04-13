@@ -25,22 +25,12 @@ function config::cache::is_exists() {
 }
 
 ################################################### global 相关 ############################################
-
-function config::cache::has_pre_installed::set_true() {
-    config::map::set ".cache" "has_pre_installed" "true" "${__config_filepath}" || return "$SHELL_FALSE"
+function config::cache::pre_install_apps::is_exists() {
+    config::map::has_key ".cache" "pre_install_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
-function config::cache::has_pre_installed::set_false() {
-    config::map::set ".cache" "has_pre_installed" "false" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::has_pre_installed::get() {
-    local value
-    value=$(config::map::get ".cache" "has_pre_installed") || return "$SHELL_FALSE"
-    if string::is_true "$value"; then
-        return "$SHELL_TRUE"
-    fi
-    return "$SHELL_FALSE"
+function config::cache::pre_install_apps::delete() {
+    config::map::delete_key ".cache" "pre_install_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
 function config::cache::pre_install_apps::clean() {
@@ -88,6 +78,14 @@ function config::cache::uninstalled_apps::rpush() {
     config::array::rpush ".cache.uninstalled_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
+function config::cache::top_apps::is_exists() {
+    config::map::has_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
+function config::cache::top_apps::delete() {
+    config::map::delete_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
 function config::cache::top_apps::get() {
     config::array::get ".cache.top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
@@ -102,6 +100,13 @@ function config::cache::top_apps::rpush() {
 }
 
 ################################################### APP 相关 ############################################
+function config::cache::apps::is_exists() {
+    config::map::has_key ".cache" "apps" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
+function config::cache::apps::delete() {
+    config::map::delete_key ".cache" "apps" "${__config_filepath}" || return "$SHELL_FALSE"
+}
 
 function config::cache::app::dependencies::is_exists() {
     local pm_app="$1"
@@ -141,40 +146,40 @@ function config::cache::app::dependencies::get() {
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::as_dependencies::is_exists() {
+function config::cache::app::required_by::is_exists() {
     local pm_app="$1"
-    config::map::has_key ".cache.apps.[\"${pm_app}\"]" "as_dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::map::has_key ".cache.apps.[\"${pm_app}\"]" "required_by" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::as_dependencies::delete() {
+function config::cache::app::required_by::delete() {
     local pm_app="$1"
-    config::map::delete_key ".cache.apps.[\"${pm_app}\"]" "as_dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::map::delete_key ".cache.apps.[\"${pm_app}\"]" "required_by" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::as_dependencies::clean() {
+function config::cache::app::required_by::clean() {
     local pm_app="$1"
-    config::array::clean ".cache.apps.[\"${pm_app}\"].as_dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::clean ".cache.apps.[\"${pm_app}\"].required_by" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::as_dependencies::is_contain() {
+function config::cache::app::required_by::is_contain() {
     local pm_app="$1"
     local dependency="$2"
-    config::array::is_contain ".cache.apps.[\"${pm_app}\"].as_dependencies" "${dependency}" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::is_contain ".cache.apps.[\"${pm_app}\"].required_by" "${dependency}" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::as_dependencies::rpush_unique() {
+function config::cache::app::required_by::rpush_unique() {
     local pm_app="$1"
     local dependency="$2"
-    config::array::rpush_unique ".cache.apps.[\"${pm_app}\"].as_dependencies" "${dependency}" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::rpush_unique ".cache.apps.[\"${pm_app}\"].required_by" "${dependency}" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::as_dependencies::get() {
+function config::cache::app::required_by::get() {
     local pm_app="$1"
-    config::array::get ".cache.apps.[\"${pm_app}\"].as_dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::get ".cache.apps.[\"${pm_app}\"].required_by" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }

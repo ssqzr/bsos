@@ -65,8 +65,10 @@ function custom_manager::_env() {
 }
 
 function custom_manager::_clean_build() {
+    linfo "clean app(${PM_APP_NAME}) build env..."
     file::delete_dir_safe "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
     file::create_dir_recursive "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
+    linfo "clean app(${PM_APP_NAME}) build env success."
     return "${SHELL_TRUE}"
 }
 
@@ -82,13 +84,11 @@ function custom_manager::_install() {
         return "$SHELL_FALSE"
     fi
 
-    linfo "clean app(${PM_APP_NAME}) build env..."
-    custom_manager::_clean_build
+    custom_manager::_clean_build || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "clean app(${PM_APP_NAME}) build env failed"
         return "$SHELL_FALSE"
     fi
-    linfo "clean app(${PM_APP_NAME}) build env success."
 
     linfo "pre install app(${PM_APP_NAME})..."
     "${app_name}::trait::pre_install"

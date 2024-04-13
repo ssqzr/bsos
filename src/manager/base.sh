@@ -13,7 +13,8 @@ source "${SCRIPT_DIR_b5b83ba6}/../lib/utils/all.sh"
 # base 是为了基本的编译需要的
 # git 是为了安装pamac需要的，后面 git 还会以custom的方式再安装一遍，因为有一些配置需要配置
 # pamac 为了安装其他应用
-__PRE_INSTALL_APPS=("custom:sudo" "pacman:lsof" "pacman:gum" "pacman:go-yq" "pacman:base-devel")
+# NOTE: go-yq 一定要第一个安装，因为要操作配置文件
+__PRE_INSTALL_APPS=("pacman:go-yq" "custom:sudo" "pacman:gum" "pacman:base-devel")
 __PRE_INSTALL_APPS+=("pacman:git" "custom:yay" "custom:pamac")
 
 function base::get_pre_install_apps() {

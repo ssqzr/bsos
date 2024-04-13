@@ -20,9 +20,7 @@ function package_manager::pacman::install() {
         return "$SHELL_TRUE"
     fi
 
-    local install_cmd="pacman -S --needed --noconfirm"
-
-    cmd::run_cmd_with_history sudo "$install_cmd" "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history sudo pacman -S --needed --noconfirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pacman::uninstall() {
@@ -33,9 +31,7 @@ function package_manager::pacman::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    local remove_cmd="pacman -R --noconfirm"
-
-    cmd::run_cmd_with_history sudo "$remove_cmd" "$@" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history sudo pacman -Rc --noconfirm "$@" || return "$SHELL_FALSE"
 }
 
 function package_manager::pacman::package_description() {

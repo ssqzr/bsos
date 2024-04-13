@@ -3,6 +3,11 @@
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_b121320e="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_b121320e}/../lib/utils/all.sh" || exit 1
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_b121320e}/app_manager.sh" || exit 1
+
 function manager::cache::_recursion_generate_pre_install_list() {
     local pm_app="$1"
     local dependencies
@@ -75,7 +80,7 @@ function manager::cache::generate_top_apps() {
     fi
 
     # 被其他app依赖的app
-    local as_dependencies=()
+    local required_by=()
     # 没有被依赖的
     local none_dependencies=()
 
@@ -89,7 +94,7 @@ function manager::cache::generate_top_apps() {
             continue
         fi
 
-        if ! array::is_contain as_dependencies "$pm_app"; then
+        if ! array::is_contain required_by "$pm_app"; then
             array::rpush_unique none_dependencies "$pm_app"
         fi
 
@@ -101,7 +106,7 @@ function manager::cache::generate_top_apps() {
         local item
         for item in "${dependencies[@]}"; do
             array::remove none_dependencies "$item"
-            array::rpush_unique as_dependencies "$item"
+            array::rpush_unique required_by "$item"
         done
 
         # 获取它的feature
@@ -110,11 +115,11 @@ function manager::cache::generate_top_apps() {
         array::readarray features < <(echo "$temp_str")
         for item in "${features[@]}"; do
             array::remove none_dependencies "$item"
-            array::rpush_unique as_dependencies "$item"
+            array::rpush_unique required_by "$item"
         done
     done
     ldebug "none_dependencies: ${none_dependencies[*]}"
-    ldebug "as_dependencies: ${as_dependencies[*]}"
+    ldebug "required_by: ${required_by[*]}"
 
     # 生成安装列表
     local pm_app
@@ -200,7 +205,7 @@ function manager::cache::generate_apps_relation() {
         local pm_app="custom:$app_name"
 
         config::cache::app::dependencies::delete "$pm_app" || return "$SHELL_FALSE"
-        config::cache::app::as_dependencies::delete "$pm_app" || return "$SHELL_FALSE"
+        config::cache::app::required_by::delete "$pm_app" || return "$SHELL_FALSE"
     done
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
@@ -211,7 +216,7 @@ function manager::cache::generate_apps_relation() {
         manager::cache::generate_app_dependencies "$pm_app" || return "$SHELL_FALSE"
     done
 
-    # 根据dependencies依赖关系，生成as_dependencies的列表
+    # 根据dependencies依赖关系，生成 as_dependencies 的列表
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         local app_name
         app_name=$(basename "${app_path}")
@@ -222,7 +227,7 @@ function manager::cache::generate_apps_relation() {
         array::readarray item_dependencies < <(echo "$temp_str")
 
         for item in "${item_dependencies[@]}"; do
-            config::cache::app::as_dependencies::rpush_unique "$item" "$pm_app" || return "$SHELL_FALSE"
+            config::cache::app::required_by::rpush_unique "$item" "$pm_app" || return "$SHELL_FALSE"
         done
     done
 
@@ -232,33 +237,46 @@ function manager::cache::generate_apps_relation() {
 }
 
 function manager::cache::do() {
-    local reuse_cache
-    while true; do
-        printf_blue "reuse cache if exists ??? (y/n)[Y] "
-        read -r -e -n 1 reuse_cache
-        linfo "get input reuse_cache=${reuse_cache}"
-        if [ -z "$reuse_cache" ]; then
-            reuse_cache="y"
-            break
-        fi
-        if string::is_true_or_false "$reuse_cache"; then
-            break
-        fi
-        println_error "input invalid, please input y or n."
-    done
-    if string::is_false "$reuse_cache"; then
+    local reuse_cache="$1"
+
+    # 询问用户的步骤提前
+    # local reuse_cache
+    # while true; do
+    #     printf_blue "reuse cache if exists ??? (y/n)[Y] "
+    #     # 超时的退出码是1，Ctrl+C的退出码是130
+    #     read -t 5 -r -e -n 1 reuse_cache
+    #     if [ $? -eq 130 ]; then
+    #         lerror "quite input, exit"
+    #         return 130
+    #     fi
+    #     linfo "get input reuse_cache=${reuse_cache}"
+    #     if [ -z "$reuse_cache" ]; then
+    #         reuse_cache="y"
+    #         break
+    #     fi
+    #     if string::is_true_or_false "$reuse_cache"; then
+    #         break
+    #     fi
+    #     println_error "input invalid, please input y or n."
+    # done
+
+    if [ "${reuse_cache}" -ne "$SHELL_TRUE" ]; then
         config::cache::delete || return "$SHELL_FALSE"
     fi
 
-    if config::cache::is_exists; then
-        linfo "cache exists, reuse it."
-        return "$SHELL_TRUE"
+    # 这个列表目前只用作过滤判断用
+    if ! config::cache::pre_install_apps::is_exists; then
+        manager::cache::generate_pre_install_list || return "$SHELL_FALSE"
     fi
 
-    # 这个列表目前只用作过滤判断用
-    manager::cache::generate_pre_install_list || return "$SHELL_FALSE"
+    if ! config::cache::apps::is_exists; then
+        manager::cache::generate_apps_relation || return "$SHELL_FALSE"
+    fi
 
-    manager::cache::generate_apps_relation || return "$SHELL_FALSE"
+    if ! config::cache::top_apps::is_exists; then
+        # 生成需要处理的应用列表
+        manager::cache::generate_top_apps "$pm_app" || return "$SHELL_FALSE"
+    fi
 
     return "$SHELL_TRUE"
 }

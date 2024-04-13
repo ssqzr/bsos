@@ -53,7 +53,7 @@ function ags::trait::pre_uninstall() {
 
 # 卸载的操作
 function ags::trait::do_uninstall() {
-    papackage_managermac::uninstall "$(ags::trait::package_manager)" "$(ags::trait::package_name)" || return "${SHELL_FALSE}"
+    package_manager::uninstall "$(ags::trait::package_manager)" "$(ags::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

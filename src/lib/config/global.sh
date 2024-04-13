@@ -15,21 +15,19 @@ if [ -z "${__config_filepath}" ]; then
     exit 1
 fi
 
-# function config::global::reuse_cache::set_true() {
-#     config::map::set ".global" "reuse_cache" "true" "${__config_filepath}" || return "$SHELL_FALSE"
-#     return "$SHELL_TRUE"
-# }
+function config::global::has_pre_installed::set_true() {
+    config::map::set ".global" "has_pre_installed" "true" "${__config_filepath}" || return "$SHELL_FALSE"
+}
 
-# function config::global::reuse_cache::set_false() {
-#     config::map::set ".global" "reuse_cache" "false" "${__config_filepath}" || return "$SHELL_FALSE"
-#     return "$SHELL_TRUE"
-# }
+function config::global::has_pre_installed::set_false() {
+    config::map::set ".global" "has_pre_installed" "false" "${__config_filepath}" || return "$SHELL_FALSE"
+}
 
-# function config::global::reuse_cache::get() {
-#     local value
-#     value=$(config::map::get ".global" "reuse_cache") || return "$SHELL_FALSE"
-#     if string::is_true "$value"; then
-#         return "$SHELL_TRUE"
-#     fi
-#     return "$SHELL_FALSE"
-# }
+function config::global::has_pre_installed::get() {
+    local value
+    value=$(config::map::get ".global" "has_pre_installed" "${__config_filepath}") || return "$SHELL_FALSE"
+    if string::is_true "$value"; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
+}

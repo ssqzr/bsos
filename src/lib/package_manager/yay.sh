@@ -33,7 +33,7 @@ function package_manager::yay::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    local remove_cmd="yay -R --noconfirm"
+    local remove_cmd="yay -Rc --unneeded --noconfirm"
 
     cmd::run_cmd_with_history "$remove_cmd" "$@" || return "$SHELL_FALSE"
 }

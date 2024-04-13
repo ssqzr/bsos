@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function pamac::trait::package_manager() {
     echo "default"
@@ -36,13 +35,13 @@ function pamac::trait::_src_directory() {
 }
 
 function pamac::trait::pre_install() {
-    cmd::run_cmd_with_history git clone --depth 1 https://aur.archlinux.org/pamac-aur.git "$(pamac::trait::_src_directory)" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history git clone --depth 1 https://aur.archlinux.org/pamac-aur.git "$(pamac::trait::_src_directory)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
 function pamac::trait::do_install() {
 
-    cmd::run_cmd_with_history cd "$(pamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history cd "$(pamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(pamac::trait::package_name) failed."
         return "$SHELL_FALSE"

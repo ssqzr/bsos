@@ -4,6 +4,9 @@
 SCRIPT_DIR_e53d23f3="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_e53d23f3}/constant.sh"
+
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_e53d23f3}/log.sh"
 
 # shellcheck source=/dev/null
@@ -135,6 +138,29 @@ function cmd::run_cmd_with_history() {
     cmd::run_cmd lwrite - lwrite - "$@"
     return $?
 }
+
+#
+function cmd::run_cmd_retry() {
+    local max_count=$1
+    local count=1
+    while [ "$count" -le "$max_count" ]; do
+        "${@:2}"
+        if [ $? -ne "$SHELL_TRUE" ]; then
+            lerror "run command(${*:2}) failed ${count} times, max retry count=${max_count}"
+            ((count += 1))
+            continue
+        fi
+        return "$SHELL_TRUE"
+    done
+    return "$SHELL_FALSE"
+}
+
+function cmd::run_cmd_retry_three() {
+    cmd::run_cmd_retry 3 "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+################################################ 以下是测试代码 #########################################＃
 
 function cmd::_test_simple_cmd() {
     local output

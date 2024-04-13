@@ -95,7 +95,6 @@ function manager::app::is_no_loop_dependencies() {
         lerror "param pm_app is empty, params=$*"
         return "$SHELL_FALSE"
     fi
-    local dependencies=()
     local temp_array=()
     local item
     local temp_str
@@ -112,20 +111,62 @@ function manager::app::is_no_loop_dependencies() {
         return "$SHELL_FALSE"
     fi
 
-    link_path="$link_path $pm_app"
-
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
     array::readarray temp_array < <(echo "$temp_str")
-    dependencies+=("${temp_array[@]}")
+    for item in "${temp_array[@]}"; do
+        manager::app::is_no_loop_dependencies "${item}" "$link_path $pm_app" || return "$SHELL_FALSE"
+    done
 
-    temp_array=()
+    return "$SHELL_TRUE"
+}
+
+function manager::app::is_no_loop_features() {
+    local pm_app="$1"
+    local link_path="$2"
+
+    if [ -z "$pm_app" ]; then
+        lerror "param pm_app is empty, params=$*"
+        return "$SHELL_FALSE"
+    fi
+    local temp_array=()
+    local item
+    local temp_str
+
+    if ! manager::app::is_custom "$pm_app"; then
+        # 如果不是自定义的包，那么不需要检查循环依赖
+        return "$SHELL_TRUE"
+    fi
+
+    echo "$link_path" | grep -wq "$pm_app"
+    if [ $? -eq "${SHELL_TRUE}" ]; then
+        println_error "app($pm_app) has loop features. features link path: $pm_app ${link_path}"
+        lerror "app($pm_app) has loop features. features link path: $pm_app ${link_path}"
+        return "$SHELL_FALSE"
+    fi
+
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")" || return "$SHELL_FALSE"
     array::readarray temp_array < <(echo "$temp_str")
-    dependencies+=("${temp_array[@]}")
-
-    for item in "${dependencies[@]}"; do
-        manager::app::is_no_loop_dependencies "${item}" "${link_path}" || return "$SHELL_FALSE"
+    for item in "${temp_array[@]}"; do
+        manager::app::is_no_loop_features "${item}" "$pm_app $link_path" || return "$SHELL_FALSE"
     done
+    return "$SHELL_TRUE"
+}
+
+# 检查循环依赖
+function manager::app::check_loop_dependencies() {
+
+    linfo "start check all app loop dependencies..."
+
+    for app_path in "${SRC_ROOT_DIR}/app"/*; do
+        local app_name
+        app_name=$(basename "${app_path}")
+        local pm_app="custom:$app_name"
+
+        manager::app::is_no_loop_dependencies "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_features "${pm_app}" || return "$SHELL_FALSE"
+    done
+
+    linfo "check all app loop dependencies success"
     return "$SHELL_TRUE"
 }
 
@@ -199,6 +240,12 @@ function manager::app::_do_install_use_pm() {
         return "$SHELL_FALSE"
     fi
 
+    if manager::app::is_custom "${pm_app}"; then
+        lerror "app(${pm_app}) is custom, can not use package manager direct install"
+        println_error "${level_indent}${pm_app}: is custom, can not use package manager direct install"
+        return "$SHELL_FALSE"
+    fi
+
     local package_manager
     local package
 
@@ -233,6 +280,12 @@ function manager::app::_do_install_use_custom() {
     local features
     local item
     local temp_str
+
+    if ! manager::app::is_custom "${pm_app}"; then
+        lerror "app(${pm_app}) is not custom, can not use custom to install"
+        println_error "${level_indent}${pm_app}: is not custom, can not use custom to install"
+        return "$SHELL_FALSE"
+    fi
 
     if [ ! -e "$(manager::app::app_directory "${pm_app}")" ]; then
         lerror "app(${pm_app}) is not exist."
@@ -368,22 +421,131 @@ function manager::app::do_finally() {
     return "${SHELL_TRUE}"
 }
 
-# 检查循环依赖
-function manager::app::check_loop_dependencies() {
+# 使用包管理器直接安装
+function manager::app::_do_uninstall_use_pm() {
+    local pm_app="$1"
+    local level_indent="$2"
 
-    linfo "start check all app loop dependencies..."
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
 
-    for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        local app_name
-        app_name=$(basename "${app_path}")
-        local pm_app="custom:$app_name"
+    if manager::app::is_custom "${pm_app}"; then
+        lerror "app(${pm_app}) is custom, can not use package manager direct uninstall"
+        println_error "${level_indent}${pm_app}: is custom, can not use package manager direct uninstall"
+        return "$SHELL_FALSE"
+    fi
 
-        manager::app::is_no_loop_dependencies "${pm_app}" || return "$SHELL_FALSE"
+    local package_manager
+    local package
+
+    package_manager=$(manager::app::parse_package_manager "$pm_app")
+    package=$(manager::app::parse_app_name "$pm_app")
+
+    linfo "${pm_app}: direct uninstalling app with ${package_manager}"
+    println_info "${level_indent}${pm_app}: direct uninstalling app with ${package_manager}"
+
+    package_manager::uninstall "${package_manager}" "${package}" || return "$SHELL_FALSE"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "${pm_app}: direct uninstall app with ${package_manager} failed"
+        println_error "${level_indent}${pm_app}: direct uninstall app with ${package_manager} failed"
+        return "$SHELL_FALSE"
+    fi
+
+    linfo "${pm_app}: direct uninstall app with ${package_manager} success"
+    println_success "${level_indent}${pm_app}: direct uninstall app with ${package_manager} success"
+
+    return "$SHELL_TRUE"
+}
+
+function manager::app::_do_uninstall_use_custom() {
+    local pm_app="$1"
+    local level_indent="$2"
+
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+    local dependencies
+    local features
+    local item
+    local temp_str
+
+    if ! manager::app::is_custom "${pm_app}"; then
+        lerror "app(${pm_app}) is not custom, can not use custom to uninstall"
+        println_error "${level_indent}${pm_app}: is not custom, can not use custom to uninstall"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -e "$(manager::app::app_directory "${pm_app}")" ]; then
+        lerror "app(${pm_app}) is not exist."
+        return "$SHELL_FALSE"
+    fi
+
+    # 先卸载所有 features
+    linfo "start uninstall app(${pm_app}) features..."
+    println_info "${level_indent}${pm_app}: uninstall features..."
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
+    array::readarray features < <(echo "$temp_str")
+    for item in "${features[@]}"; do
+        manager::app::do_uninstall "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
+    linfo "app(${pm_app}) all features uninstall success"
+    println_success "${level_indent}${pm_app}: all features uninstall success"
+
+    # 卸载自己
+    linfo "start uninstall app(${pm_app}) self..."
+    println_info "${level_indent}${pm_app}: uninstall self..."
+    manager::app::run_custom_manager "${pm_app}" "uninstall" || return "$SHELL_FALSE"
+    linfo "app(${pm_app}) uninstall self success"
+    println_success "${level_indent}${pm_app}: uninstall self success"
+
+    # 卸载所有 dependencies
+    linfo "start uninstall app(${pm_app}) dependencies..."
+    println_info "${level_indent}${pm_app}: uninstall dependencies..."
+
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
+    array::readarray dependencies < <(echo "$temp_str")
+
+    for item in "${dependencies[@]}"; do
+        manager::app::do_uninstall "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
+    done
+
+    linfo "app(${pm_app}) all dependencies uninstall success"
+    println_success "${level_indent}${pm_app}: all dependencies uninstall success"
+
+    linfo "app(${pm_app}) use custom uninstall done"
+    println_success "${level_indent}${pm_app}: use custom uninstall done"
     return "$SHELL_TRUE"
 }
 
 function manager::app::do_uninstall() {
     local pm_app="$1"
+    local level_indent="$2"
+
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+    println_info "${level_indent}${pm_app}: uninstalling..."
+    linfo "start uninstall app(${pm_app})..."
+
+    if config::cache::uninstalled_apps::is_contain "${pm_app}"; then
+        linfo "app(${pm_app}) has uninstalled. dont need uninstall again."
+        println_success "${level_indent}${pm_app}: uninstalled. dont need uninstall again."
+        return "${SHELL_TRUE}"
+    fi
+
+    if ! manager::app::is_custom "$pm_app"; then
+        manager::app::_do_uninstall_use_pm "$pm_app" "$level_indent" || return "$SHELL_FALSE"
+    else
+        manager::app::_do_uninstall_use_custom "$pm_app" "$level_indent" || return "$SHELL_FALSE"
+    fi
+
+    config::cache::uninstalled_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
+
+    linfo "uninstall app(${pm_app}) success."
+    println_success "${level_indent}${pm_app}: uninstall success."
     return "$SHELL_TRUE"
 }

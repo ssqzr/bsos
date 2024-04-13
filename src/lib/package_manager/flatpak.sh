@@ -20,9 +20,7 @@ function package_manager::flatpak::install() {
         return "$SHELL_TRUE"
     fi
 
-    local install_cmd="flatpak install -y"
-
-    cmd::run_cmd_with_history sudo "$install_cmd" "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history sudo flatpak install -y "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::flatpak::uninstall() {
@@ -32,9 +30,7 @@ function package_manager::flatpak::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    local remove_cmd="flatpak uninstall -y"
-
-    cmd::run_cmd_with_history sudo "$remove_cmd" "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history sudo flatpak uninstall -y "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::flatpak::package_description() {

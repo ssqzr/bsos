@@ -56,41 +56,8 @@ function install_flow::app::do_finally() {
     return "$SHELL_TRUE"
 }
 
-# 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
-# 这些模块应该是没什么依赖的
-# 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
-function install_flow::pre_install_global_dependencies() {
-
-    local pm_app
-    local pre_install_apps=()
-    local temp_str
-
-    linfo "start install global pre dependencies..."
-    # 避免每次运行都安装，耗时并且没有必要
-    if config::cache::has_pre_installed::get; then
-        linfo "install global pre apps has installed. dont need install again."
-        return "$SHELL_TRUE"
-    fi
-
-    temp_str="$(base::get_pre_install_apps)" || return "$SHELL_FALSE"
-    array::readarray pre_install_apps < <(echo "${temp_str}")
-    for pm_app in "${pre_install_apps[@]}"; do
-        manager::app::do_install "${pm_app}" || return "$SHELL_FALSE"
-    done
-
-    config::cache::has_pre_installed::set_true || return "$SHELL_FALSE"
-
-    linfo "install global pre dependencies success."
-    return "$SHELL_TRUE"
-}
-
 # 安装前置操作
 function install_flow::pre_install() {
-    # 将当前用户添加到wheel组
-    cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
-
-    # 先安装全局都需要的包
-    install_flow::pre_install_global_dependencies || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -135,6 +102,7 @@ function install_flow::main_flow() {
     package_manager::upgrade "pacman" || return "$SHELL_FALSE"
     println_success "upgrade system success."
 
+    config::cache::installed_apps::clean || return "$SHELL_FALSE"
     install_flow::pre_install || return "$SHELL_FALSE"
     install_flow::do_install || return "$SHELL_FALSE"
     install_flow::post_install || return "$SHELL_FALSE"

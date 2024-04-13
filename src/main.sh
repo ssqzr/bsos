@@ -114,6 +114,47 @@ function main::disable_no_password() {
     return "$SHELL_TRUE"
 }
 
+# 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
+# 这些模块应该是没什么依赖的
+# 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
+function main::pre_install_global_dependencies() {
+
+    local pm_app
+    local pre_install_apps=()
+    local temp_str
+
+    linfo "start install global pre dependencies..."
+
+    # 避免每次运行都安装，耗时并且没有必要
+    # 第一次运行 yq 可能都没有安装
+    which yq >/dev/null
+    if [ $? -eq "$SHELL_TRUE" ]; then
+        if config::global::has_pre_installed::get; then
+            linfo "install global pre apps has installed. dont need install again."
+            return "$SHELL_TRUE"
+        fi
+    fi
+
+    temp_str="$(base::get_pre_install_apps)" || return "$SHELL_FALSE"
+    array::readarray pre_install_apps < <(echo "${temp_str}")
+    for pm_app in "${pre_install_apps[@]}"; do
+        manager::app::do_install "${pm_app}" || return "$SHELL_FALSE"
+    done
+
+    config::global::has_pre_installed::set_true || return "$SHELL_FALSE"
+
+    linfo "install global pre dependencies success."
+    return "$SHELL_TRUE"
+}
+
+function main::must_do() {
+    # 将当前用户添加到wheel组
+    cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
+
+    # 先安装全局都需要的包
+    main::pre_install_global_dependencies || return "$SHELL_FALSE"
+}
+
 function main::command::install() {
     local app_name="$1"
     local pm_app
@@ -121,8 +162,6 @@ function main::command::install() {
     if [ -n "${app_name}" ]; then
         pm_app="custom:${app_name}"
     fi
-    # 生成需要处理的应用列表
-    manager::cache::generate_top_apps "$pm_app" || return "$SHELL_FALSE"
 
     install_flow::main_flow || return "$SHELL_FALSE"
 
@@ -136,12 +175,46 @@ function main::command::uninstall() {
     if [ -n "${app_name}" ]; then
         pm_app="custom:${app_name}"
     fi
-    # 生成需要处理的应用列表
-    manager::cache::generate_top_apps "$pm_app" || return "$SHELL_FALSE"
 
     uninstall_flow::main_flow || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
+}
+
+function main::command::check() {
+    manager::app::check_loop_dependencies
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "check_loop_dependencies failed"
+        return "$SHELL_FALSE"
+    fi
+
+    return "$SHELL_TRUE"
+}
+
+function main::ask_reuse_cache() {
+    local reuse_cache
+    while true; do
+        printf_blue "reuse cache if exists ??? (y/n)[Y] "
+        # 超时的退出码是1，Ctrl+C的退出码是130
+        read -t 5 -r -e -n 1 reuse_cache
+        if [ $? -eq 130 ]; then
+            lerror "quite input, exit"
+            return 130
+        fi
+        linfo "get input reuse_cache=${reuse_cache}"
+        if [ -z "$reuse_cache" ]; then
+            reuse_cache="y"
+            break
+        fi
+        if string::is_true_or_false "$reuse_cache"; then
+            break
+        fi
+        println_error "input invalid, please input y or n."
+    done
+    if string::is_true "$reuse_cache"; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
 }
 
 function main::main() {
@@ -153,6 +226,7 @@ function main::main() {
     local log_filepath
     local cmd_history_filepath
     local config_filepath
+    local reuse_cache
 
     # 单例
     main::_lock || return "$SHELL_FALSE"
@@ -173,23 +247,33 @@ function main::main() {
     # 导出全局变量
     main::_export_env || return "$SHELL_FALSE"
 
-    # FIXME: 测试需要注释掉，后面要还原
-    # 判断循环依赖
-    # manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-
-    manager::cache::do || return "$SHELL_FALSE"
+    main::ask_reuse_cache
+    reuse_cache="$?"
+    if [ $reuse_cache -eq 130 ]; then
+        return "$SHELL_FALSE"
+    fi
 
     main::enable_no_password || return "$SHELL_FALSE"
+    main::must_do || return "$SHELL_FALSE"
 
     local code
     case "${command}" in
     "install")
+        manager::app::check_loop_dependencies || return "$SHELL_FALSE"
+        manager::cache::do $reuse_cache || return "$SHELL_FALSE"
         main::command::install "${command_params[@]}"
         code=$?
         ;;
 
     "uninstall")
+        manager::app::check_loop_dependencies || return "$SHELL_FALSE"
+        manager::cache::do $reuse_cache || return "$SHELL_FALSE"
         main::command::uninstall "${command_params[@]}"
+        code=$?
+        ;;
+
+    "check")
+        main::command::check
         code=$?
         ;;
     *)

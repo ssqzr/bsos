@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function yazi::trait::package_manager() {
     echo "default"
@@ -53,7 +52,7 @@ function yazi::trait::post_install() {
 
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}/yazi/plugins" || return "${SHELL_FALSE}"
     # 需要安装 ouch
-    cmd::run_cmd_with_history git clone https://github.com/ndtoan96/ouch.yazi.git "${XDG_CONFIG_HOME}/yazi/plugins/ouch.yazi" || return "${SHELL_FALSE}"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history git clone https://github.com/ndtoan96/ouch.yazi.git "${XDG_CONFIG_HOME}/yazi/plugins/ouch.yazi" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }

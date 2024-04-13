@@ -7,7 +7,6 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
-
 # 指定使用的包管理器
 function git::trait::package_manager() {
     echo "default"
@@ -27,7 +26,7 @@ function git::trait::description() {
 # 后续安装的时候会用到的配置
 function git::trait::install_guide() {
     local username
-    username=$(users)
+    username=$(id -un)
     username=$(tui::input_required "used to git config --global user.name" "config git username: " "${username}") || return "$SHELL_FALSE"
 
     local email
@@ -58,7 +57,8 @@ function git::trait::pre_install() {
 }
 
 function git::trait::do_install() {
-    package_manager::install "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
+    # 全局已经安装了，这里不安装了
+    # package_manager::install "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -104,7 +104,8 @@ function git::trait::pre_uninstall() {
 }
 
 function git::trait::do_uninstall() {
-    package_manager::uninstall "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
+    # 全局安装的，这里不处理卸载。
+    # package_manager::uninstall "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 

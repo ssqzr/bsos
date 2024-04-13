@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function libpamac::trait::package_manager() {
     echo "default"
@@ -37,7 +36,7 @@ function libpamac::trait::_src_directory() {
 
 # 安装的前置操作，比如下载源代码
 function libpamac::trait::pre_install() {
-    cmd::run_cmd_with_history git clone --depth 1 https://aur.archlinux.org/libpamac-aur.git "$(libpamac::trait::_src_directory)" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history git clone --depth 1 https://aur.archlinux.org/libpamac-aur.git "$(libpamac::trait::_src_directory)" || return "$SHELL_FALSE"
 
     return "${SHELL_TRUE}"
 }
@@ -49,7 +48,7 @@ function libpamac::trait::do_install() {
     pkgbuild_filepath="$(libpamac::trait::_src_directory)/PKGBUILD"
     cmd::run_cmd_with_history sed -i "'s/ENABLE_FLATPAK=0/ENABLE_FLATPAK=1/'" "$pkgbuild_filepath" || return "$SHELL_FALSE"
 
-    cmd::run_cmd_with_history cd "$(libpamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history cd "$(libpamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(libpamac::trait::package_name) failed."
         return "$SHELL_FALSE"
