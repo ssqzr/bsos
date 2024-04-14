@@ -71,7 +71,9 @@ function yazi::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function yazi::trait::post_uninstall() {
     cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/yazi" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history sed -i "'/yazi.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
+    if [ -f "${XDG_CONFIG_HOME}/mimeapps.list" ]; then
+        cmd::run_cmd_with_history sed -i "'/yazi.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
+    fi
 
     return "${SHELL_TRUE}"
 }

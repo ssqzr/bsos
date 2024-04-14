@@ -11,8 +11,12 @@ function uninstall_flow::app::do_uninstall() {
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
-
     ldebug "top_apps=${top_apps[*]}"
+
+    # 因为优先安装的APP在最前面，所以这里reverse一下
+    array::reverse top_apps
+    ldebug "top_apps reverse=${top_apps[*]}"
+
     local pm_app
     for pm_app in "${top_apps[@]}"; do
         manager::app::do_uninstall "${pm_app}" || return "$SHELL_FALSE"

@@ -25,28 +25,6 @@ function config::cache::is_exists() {
 }
 
 ################################################### global 相关 ############################################
-function config::cache::pre_install_apps::is_exists() {
-    config::map::has_key ".cache" "pre_install_apps" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::pre_install_apps::delete() {
-    config::map::delete_key ".cache" "pre_install_apps" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::pre_install_apps::clean() {
-    config::array::clean ".cache.pre_install_apps" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::pre_install_apps::rpush_unique() {
-    local app="$1"
-    config::array::rpush_unique ".cache.pre_install_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::pre_install_apps::is_contain() {
-    local app="$1"
-    config::array::is_contain ".cache.pre_install_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
-    return "$SHELL_TRUE"
-}
 
 function config::cache::installed_apps::clean() {
     config::array::clean ".cache.installed_apps" "${__config_filepath}" || return "$SHELL_FALSE"
@@ -94,9 +72,9 @@ function config::cache::top_apps::clean() {
     config::array::clean ".cache.top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
-function config::cache::top_apps::rpush() {
+function config::cache::top_apps::rpush_unique() {
     local app="$1"
-    config::array::rpush ".cache.top_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::rpush_unique ".cache.top_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
 ################################################### APP 相关 ############################################

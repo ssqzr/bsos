@@ -51,3 +51,13 @@ alias mv="mv -i"
 # fzf 配置
 # Set up fzf key bindings and fuzzy completion
 eval "$(fzf --zsh)"
+
+# pkgfile 配置，command-not-found 的支持
+source /usr/share/doc/pkgfile/command-not-found.zsh
+
+# zsh-autosuggestions 配置
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# zsh-syntax-highlighting 配置
+# NOTE: 这个必须是最后一行，https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

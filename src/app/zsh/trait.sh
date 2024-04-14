@@ -86,8 +86,7 @@ function zsh::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function zsh::trait::features() {
-    # NOTE: custom:zsh_syntax_highlighting 需要放到最后
-    local apps=("custom:pkgfile" "default:zsh-completions" "custom:zsh_autosuggestions" "custom:fzf" "custom:zsh_syntax_highlighting")
+    local apps=("custom:pkgfile" "default:zsh-completions" "default:zsh-autosuggestions" "custom:fzf" "default:zsh-syntax-highlighting")
     array::print apps
     return "${SHELL_TRUE}"
 }

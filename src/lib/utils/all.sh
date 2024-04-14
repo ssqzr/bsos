@@ -25,3 +25,5 @@ source "${SCRIPT_DIR_cd871afe}/tui.sh"
 source "${SCRIPT_DIR_cd871afe}/sed.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/process.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/systemctl.sh"

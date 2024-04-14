@@ -231,7 +231,7 @@ function manager::app::do_install_guide() {
 }
 
 # 使用包管理器直接安装
-function manager::app::_do_install_use_pm() {
+function manager::app::do_install_use_pm() {
     local pm_app="$1"
     local level_indent="$2"
 
@@ -268,7 +268,7 @@ function manager::app::_do_install_use_pm() {
     return "$SHELL_TRUE"
 }
 
-function manager::app::_do_install_use_custom() {
+function manager::app::do_install_use_custom() {
     local pm_app="$1"
     local level_indent="$2"
 
@@ -351,18 +351,12 @@ function manager::app::do_install() {
     fi
 
     if ! manager::app::is_custom "$pm_app"; then
-        manager::app::_do_install_use_pm "$pm_app" "$level_indent" || return "$SHELL_FALSE"
+        manager::app::do_install_use_pm "$pm_app" "$level_indent" || return "$SHELL_FALSE"
     else
-        manager::app::_do_install_use_custom "$pm_app" "$level_indent" || return "$SHELL_FALSE"
+        manager::app::do_install_use_custom "$pm_app" "$level_indent" || return "$SHELL_FALSE"
     fi
 
-    if ! config::cache::pre_install_apps::is_contain "${pm_app}"; then
-        # pre_install_apps 里的APP
-        # 只需要安装不需要记载下来，卸载的时候不会卸载
-        # 因为卸载后会导致程序运行异常
-        # 例如卸载 go-yq 后脚本就读写不了配置文件了
-        config::cache::installed_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
-    fi
+    config::cache::installed_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
 
     linfo "install app(${pm_app}) success."
     println_success "${level_indent}${pm_app}: install success."

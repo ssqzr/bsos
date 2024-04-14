@@ -68,10 +68,10 @@ function main::enable_no_password() {
 
     local username
     username=$(id -un)
-    local dst_filepath="/etc/sudoers.d/10-${username}"
+    local filepath="/etc/sudoers.d/10-${username}"
     linfo "enable user(${username}) no password to run sudo"
-    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${dst_filepath}")"\"\' || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) NOPASSWD:ALL\" \> "${dst_filepath}"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) NOPASSWD:ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"
     linfo "enable user(${username}) no password to run sudo success"
 
     # 设置当前组内的用户执行pamac不需要输入密码
@@ -79,9 +79,10 @@ function main::enable_no_password() {
     group_name="$(id -ng)"
     linfo "enable no password for group(${group_name}) to run pamac"
     local src_filepath="${SCRIPT_DIR_8dac019e}/assets/polkit/10-pamac.rules"
-    dst_filepath="/etc/polkit-1/rules.d/10-pamac.rules"
-    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'cp -f \""${src_filepath}"\" \""${dst_filepath}"\"\' || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'sed -i \"s/usergroup/"${group_name}"/g\" \""${dst_filepath}"\"\' || return "${SHELL_FALSE}"
+    filepath="/etc/polkit-1/rules.d/10-pamac.rules"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'cp -f \""${src_filepath}"\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'sed -i \"s/usergroup/"${group_name}"/g\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
     linfo "enable no password for group(${group_name}) to run pamac success"
 
     linfo "enable no password success"
@@ -100,8 +101,8 @@ function main::disable_no_password() {
     local username
     username=$(id -un)
     local filepath="/etc/sudoers.d/10-${username}"
-    linfo "disable no password for user(${username}), delete filepath=${filepath}"
-    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'rm -f \""${filepath}"\"\' || return "${SHELL_FALSE}"
+    linfo "disable no password for user(${username})"
+    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"
     linfo "disable no password for user(${username}) success"
 
     filepath="/etc/polkit-1/rules.d/10-pamac.rules"
@@ -117,42 +118,35 @@ function main::disable_no_password() {
 # 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
 # 这些模块应该是没什么依赖的
 # 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
-function main::pre_install_global_dependencies() {
+function main::install_core_dependencies() {
 
     local pm_app
-    local pre_install_apps=()
+    local core_apps=()
     local temp_str
 
-    linfo "start install global pre dependencies..."
+    linfo "start install core dependencies..."
 
-    # 避免每次运行都安装，耗时并且没有必要
-    # 第一次运行 yq 可能都没有安装
-    which yq >/dev/null
-    if [ $? -eq "$SHELL_TRUE" ]; then
-        if config::global::has_pre_installed::get; then
-            linfo "install global pre apps has installed. dont need install again."
-            return "$SHELL_TRUE"
+    temp_str="$(base::core_apps::list)" || return "$SHELL_FALSE"
+    array::readarray core_apps < <(echo "${temp_str}")
+    for pm_app in "${core_apps[@]}"; do
+        if ! manager::app::is_custom "$pm_app"; then
+            manager::app::do_install_use_pm "$pm_app" || return "$SHELL_FALSE"
+        else
+            manager::app::run_custom_manager "${pm_app}" "install" || return "$SHELL_FALSE"
         fi
-    fi
-
-    temp_str="$(base::get_pre_install_apps)" || return "$SHELL_FALSE"
-    array::readarray pre_install_apps < <(echo "${temp_str}")
-    for pm_app in "${pre_install_apps[@]}"; do
-        manager::app::do_install "${pm_app}" || return "$SHELL_FALSE"
     done
 
-    config::global::has_pre_installed::set_true || return "$SHELL_FALSE"
-
-    linfo "install global pre dependencies success."
+    linfo "install core dependencies success."
     return "$SHELL_TRUE"
 }
 
 function main::must_do() {
-    # 将当前用户添加到wheel组
-    cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
 
     # 先安装全局都需要的包
-    main::pre_install_global_dependencies || return "$SHELL_FALSE"
+    main::install_core_dependencies || return "$SHELL_FALSE"
+
+    # 将当前用户添加到wheel组
+    cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
 }
 
 function main::command::install() {
@@ -254,7 +248,9 @@ function main::main() {
     fi
 
     main::enable_no_password || return "$SHELL_FALSE"
+
     main::must_do || return "$SHELL_FALSE"
+    # NOTE: 在执行 main::must_do 之后才可以使用 yq 操作配置文件
 
     local code
     case "${command}" in

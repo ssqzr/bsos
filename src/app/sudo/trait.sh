@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function sudo::trait::package_manager() {
     # 这个是全局前置安装包，只能使用pacman安装
@@ -57,8 +56,8 @@ function sudo::trait::pre_uninstall() {
 # 卸载的操作
 function sudo::trait::do_uninstall() {
     # 判断 sudo 是否安装
-    which "$(sudo::trait::package_name)" >/dev/null 2>&1
-    if [ $? -ne "${SHELL_TRUE}" ]; then
+    # which "$(sudo::trait::package_name)" >/dev/null 2>&1 # which 命令可能没有安装
+    if [ -f "/usr/bin/$(sudo::trait::package_name)" ]; then
         linfo "$(sudo::trait::package_name) is not installed"
         return "$SHELL_TRUE"
     fi

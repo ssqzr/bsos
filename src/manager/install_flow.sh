@@ -79,21 +79,7 @@ function install_flow::do_install() {
 
 # FIXME: 验证功能没有问题
 function install_flow::post_install() {
-    local reverse_pre_install_apps=()
-    local pre_install_apps=()
-    local temp_str
-
-    temp_str="$(base::get_pre_install_apps)" || return "$SHELL_FALSE"
-    array::readarray pre_install_apps < <(echo "$temp_str")
-    # 反转是因为最先安装的全局应用一般对系统的影响最大，所以处理 finally 的时候将“可能”影响最大的放到最后
-    array::reverse_new reverse_pre_install_apps pre_install_apps
-
-    local pm_app
-    for pm_app in "${reverse_pre_install_apps[@]}"; do
-        manager::app::do_finally "${pm_app}" || return "$SHELL_FALSE"
-    done
     return "$SHELL_TRUE"
-
 }
 
 function install_flow::main_flow() {

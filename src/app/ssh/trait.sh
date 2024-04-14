@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function ssh::trait::package_manager() {
     echo "default"
@@ -44,15 +43,19 @@ function ssh::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function ssh::trait::post_install() {
-    cmd::run_cmd_with_history sudo systemctl enable sshd.service || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history sudo systemctl start sshd.service || return "${SHELL_FALSE}"
+    local unit="sshd.service"
+    systemctl::enable "$unit" || return "${SHELL_FALSE}"
+    systemctl::start "$unit" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
 function ssh::trait::pre_uninstall() {
-    cmd::run_cmd_with_history sudo systemctl stop sshd.service || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history sudo systemctl disable sshd.service || return "${SHELL_FALSE}"
+    local unit="sshd.service"
+    if systemctl::is_exists "$unit"; then
+        systemctl::stop "$unit" || return "${SHELL_FALSE}"
+        systemctl::disable "$unit" || return "${SHELL_FALSE}"
+    fi
     return "${SHELL_TRUE}"
 }
 

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# NOTE: 这不是一个真实的软件包，而是软件集合，是直接通过包管理安装的软件集合。
+# 因为有一些软件我们是需要的，没有额外的配置，是直接通过包管理器安装的
+
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 # shellcheck disable=SC2034
 SCRIPT_DIR_2e8e0431="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
@@ -8,7 +11,6 @@ SCRIPT_DIR_2e8e0431="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
-
 
 # 指定使用的包管理器
 function all_direct_pm::trait::package_manager() {

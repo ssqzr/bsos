@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function pamac::trait::package_manager() {
     echo "default"
@@ -44,27 +43,21 @@ function pkgfile::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function pkgfile::trait::post_install() {
-    cmd::run_cmd_with_history sudo systemctl enable pkgfile-update.timer || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history sudo systemctl restart pkgfile-update.timer || return "$SHELL_FALSE"
+    local unit="pkgfile-update.timer"
 
-    local zshrc_filepath="$HOME/.zshrc"
-    local package_name
-    package_name="$(pkgfile::trait::package_name)"
-    grep "${package_name} begin" "$zshrc_filepath" >/dev/null 2>&1
-    if [ $? -eq "$SHELL_TRUE" ]; then
-        linfo "${PM_APP_NAME} has modify config."
-        return "$SHELL_TRUE"
-    fi
-
-    printf "# %s begin\nsource /usr/share/doc/pkgfile/command-not-found.zsh\n# %s end" "${package_name}" "${package_name}" >>"$zshrc_filepath" || return "$SHELL_FALSE"
+    systemctl::enable "$unit" || return "$SHELL_FALSE"
+    systemctl::restart "$unit" || return "$SHELL_FALSE"
 
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
 function pkgfile::trait::pre_uninstall() {
-    cmd::run_cmd_with_history sudo systemctl stop pkgfile-update.timer
-    cmd::run_cmd_with_history sudo systemctl disable pkgfile-update.timer
+    local unit="pkgfile-update.timer"
+    if systemctl::is_exists "$unit"; then
+        systemctl::stop "$unit" || return "$SHELL_FALSE"
+        systemctl::disable "$unit" || return "$SHELL_FALSE"
+    fi
 
     return "${SHELL_TRUE}"
 }
@@ -77,9 +70,6 @@ function pkgfile::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function pkgfile::trait::post_uninstall() {
-    local package_name
-    package_name="$(pkgfile::trait::package_name)"
-    sed::delete_between_line "${package_name} begin" "${package_name} end" "$HOME/.zshrc" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 

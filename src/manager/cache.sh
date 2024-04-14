@@ -7,65 +7,21 @@ SCRIPT_DIR_b121320e="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "${SCRIPT_DIR_b121320e}/../lib/utils/all.sh" || exit 1
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_b121320e}/app_manager.sh" || exit 1
-
-function manager::cache::_recursion_generate_pre_install_list() {
-    local pm_app="$1"
-    local dependencies
-    local item
-    local features
-    local temp
-    if ! manager::app::is_custom "${pm_app}"; then
-        config::cache::pre_install_apps::rpush_unique "${pm_app}"
-        return "$SHELL_TRUE"
-    fi
-
-    # 获取它的依赖
-    temp="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
-    array::readarray dependencies < <(echo "${temp}")
-
-    for item in "${dependencies[@]}"; do
-        manager::cache::_recursion_generate_pre_install_list "${item}" || return "$SHELL_FALSE"
-    done
-
-    # 获取它的feature
-    temp="$(manager::app::run_custom_manager "${pm_app}" "features")" || return "$SHELL_FALSE"
-    array::readarray features < <(echo "${temp}")
-    for item in "${features[@]}"; do
-        manager::cache::_recursion_generate_pre_install_list "${item}" || return "$SHELL_FALSE"
-    done
-
-    # 处理自己
-    config::cache::pre_install_apps::rpush_unique "${pm_app}"
-    return "$SHELL_TRUE"
-}
-
-# 这个列表目前只是用作过滤使用
-function manager::cache::generate_pre_install_list() {
-    local pm_app
-    local pre_install_apps=()
-    local temp_str
-
-    config::cache::pre_install_apps::clean || return "$SHELL_FALSE"
-
-    println_info "generate pre install app list, it take a long time..."
-    linfo "generate pre install app list, it take a long time..."
-
-    temp_str="$(base::get_pre_install_apps)" || return "$SHELL_FALSE"
-    array::readarray pre_install_apps < <(echo "${temp_str}")
-    for pm_app in "${pre_install_apps[@]}"; do
-        manager::cache::_recursion_generate_pre_install_list "${pm_app}" || return "$SHELL_FALSE"
-    done
-
-    linfo "generate pre install app list success."
-    println_success "generate pre install app list success."
-    return "$SHELL_TRUE"
-}
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_b121320e}/base.sh" || exit 1
 
 # 生成安装列表
 function manager::cache::generate_top_apps() {
     local pm_app="$1"
 
     local temp_str
+    local priority_apps=()
+    # 被其他app依赖的app
+    local required_by=()
+    # 没有被依赖的
+    local none_dependencies=()
+    local item
+    local app_path
 
     # 先清空安装列表
     config::cache::top_apps::clean || return "$SHELL_FALSE"
@@ -75,22 +31,23 @@ function manager::cache::generate_top_apps() {
 
     if [ -n "$pm_app" ]; then
         linfo "only add ${pm_app} to top app list"
-        config::cache::top_apps::rpush "$pm_app" || return "$SHELL_FALSE"
+        config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
         return "$SHELL_TRUE"
     fi
 
-    # 被其他app依赖的app
-    local required_by=()
-    # 没有被依赖的
-    local none_dependencies=()
+    # 先处理优先安装的app
+    temp_str="$(base::prior_install_apps::list)" || return "$SHELL_FALSE"
+    array::readarray priority_apps < <(echo "${temp_str}")
+    for pm_app in "${priority_apps[@]}"; do
+        config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
+    done
 
-    local app_path
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         local app_name
         app_name=$(basename "${app_path}")
         local pm_app="custom:$app_name"
 
-        if config::cache::pre_install_apps::is_contain "$pm_app"; then
+        if base::core_apps::is_contain "$pm_app"; then
             continue
         fi
 
@@ -122,9 +79,8 @@ function manager::cache::generate_top_apps() {
     ldebug "required_by: ${required_by[*]}"
 
     # 生成安装列表
-    local pm_app
     for item in "${none_dependencies[@]}"; do
-        config::cache::top_apps::rpush "$item" || return "$SHELL_FALSE"
+        config::cache::top_apps::rpush_unique "$item" || return "$SHELL_FALSE"
     done
 
     linfo "generate top install app list success"
@@ -262,11 +218,6 @@ function manager::cache::do() {
 
     if [ "${reuse_cache}" -ne "$SHELL_TRUE" ]; then
         config::cache::delete || return "$SHELL_FALSE"
-    fi
-
-    # 这个列表目前只用作过滤判断用
-    if ! config::cache::pre_install_apps::is_exists; then
-        manager::cache::generate_pre_install_list || return "$SHELL_FALSE"
     fi
 
     if ! config::cache::apps::is_exists; then

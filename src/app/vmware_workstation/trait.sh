@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function vmware_workstation::trait::package_manager() {
     echo "default"
@@ -44,15 +43,19 @@ function vmware_workstation::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function vmware_workstation::trait::post_install() {
-    cmd::run_cmd_with_history sudo systemctl enable vmware-networks.service || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history sudo systemctl enable vmware-usbarbitrator.service || return "${SHELL_FALSE}"
+    systemctl::enable "vmware-networks.service" || return "${SHELL_FALSE}"
+    systemctl::enable "vmware-usbarbitrator.service" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
 function vmware_workstation::trait::pre_uninstall() {
-    cmd::run_cmd_with_history sudo systemctl disable vmware-networks.service
-    cmd::run_cmd_with_history sudo systemctl disable vmware-usbarbitrator.service
+    if systemctl::is_exists "vmware-networks.service"; then
+        systemctl::disable "vmware-networks.service" || return "${SHELL_FALSE}"
+    fi
+    if systemctl::is_exists "vmware-usbarbitrator.service"; then
+        systemctl::disable "vmware-usbarbitrator.service" || return "${SHELL_FALSE}"
+    fi
     return "${SHELL_TRUE}"
 }
 
