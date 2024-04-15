@@ -9,6 +9,63 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
+function hyprland::settings::terminal() {
+    local terminal
+    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    if os::is_vm; then
+        terminal="terminator"
+    else
+        # 虚拟机里面不支持 wezterm
+        terminal="wezterm"
+    fi
+    cmd::run_cmd_with_history sed -i "'s/__terminal__/$terminal/g'" "$config_filepath"
+    if [ "$?" -ne "$SHELL_TRUE" ]; then
+        lerror "hyprland setting terminal failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "hyprland setting terminal success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::settings::file_manager() {
+    local file_manager
+    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    if os::is_vm; then
+        file_manager="terminator -e yazi"
+    else
+        # 虚拟机里面不支持 wezterm
+        file_manager="wezterm start -- yazi"
+    fi
+    cmd::run_cmd_with_history sed -i "'s/__file_manager__/$file_manager/g'" "$config_filepath"
+    if [ "$?" -ne "$SHELL_TRUE" ]; then
+        lerror "hyprland setting file manager failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "hyprland setting file manager success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::settings::monitor() {
+    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    sed::delete_between_line "BEGIN Monitor Settings BEGIN" "END Monitor Settings END" "$config_filepath"
+    if [ "$?" -ne "$SHELL_TRUE" ]; then
+        lerror "hyprland setting monitor failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "hyprland setting monitor success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::settings::workspace() {
+    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    sed::delete_between_line "BEGIN Workspace Settings BEGIN" "END Workspace Settings END" "$config_filepath"
+    if [ "$?" -ne "$SHELL_TRUE" ]; then
+        lerror "hyprland setting workspace failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "hyprland setting workspace success"
+    return "${SHELL_TRUE}"
+}
 
 # 指定使用的包管理器
 function hyprland::trait::package_manager() {
@@ -68,12 +125,14 @@ function hyprland::trait::post_uninstall() {
 
 # 全部安装完成后的操作
 function hyprland::trait::finally() {
-    println_info "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
-    println_info "${PM_APP_NAME}: you should run 'Hyprland' to start it"
+    hyprland::settings::terminal || return "${SHELL_FALSE}"
+    hyprland::settings::file_manager || return "${SHELL_FALSE}"
+    hyprland::settings::monitor || return "${SHELL_FALSE}"
+    hyprland::settings::workspace || return "${SHELL_FALSE}"
 
-    if ! process::is_running "Hyprland"; then
-        println_warn "${PM_APP_NAME}: some settings not configed, you should run 'Hyprland' and run finally command again."
-    fi
+    println_warn "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
+    println_warn "${PM_APP_NAME}: you should run 'Hyprland' to start it"
+
     return "${SHELL_TRUE}"
 }
 
@@ -91,19 +150,29 @@ function hyprland::trait::dependencies() {
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
     # TODO: 这些依赖需要处理，处理到swaync
-    local apps=("custom:fonts" "pacman:polkit-kde-agent" "custom:fcitx5" "custom:wezterm" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
+    local apps=("custom:fonts" "pacman:polkit-kde-agent" "custom:fcitx5" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
 
     # xdg-desktop-portal
     apps+=("default:xdg-desktop-portal-hyprland" "default:xdg-desktop-portal-gtk")
 
     # 截图需要的
     apps+=("default:grim" "default:slurp" "flatpak:org.ksnip.ksnip")
+
     # 邮箱
     apps+=("default:thunderbird" "default:thunderbird-i18n-zh-cn")
+
     # 翻译软件
     apps+=("custom:pot")
+
     # 取色软件
     apps+=("default:hyprpicker")
+
+    # 终端软件
+    apps+=("custom:wezterm")
+    if os::is_vm; then
+        apps+=("default:terminator")
+    fi
+
     array::print apps
     return "${SHELL_TRUE}"
 }

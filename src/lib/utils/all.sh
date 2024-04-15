@@ -27,3 +27,5 @@ source "${SCRIPT_DIR_cd871afe}/sed.sh"
 source "${SCRIPT_DIR_cd871afe}/process.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/systemctl.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/os.sh"
