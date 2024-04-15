@@ -194,27 +194,7 @@ function manager::cache::generate_apps_relation() {
 
 function manager::cache::do() {
     local reuse_cache="$1"
-
-    # 询问用户的步骤提前
-    # local reuse_cache
-    # while true; do
-    #     printf_blue "reuse cache if exists ??? (y/n)[Y] "
-    #     # 超时的退出码是1，Ctrl+C的退出码是130
-    #     read -t 5 -r -e -n 1 reuse_cache
-    #     if [ $? -eq 130 ]; then
-    #         lerror "quite input, exit"
-    #         return 130
-    #     fi
-    #     linfo "get input reuse_cache=${reuse_cache}"
-    #     if [ -z "$reuse_cache" ]; then
-    #         reuse_cache="y"
-    #         break
-    #     fi
-    #     if string::is_true_or_false "$reuse_cache"; then
-    #         break
-    #     fi
-    #     println_error "input invalid, please input y or n."
-    # done
+    local pm_app="$2"
 
     if [ "${reuse_cache}" -ne "$SHELL_TRUE" ]; then
         config::cache::delete || return "$SHELL_FALSE"

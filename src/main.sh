@@ -53,7 +53,6 @@ function main::input_password() {
 
 # 导出全局的变量
 function main::_export_env() {
-    export LC_ALL="C"
     export SRC_ROOT_DIR="${SCRIPT_DIR_8dac019e}"
     export BUILD_ROOT_DIR="/var/tmp/arch_os_install/build"
 
@@ -157,6 +156,9 @@ function main::command::install() {
         pm_app="custom:${app_name}"
     fi
 
+    manager::app::check_loop_dependencies || return "$SHELL_FALSE"
+    manager::cache::do "$reuse_cache" "$pm_app" || return "$SHELL_FALSE"
+
     install_flow::main_flow || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
@@ -169,6 +171,9 @@ function main::command::uninstall() {
     if [ -n "${app_name}" ]; then
         pm_app="custom:${app_name}"
     fi
+
+    manager::app::check_loop_dependencies || return "$SHELL_FALSE"
+    manager::cache::do "$reuse_cache" "$pm_app" || return "$SHELL_FALSE"
 
     uninstall_flow::main_flow || return "$SHELL_FALSE"
 
@@ -255,15 +260,11 @@ function main::main() {
     local code
     case "${command}" in
     "install")
-        manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-        manager::cache::do $reuse_cache || return "$SHELL_FALSE"
         main::command::install "${command_params[@]}"
         code=$?
         ;;
 
     "uninstall")
-        manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-        manager::cache::do $reuse_cache || return "$SHELL_FALSE"
         main::command::uninstall "${command_params[@]}"
         code=$?
         ;;

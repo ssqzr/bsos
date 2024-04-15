@@ -3,32 +3,40 @@
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_612d794c="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
-function manager::app::parse_package_manager() {
-    local pm_app="$1"
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_612d794c}/../lib/utils/all.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_612d794c}/../lib/utils/utest.sh"
+
+function manager::app::is_package_name_valid() {
+    local package_name="$1"
+    # https://www.gnu.org/software/bash/manual/html_node/Conditional-Constructs.html#index-_005b_005b
+    # https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
+    if [[ ! "$package_name" =~ ^[^:[:space:]]+:[^:[:space:]]+$ ]]; then
+        lerror "package_name($package_name) is invalid, it should be 'package_manager:app_name'"
         return "$SHELL_FALSE"
     fi
+    return "$SHELL_TRUE"
+}
+
+function manager::app::parse_package_manager() {
+    local pm_app="$1"
+    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
     local package_manager=${pm_app%:*}
     echo "$package_manager"
 }
 
 function manager::app::parse_app_name() {
     local pm_app="$1"
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
+    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
     local app_name=${pm_app#*:}
     echo "$app_name"
 }
 
 function manager::app::is_custom() {
     local pm_app="$1"
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
+    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
+
     local package_manager
     package_manager=$(manager::app::parse_package_manager "$pm_app")
     if [ "$package_manager" == "custom" ]; then
@@ -39,10 +47,7 @@ function manager::app::is_custom() {
 
 function manager::app::app_directory() {
     local pm_app="$1"
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
+    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
 
     if ! manager::app::is_custom "$pm_app"; then
         lerror "app(${pm_app}) is not custom"
@@ -59,7 +64,7 @@ function manager::app::run_custom_manager() {
     local sub_command="$2"
 
     if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
+        lerror "pm_app is empty, params=$*"
         return "$SHELL_FALSE"
     fi
 
@@ -91,10 +96,8 @@ function manager::app::is_no_loop_dependencies() {
     local pm_app="$1"
     local link_path="$2"
 
-    if [ -z "$pm_app" ]; then
-        lerror "param pm_app is empty, params=$*"
-        return "$SHELL_FALSE"
-    fi
+    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
+
     local temp_array=()
     local item
     local temp_str
@@ -124,10 +127,8 @@ function manager::app::is_no_loop_features() {
     local pm_app="$1"
     local link_path="$2"
 
-    if [ -z "$pm_app" ]; then
-        lerror "param pm_app is empty, params=$*"
-        return "$SHELL_FALSE"
-    fi
+    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
+
     local temp_array=()
     local item
     local temp_str
@@ -543,3 +544,60 @@ function manager::app::do_uninstall() {
     println_success "${level_indent}${pm_app}: uninstall success."
     return "$SHELL_TRUE"
 }
+
+########################### 下面是测试代码 ###########################
+function manager::app::_test_is_package_name_valid() {
+    manager::app::is_package_name_valid "pamac:app_name"
+    utest::assert $?
+
+    manager::app::is_package_name_valid ""
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac app_name"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid ":"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "::"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac:"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid ":pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac::pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid " :pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac: "
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid " pamac:pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac :pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac: pamac"
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac:pamac "
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid " pamac : pamac "
+    utest::assert_fail $?
+
+    manager::app::is_package_name_valid "pamac：pamac"
+    utest::assert_fail $?
+}
+
+string::is_true "$TEST" && manager::app::_test_is_package_name_valid
+true

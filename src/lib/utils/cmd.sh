@@ -261,4 +261,5 @@ function cmd::_test_run_cmd() {
 }
 
 string::is_true "$TEST" && cmd::_test_run_cmd
+true
 cmd::_init_cmd_history_filepath

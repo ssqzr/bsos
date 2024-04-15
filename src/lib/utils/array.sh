@@ -211,3 +211,4 @@ function array::_test_array::dedup() {
 string::is_true "$TEST" && array::_test_array::reverse
 string::is_true "$TEST" && array::_test_array::reverse_new
 string::is_true "$TEST" && array::_test_array::dedup
+true

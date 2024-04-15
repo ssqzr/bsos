@@ -20,12 +20,13 @@ __CORE_APPS=("custom:systemd_resolved" "custom:pacman" "custom:sudo" "pacman:go-
 # __PRE_INSTALL_APPS+=("pacman:git" "custom:yay" "custom:pamac")
 
 # 优先安装的应用
+# system_setting 系统设置
 # base-devel 是为了基本的编译需要的
 # git 是为了安装pamac需要的，后面 git 还会以custom的方式再安装一遍，因为有一些配置需要配置
 # yay 为了安装其他应用
 # pamac 为了安装其他应用
 # rust 我需要rustup包，但是一些APP依赖rust时默认安装的是rust包，导致再次安装rustup会冲突
-__PRIOR_INSTALL_APPS=("pacman:base-devel" "pacman:git" "custom:yay" "custom:pamac" "custom:rust")
+__PRIOR_INSTALL_APPS=("custom:system_setting" "pacman:base-devel" "pacman:git" "custom:yay" "custom:pamac" "custom:rust")
 
 function base::core_apps::list() {
     array::print __CORE_APPS

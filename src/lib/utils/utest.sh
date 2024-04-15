@@ -9,7 +9,9 @@ source "${SCRIPT_DIR_00577440}/debug.sh"
 function utest::assert_equal() {
     local left="$1"
     local right="$2"
+    local line_num
     local caller_frame
+    line_num=$(get_caller_file_line_num 1)
     caller_frame=$(get_caller_frame 1)
 
     if [ "$left" != "$right" ]; then
@@ -18,7 +20,7 @@ function utest::assert_equal() {
         println_error "left: $left, right: $right"
         return "$SHELL_FALSE"
     fi
-    printf_info "$caller_frame"
+    printf_info "$caller_frame:$line_num"
     println_success " success"
 
     return "$SHELL_TRUE"
@@ -27,6 +29,8 @@ function utest::assert_equal() {
 function utest::assert() {
     local left="$1"
     local caller_frame
+    local line_num
+    line_num=$(get_caller_file_line_num 1)
     caller_frame=$(get_caller_frame 1)
 
     if [ "$left" != "$SHELL_TRUE" ]; then
@@ -35,7 +39,7 @@ function utest::assert() {
         return "$SHELL_FALSE"
     fi
 
-    printf_info "$caller_frame"
+    printf_info "$caller_frame:$line_num"
     println_success " success"
     return "$SHELL_TRUE"
 }
@@ -43,6 +47,8 @@ function utest::assert() {
 function utest::assert_fail() {
     local left="$1"
     local caller_frame
+    local line_num
+    line_num=$(get_caller_file_line_num 1)
     caller_frame=$(get_caller_frame 1)
 
     if [ "$left" = "$SHELL_TRUE" ]; then
@@ -51,7 +57,7 @@ function utest::assert_fail() {
         return "$SHELL_FALSE"
     fi
 
-    printf_info "$caller_frame"
+    printf_info "$caller_frame:$line_num"
     println_success " success"
     return "$SHELL_TRUE"
 }
