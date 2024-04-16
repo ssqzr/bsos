@@ -6,9 +6,9 @@
 SCRIPT_DIR_30e78b31="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_30e78b31}/constant.sh"
+source "${SCRIPT_DIR_30e78b31}/constant.sh" || exit 1
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_30e78b31}/debug.sh"
+source "${SCRIPT_DIR_30e78b31}/debug.sh" || exit 1
 
 function log::_init_log_filepath() {
     if [ -n "${__log_filepath}" ]; then

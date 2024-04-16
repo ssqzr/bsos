@@ -41,3 +41,7 @@ function base::prior_install_apps::list() {
 
     array::print __PRIOR_INSTALL_APPS
 }
+
+function base::bash_lib_dir() {
+    echo "$HOME/.bash_lib"
+}

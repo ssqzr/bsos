@@ -149,15 +149,19 @@ function main::must_do() {
 }
 
 function main::command::install() {
-    local app_name="$1"
-    local pm_app
+    local reuse_cache="$1"
+    local app_names="$2"
+    local temp_str
 
-    if [ -n "${app_name}" ]; then
-        pm_app="custom:${app_name}"
+    local pm_apps=()
+
+    if [ -n "${app_names}" ]; then
+        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
+        array::readarray pm_apps < <(echo "${temp_str}")
     fi
 
     manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-    manager::cache::do "$reuse_cache" "$pm_app" || return "$SHELL_FALSE"
+    manager::cache::do "$reuse_cache" "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     install_flow::main_flow || return "$SHELL_FALSE"
 
@@ -165,15 +169,19 @@ function main::command::install() {
 }
 
 function main::command::uninstall() {
-    local app_name="$1"
-    local pm_app
+    local reuse_cache="$1"
+    local app_names="$2"
+    local temp_str
 
-    if [ -n "${app_name}" ]; then
-        pm_app="custom:${app_name}"
+    local pm_apps=()
+
+    if [ -n "${app_names}" ]; then
+        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
+        array::readarray pm_apps < <(echo "${temp_str}")
     fi
 
     manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-    manager::cache::do "$reuse_cache" "$pm_app" || return "$SHELL_FALSE"
+    manager::cache::do "$reuse_cache" "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     uninstall_flow::main_flow || return "$SHELL_FALSE"
 
@@ -260,12 +268,12 @@ function main::main() {
     local code
     case "${command}" in
     "install")
-        main::command::install "${command_params[@]}"
+        main::command::install "$reuse_cache" "${command_params[@]}"
         code=$?
         ;;
 
     "uninstall")
-        main::command::uninstall "${command_params[@]}"
+        main::command::uninstall "$reuse_cache" "${command_params[@]}"
         code=$?
         ;;
 

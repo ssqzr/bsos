@@ -44,7 +44,15 @@ function zsh::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function zsh::trait::post_install() {
     local conf_filepath="$HOME/.zshrc"
-    cmd::run_cmd_with_history cp "$SCRIPT_DIR_fd204c06/zshrc" "$conf_filepath" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$conf_filepath" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history cp -rf "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
+
+    # 设置默认的shell为zsh
+    # https://wiki.archlinux.org/title/zsh#Making_Zsh_your_default_shell
+    local username
+    username=$(id -un)
+    cmd::run_cmd_with_history sudo chsh -s /usr/bin/zsh "${username}"
 
     return "${SHELL_TRUE}"
 }
@@ -63,11 +71,16 @@ function zsh::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
     cmd::run_cmd_with_history rm -f "$HOME/.zshrc" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
+    local username
+    username=$(id -un)
+    cmd::run_cmd_with_history sudo chsh -s /usr/bin/bash "${username}"
     return "${SHELL_TRUE}"
 }
 
 # 全部安装完成后的操作
 function zsh::trait::finally() {
+    println_warn "if you found some keys not working, you can run '/usr/share/zsh/functions/Misc/zkbd' to define keys."
     return "${SHELL_TRUE}"
 }
 

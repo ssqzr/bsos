@@ -1,5 +1,12 @@
 
 # 文档
+:sectnums:
+:sectnumlevels: 5
+:toc: right
+:toc-title: {doctitle}
+:toclevels: 5
+:table-caption: {doctitle}.
+:icons: font
 
 ## 背景说明
 
@@ -111,6 +118,16 @@ echo "all success"
 如果卸载单个应用用于测试，最好是仅仅卸载自己就可以了。
 
 如果卸载全部，可以按照安装的顺序依次卸载，如果一个应用被多个应用依赖，这个应用的安装肯定是在所有依赖应用的前面安装，所以卸载也是最后卸载的。
+
+## TODO
+
+* [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
+* [ ] pywal 的使用
+* [ ] hypridle 的使用
+* [ ] hyprlock 的使用
+* [ ] hyprcursor 的使用
+* [ ] wlogout 的使用
+* [ ] ags 的使用
 
 ## 引用
 

@@ -4,6 +4,9 @@
 # shellcheck disable=SC2034
 SCRIPT_DIR_b2e4a0ea="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR_b2e4a0ea}/base.sh"
+
 function uninstall_flow::app::do_uninstall() {
     local top_apps=()
     local temp_str
@@ -35,6 +38,9 @@ function uninstall_flow::do_uninstall() {
 }
 
 function uninstall_flow::post_uninstall() {
+    local lib_dir
+    lib_dir=$(base::bash_lib_dir) || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history rm -rf "${lib_dir}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

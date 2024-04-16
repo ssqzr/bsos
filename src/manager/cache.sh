@@ -12,8 +12,9 @@ source "${SCRIPT_DIR_b121320e}/base.sh" || exit 1
 
 # 生成安装列表
 function manager::cache::generate_top_apps() {
-    local pm_app="$1"
+    local pm_apps=("${@}")
 
+    local pm_app
     local temp_str
     local priority_apps=()
     # 被其他app依赖的app
@@ -29,9 +30,11 @@ function manager::cache::generate_top_apps() {
     println_info "generate top install app list, it take a long time..."
     linfo "generate top install app list, it take a long time..."
 
-    if [ -n "$pm_app" ]; then
-        linfo "only add ${pm_app} to top app list"
-        config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
+    if [ 0 -ne "${#pm_apps[@]}" ]; then
+        linfo "only add ${pm_apps[*]} to top app list"
+        for pm_app in "${pm_apps[@]}"; do
+            config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
+        done
         return "$SHELL_TRUE"
     fi
 
@@ -194,7 +197,7 @@ function manager::cache::generate_apps_relation() {
 
 function manager::cache::do() {
     local reuse_cache="$1"
-    local pm_app="$2"
+    local pm_apps=("${@:2}")
 
     if [ "${reuse_cache}" -ne "$SHELL_TRUE" ]; then
         config::cache::delete || return "$SHELL_FALSE"
@@ -206,7 +209,7 @@ function manager::cache::do() {
 
     if ! config::cache::top_apps::is_exists; then
         # 生成需要处理的应用列表
-        manager::cache::generate_top_apps "$pm_app" || return "$SHELL_FALSE"
+        manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
     fi
 
     return "$SHELL_TRUE"

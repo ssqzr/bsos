@@ -9,9 +9,29 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
+function hyprland::settings::hyprland_config_filepath() {
+    echo "$XDG_CONFIG_HOME/hypr/hyprland.conf"
+}
+
+function hyprland::settings::cursors() {
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+
+    if os::is_vm; then
+        cmd::run_cmd_with_history sed -i "'s/^#env = WLR_NO_HARDWARE_CURSORS,1/env = WLR_NO_HARDWARE_CURSORS,1/g'" "$config_filepath"
+        if [ "$?" -ne "$SHELL_TRUE" ]; then
+            lerror "hyprland setting cursors failed"
+            return "$SHELL_FALSE"
+        fi
+    fi
+    linfo "hyprland setting cursors success"
+    return "${SHELL_TRUE}"
+}
+
 function hyprland::settings::terminal() {
     local terminal
-    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     if os::is_vm; then
         terminal="terminator"
     else
@@ -29,7 +49,8 @@ function hyprland::settings::terminal() {
 
 function hyprland::settings::file_manager() {
     local file_manager
-    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     if os::is_vm; then
         file_manager="terminator -e yazi"
     else
@@ -46,7 +67,8 @@ function hyprland::settings::file_manager() {
 }
 
 function hyprland::settings::monitor() {
-    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     sed::delete_between_line "BEGIN Monitor Settings BEGIN" "END Monitor Settings END" "$config_filepath"
     if [ "$?" -ne "$SHELL_TRUE" ]; then
         lerror "hyprland setting monitor failed"
@@ -57,7 +79,8 @@ function hyprland::settings::monitor() {
 }
 
 function hyprland::settings::workspace() {
-    local config_filepath="$XDG_CONFIG_HOME/hypr/hyprland.conf"
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     sed::delete_between_line "BEGIN Workspace Settings BEGIN" "END Workspace Settings END" "$config_filepath"
     if [ "$?" -ne "$SHELL_TRUE" ]; then
         lerror "hyprland setting workspace failed"
@@ -129,6 +152,7 @@ function hyprland::trait::finally() {
     hyprland::settings::file_manager || return "${SHELL_FALSE}"
     hyprland::settings::monitor || return "${SHELL_FALSE}"
     hyprland::settings::workspace || return "${SHELL_FALSE}"
+    hyprland::settings::cursors || return "${SHELL_FALSE}"
 
     println_warn "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
     println_warn "${PM_APP_NAME}: you should run 'Hyprland' to start it"
@@ -184,6 +208,9 @@ function hyprland::trait::dependencies() {
 function hyprland::trait::features() {
     # TODO: 这些依赖需要处理
     local apps=()
+    # 壁纸
+    # bing 壁纸需要解析json字符串
+    apps+=("default:go-yq" "default:hyprpaper")
     array::print apps
     return "${SHELL_TRUE}"
 }

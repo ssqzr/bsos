@@ -3,6 +3,9 @@
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_23248a22="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR_23248a22}/base.sh"
+
 # 运行所有程序的安装向导
 function install_flow::app::do_guide() {
     linfo "start run all apps guide..."
@@ -79,6 +82,12 @@ function install_flow::do_install() {
 
 # FIXME: 验证功能没有问题
 function install_flow::post_install() {
+    # bash 脚本的封装库拷贝到 HOME 目录供其他脚本使用
+    local lib_dir
+    lib_dir=$(base::bash_lib_dir) || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history rm -rf "${lib_dir}" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history mkdir -p "${lib_dir}" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history cp -rf "${SRC_ROOT_DIR}/lib/utils" "${lib_dir}/utils" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

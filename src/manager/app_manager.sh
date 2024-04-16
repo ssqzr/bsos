@@ -157,6 +157,7 @@ function manager::app::is_no_loop_features() {
 function manager::app::check_loop_dependencies() {
 
     linfo "start check all app loop dependencies..."
+    println_info "start check all app loop dependencies, it may take a long time..."
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         local app_name
@@ -168,6 +169,7 @@ function manager::app::check_loop_dependencies() {
     done
 
     linfo "check all app loop dependencies success"
+    println_success "check all app loop dependencies success"
     return "$SHELL_TRUE"
 }
 

@@ -1,0 +1,12 @@
+# vim 安装说明文档
+:sectnums:
+:sectnumlevels: 5
+:toc: right
+:toc-title: {doctitle}
+:toclevels: 5
+:table-caption: {doctitle}.
+:icons: font
+
+
+official_document_url[官方文档]
+
