@@ -64,6 +64,12 @@ function custom_manager::_env() {
     return "$SHELL_TRUE"
 }
 
+function custom_manager::prepare() {
+    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+
+    return "$SHELL_TRUE"
+}
+
 function custom_manager::_clean_build() {
     linfo "clean app(${PM_APP_NAME}) build env..."
     file::delete_dir_safe "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
@@ -265,6 +271,7 @@ function custom_manager::main() {
     fi
 
     custom_manager::_env "${app_name}" || return 1
+    custom_manager::prepare || return "$SHELL_FALSE"
 
     # shellcheck source=/dev/null
     source "${SRC_ROOT_DIR}/app/${app_name}/trait.sh" || return "$SHELL_FALSE"

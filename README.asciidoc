@@ -119,15 +119,30 @@ echo "all success"
 
 如果卸载全部，可以按照安装的顺序依次卸载，如果一个应用被多个应用依赖，这个应用的安装肯定是在所有依赖应用的前面安装，所以卸载也是最后卸载的。
 
+### 音频可视化
+
+https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_tool_for_linux/[有哪些音频可视化]
+
+* https://github.com/dpayne/cli-visualizer[cli-visualizer] 支持颜色主题，可以配合 pywal 一起使用实现多变的颜色主题。[.red]#2018-10-8后就没有发布新版本了#。
+* https://github.com/karlstav/cava?tab=readme-ov-file#configuration[cava] star数更多。截至目前（2024-4-17）发布频繁。
+* https://github.com/jarcode-foss/glava[glava] X11的，没有试过wayland是否可以。
+
+我目前选择的是 https://github.com/dpayne/cli-visualizer[cli-visualizer] 。
+
+* cli-visualizer 单个音频柱子有不同的颜色，cava只有一种颜色。
+* cava文档太简单了，都不知道配置项有哪些
+
 ## TODO
 
 * [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
-* [ ] pywal 的使用
+* [*] pywal 的使用
 * [ ] hypridle 的使用
 * [ ] hyprlock 的使用
 * [ ] hyprcursor 的使用
 * [ ] wlogout 的使用
 * [ ] ags 的使用
+* [ ] grub 主题美化
+* [ ] https://github.com/dpayne/cli-visualizer[cli-visualizer] 的使用
 
 ## 引用
 

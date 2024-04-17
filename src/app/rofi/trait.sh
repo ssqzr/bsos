@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function rofi::trait::package_manager() {
     echo "default"
@@ -17,7 +16,11 @@ function rofi::trait::package_manager() {
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
 function rofi::trait::package_name() {
-    echo "rofi-lbonn-wayland-git"
+    # FIXME: rofi 是否已经原生支持wayland
+    # rofi-lbonn-wayland-git 运行 rofi -dump-config > ~/.config/rofi/config.rasi 报错：
+    # ABI version of plugin: 'calc.so' does not match
+    # rofi 使用xwayland好像也没什么问题，原版修复问题会快一些
+    echo "rofi"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
@@ -44,7 +47,7 @@ function rofi::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function rofi::trait::post_install() {
-    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/rofi" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_41bd3dd5}/rofi" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -85,6 +88,8 @@ function rofi::trait::dependencies() {
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
     local apps=("custom:fonts")
+    # pywal 动态主题
+    apps+=("custom:pywal")
     array::print apps
     return "${SHELL_TRUE}"
 }

@@ -69,10 +69,12 @@ function hyprland::settings::file_manager() {
 function hyprland::settings::monitor() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-    sed::delete_between_line "BEGIN Monitor Settings BEGIN" "END Monitor Settings END" "$config_filepath"
-    if [ "$?" -ne "$SHELL_TRUE" ]; then
-        lerror "hyprland setting monitor failed"
-        return "$SHELL_FALSE"
+    if os::is_vm; then
+        sed::delete_between_line "BEGIN Monitor Settings BEGIN" "END Monitor Settings END" "$config_filepath"
+        if [ "$?" -ne "$SHELL_TRUE" ]; then
+            lerror "hyprland setting monitor failed"
+            return "$SHELL_FALSE"
+        fi
     fi
     linfo "hyprland setting monitor success"
     return "${SHELL_TRUE}"
@@ -125,6 +127,7 @@ function hyprland::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function hyprland::trait::post_install() {
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -173,8 +176,7 @@ function hyprland::trait::dependencies() {
     # yay:vim
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
-    # TODO: 这些依赖需要处理，处理到swaync
-    local apps=("custom:fonts" "pacman:polkit-kde-agent" "custom:fcitx5" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
+    local apps=("default:wget" "custom:fonts" "pacman:polkit-kde-agent" "custom:fcitx5" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
 
     # xdg-desktop-portal
     apps+=("default:xdg-desktop-portal-hyprland" "default:xdg-desktop-portal-gtk")
@@ -208,9 +210,11 @@ function hyprland::trait::dependencies() {
 function hyprland::trait::features() {
     # TODO: 这些依赖需要处理
     local apps=()
+    # pywal 根据图片生成颜色主题
+    apps+=("custom:pywal")
     # 壁纸
     # bing 壁纸需要解析json字符串
-    apps+=("default:go-yq" "default:hyprpaper")
+    apps+=("wget" "default:go-yq" "default:hyprpaper")
     array::print apps
     return "${SHELL_TRUE}"
 }

@@ -45,6 +45,7 @@ function fcitx5::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function fcitx5::trait::post_install() {
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
