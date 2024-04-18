@@ -132,6 +132,14 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 * cli-visualizer 单个音频柱子有不同的颜色，cava只有一种颜色。
 * cava文档太简单了，都不知道配置项有哪些
 
+[#fcitx5-vscode-input-repeat]
+### vscode终端输入中文重复的问题
+
+* https://juejin.cn/post/7010651687039795214[关于fcitx5在vscode命令行中输入重复的问题]
+* https://bbs.archlinuxcn.org/viewtopic.php?id=11193[visual-studio-code-bin 终端只会重复第一次输入的中文]
+
+测试卸载了 `fcitx5-chinese-addons` 和安装 `fcitx5-rime` 。并且重启了，问题依旧。
+
 ## TODO
 
 * [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
@@ -147,6 +155,7 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 * [ ] swaync 的样式没处理，字体也没处理
 * [ ] 处理 tty 的字体和shell的美化问题
 * [ ] 音频配置文件的处理
+* [ ] <<fcitx5-vscode-input-repeat>>
 
 ## 引用
 
