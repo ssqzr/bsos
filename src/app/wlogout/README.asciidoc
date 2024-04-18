@@ -1,0 +1,20 @@
+# wlogout 安装说明文档
+:sectnums:
+:sectnumlevels: 5
+:toc: right
+:toc-title: {doctitle}
+:toclevels: 5
+:table-caption: {doctitle}.
+:icons: font
+
+
+https://github.com/ArtsyMacaw/wlogout[官方文档]
+
+
+
+## 引用
+
+* https://gitlab.com/stephan-raabe/dotfiles/-/blob/main/wlogout/README.txt?ref_type=heads[ML4W Dotfiles]
+* https://github.com/end-4/dots-hyprland[dots-hyprland]
+* https://blog.gtk.org/2017/04/05/the-gtk-inspector/[The GTK+ Inspector]
+

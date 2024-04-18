@@ -176,10 +176,45 @@ function hyprland::trait::dependencies() {
     # yay:vim
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
-    local apps=("default:wget" "custom:fonts" "pacman:polkit-kde-agent" "custom:fcitx5" "custom:yazi" "custom:rofi" "custom:swaync" "custom:anyrun" "custom:ags")
+    local apps=("custom:fonts" "pacman:polkit-kde-agent")
 
     # xdg-desktop-portal
     apps+=("default:xdg-desktop-portal-hyprland" "default:xdg-desktop-portal-gtk")
+
+    array::print apps
+    return "${SHELL_TRUE}"
+}
+
+# 有一些软件是本程序安装后才可以安装的。
+# 例如程序的插件、主题等。
+# 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
+# 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
+function hyprland::trait::features() {
+    local apps=()
+
+    # 输入法
+    apps+=("custom:fcitx5")
+
+    # 文件浏览器
+    apps+=("custom:yazi")
+
+    # 程序启动器
+    apps+=("custom:rofi")
+
+    # 通知
+    apps+=("custom:swaync")
+
+    # 状态栏
+    apps+=("custom:anyrun" "custom:ags")
+
+    # pywal 根据图片生成颜色主题
+    apps+=("custom:pywal")
+    # 壁纸
+    # bing 壁纸需要解析json字符串
+    apps+=("default:wget" "default:go-yq" "default:hyprpaper")
+
+    # 锁屏
+    apps+=("default:hyprlock")
 
     # 截图需要的
     apps+=("default:grim" "default:slurp" "flatpak:org.ksnip.ksnip")
@@ -199,22 +234,12 @@ function hyprland::trait::dependencies() {
         apps+=("default:terminator")
     fi
 
-    array::print apps
-    return "${SHELL_TRUE}"
-}
+    # logout
+    apps+=("custom:wlogout")
 
-# 有一些软件是本程序安装后才可以安装的。
-# 例如程序的插件、主题等。
-# 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
-# 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
-function hyprland::trait::features() {
-    # TODO: 这些依赖需要处理
-    local apps=()
-    # pywal 根据图片生成颜色主题
-    apps+=("custom:pywal")
-    # 壁纸
-    # bing 壁纸需要解析json字符串
-    apps+=("wget" "default:go-yq" "default:hyprpaper")
+    # hypridle 会用到 brightnessctl
+    apps+=("default:brightnessctl" "default:hypridle")
+
     array::print apps
     return "${SHELL_TRUE}"
 }

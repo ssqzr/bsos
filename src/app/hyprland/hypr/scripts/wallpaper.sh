@@ -143,7 +143,7 @@ function hyprland::wallpaper::main() {
     cmd::run_cmd_with_history hyprctl hyprpaper unload unused || return "$SHELL_FALSE"
     # NOTE: 对于 terminator 等VTE终端，wal 需要指定 --vte 参数才可以。
     # wal -l 是亮色主题
-    cmd::run_cmd_with_history wal -i "$(hyprland::wallpaper::cache_dir)" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history wal -l -i "$(hyprland::wallpaper::cache_dir)" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

@@ -474,4 +474,8 @@ Monitor HDMI-A-1 (ID 1):
 
 
 
+### 参考
+
+* https://github.com/zDyanTB/HyprNova/tree/master[hyprlock配置参考]
+* https://wiki.hyprland.org/Hypr-Ecosystem/hypridle/[hypridle配置参考]
 

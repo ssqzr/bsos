@@ -136,13 +136,16 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 
 * [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
 * [*] pywal 的使用
-* [ ] hypridle 的使用
-* [ ] hyprlock 的使用
+* [*] hypridle 的使用
+* [*] hyprlock 的使用
 * [ ] hyprcursor 的使用
-* [ ] wlogout 的使用
+* [*] wlogout 的使用
 * [ ] ags 的使用
 * [ ] grub 主题美化
 * [ ] https://github.com/dpayne/cli-visualizer[cli-visualizer] 的使用
+* [ ] 修改默认的应用程序
+* [ ] swaync 的样式没处理，字体也没处理
+* [ ] 处理 tty 的字体和shell的美化问题
 
 ## 引用
 

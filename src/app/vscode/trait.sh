@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function vscode::trait::package_manager() {
     echo "default"
@@ -89,7 +88,7 @@ function vscode::trait::dependencies() {
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
 
-    local apps=("custom:gnome_keyring")
+    local apps=("custom:gnome_keyring" "custom:fonts")
     array::print apps
     return "${SHELL_TRUE}"
 }

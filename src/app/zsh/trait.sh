@@ -43,8 +43,9 @@ function zsh::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function zsh::trait::post_install() {
-    local conf_filepath="$HOME/.zshrc"
-    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$conf_filepath" || return "$SHELL_FALSE"
+
+    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/p10k.zsh" "$HOME/.p10k.zsh" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history cp -rf "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
 
@@ -71,6 +72,7 @@ function zsh::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
     cmd::run_cmd_with_history rm -f "$HOME/.zshrc" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history rm -f "$HOME/.p10k.zsh" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
     local username
     username=$(id -un)
@@ -99,7 +101,14 @@ function zsh::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function zsh::trait::features() {
-    local apps=("custom:pkgfile" "default:zsh-completions" "default:zsh-autosuggestions" "custom:fzf" "default:zsh-syntax-highlighting" "custom:pywal")
+    local apps=()
+    apps+=("custom:fonts")
+    apps+=("custom:pkgfile" "default:zsh-completions" "default:zsh-autosuggestions")
+    apps+=("custom:fzf" "custom:pywal" "default:zsh-theme-powerlevel10k-git")
+    # 如果有特殊处理，zsh-syntax-highlighting 的配置一定要放到最后
+    # 虽然目前的依赖顺序没有影响，但是为了后续忘记这个限制，特意放到最后做标注
+    # https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file
+    apps+=("default:zsh-syntax-highlighting")
     array::print apps
     return "${SHELL_TRUE}"
 }

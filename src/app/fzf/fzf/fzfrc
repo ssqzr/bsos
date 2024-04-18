@@ -1,0 +1,22 @@
+--multi
+--cycle
+
+--bind alt-i:up
+--bind alt-k:down
+
+--bind alt-p:prev-selected
+--bind alt-n:next-selected
+
+--bind alt-j:backward-char
+--bind alt-l:forward-char
+--bind alt-h:beginning-of-line
+--bind alt-';':end-of-line
+
+--preview 'cat {}'
+--bind 'ctrl-p:toggle-preview'
+--preview-window hidden
+
+--bind alt-up:preview-up
+--bind alt-down:preview-down
+--bind alt-left:preview-half-page-up
+--bind alt-right:preview-half-page-down

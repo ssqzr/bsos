@@ -65,7 +65,9 @@ function custom_manager::_env() {
 }
 
 function custom_manager::prepare() {
-    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    if [ ! -e "${XDG_CONFIG_HOME}" ]; then
+        cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    fi
 
     return "$SHELL_TRUE"
 }

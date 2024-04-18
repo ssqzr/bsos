@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function fonts::trait::package_manager() {
     echo "default"
@@ -92,7 +91,7 @@ function fonts::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function fonts::trait::features() {
-    local apps=("default:noto-fonts" "default:noto-fonts-cjk" "default:noto-fonts-emoji" "default:noto-fonts-extra" "default:ttf-jetbrains-mono")
+    local apps=("default:noto-fonts" "default:noto-fonts-cjk" "default:noto-fonts-emoji" "default:noto-fonts-extra" "default:ttf-jetbrains-mono" "default:nerd-fonts")
     array::print apps
     return "${SHELL_TRUE}"
 }

@@ -96,7 +96,7 @@ function yazi::trait::dependencies() {
     # yay:vim
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
-    local apps=("custom:xdg" "default:ouch" "default:poppler" "default:fd" "custom:fzf" "default:wl-clipboard" "default:zoxide" "default:jq" "default:nerd-fonts" "default:ffmpegthumbnailer" "default:ripgrep")
+    local apps=("custom:xdg" "default:ouch" "default:poppler" "default:fd" "custom:fzf" "default:wl-clipboard" "default:zoxide" "default:jq" "custom:fonts" "default:ffmpegthumbnailer" "default:ripgrep")
     array::print apps
     return "${SHELL_TRUE}"
 }

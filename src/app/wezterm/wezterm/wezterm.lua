@@ -8,7 +8,8 @@ local config = wezterm.config_builder()
 config.enable_wayland = false
 config.color_scheme = 'Breeze'
 config.colors = colors
-config.font = wezterm.font 'JetBrains Mono'
+-- wezterm 捆绑了 JetBrains Mono
+-- config.font = wezterm.font 'JetBrains Mono'
 config.font_size = 10;
 config.default_prog = { '/usr/bin/zsh' }
 -- 背景透明度
