@@ -146,6 +146,7 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 * [ ] 修改默认的应用程序
 * [ ] swaync 的样式没处理，字体也没处理
 * [ ] 处理 tty 的字体和shell的美化问题
+* [ ] 音频配置文件的处理
 
 ## 引用
 

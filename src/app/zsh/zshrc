@@ -20,15 +20,16 @@ zstyle ':completion:*' menu select
 # 命令行别名的自动补全
 setopt completealiases
 # 消除历史记录中的重复条目
-setopt HIST_IGNORE_DUPS
+# 体验下来并不好，不能知道最近执行的命令
+# setopt HIST_IGNORE_DUPS
 
 # 刷新自动补全
 zstyle ':completion:*' rehash true
 
 # 设置 history
 # https://zsh.sourceforge.io/Doc/Release/Parameters.html#index-HISTFILE
-# 如果不设置不会保存history
-export HISTFILE=~/.zsh_history
+# 不需要特别设置，如果有改变的需求可以设置
+# export HISTFILE=~/.zsh_history
 # 9223372036854775807 是最大值
 # export HISTSIZE=9223372036854775807
 
@@ -51,6 +52,7 @@ source "$HOME/.zkbd/$TERM-${${DISPLAY:t}:-$VENDOR-$OSTYPE}"
 
 
 # 快捷键的设置
+# 运行 showkey -a 可以查看按键
 # https://wiki.zshell.dev/zh-Hans/docs/guides/syntax/bindkey
 # https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html
 # Alt-j
@@ -65,6 +67,12 @@ bindkey "^[k" down-line-or-history
 bindkey "^[;" end-of-line
 # Alt-h
 bindkey "^[h" beginning-of-line
+# https://zsh.sourceforge.io/Doc/Release/Parameters.html 搜索 WORDCHARS
+# word 的分隔符定义是 $WORDCHARS
+# Ctrl-Backspace
+bindkey "^H" backward-kill-word
+# Ctrl-Delete
+bindkey "^[[3;5~" kill-word
 
 # 去掉默认的LESS=-R
 unset LESS
