@@ -192,6 +192,9 @@ xref:src/app/open_vm_tools/README.asciidoc[解决办法]
 * [*] <<Hyprland-pywal>>
 * [ ] <<rofi-focus>>
 * [*] <<vmware-tool>>
+* [ ] hyprlock 在 vmware 虚拟机上红屏
+* [*] 注销用户，会将ssh登录的也给注销。
+* [ ] xref:src/app/wlogout/README.asciidoc#reboot-confirm[重启提醒用户还有未关闭应用]
 
 ## 引用
 

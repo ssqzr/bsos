@@ -7,7 +7,7 @@
 
 {
     "label": "logout",
-    "action": "loginctl terminate-user $USER",
+    "action": "loginctl terminate-session ''",
     "text": "注销",
     "keybind": "e"
 }

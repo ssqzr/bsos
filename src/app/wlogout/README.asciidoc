@@ -11,6 +11,58 @@
 https://github.com/ArtsyMacaw/wlogout[官方文档]
 
 
+## 问题记录
+
+### 注销后同用户ssh登录的会话也注销了
+
+`layout` 里 `logout` 的内容如下：
+
+[source,json]
+----
+{
+    "label": "logout",
+    "action": "loginctl terminate-user $USER",
+    "text": "注销",
+    "keybind": "e"
+}
+----
+
+loginctl 可以参考如下文档：
+
+- https://www.freedesktop.org/software/systemd/man/latest/loginctl.html[loginctl 文档]
+- https://www.jinbuguo.com/systemd/loginctl.html[loginctl 中文手册]
+
+https://www.freedesktop.org/software/systemd/man/latest/loginctl.html[loginctl 文档] 里的 seat 的理解可以参考：
+
+- https://www.freedesktop.org/wiki/Software/systemd/multiseat/[Multi-Seat on Linux]
+- https://wiki.debian.org/Multi_Seat_Debian_HOWTO[Multi Seat Debian]
+
+个人总结：
+
+- 主要有3类命令， `session` （会话）、 `user` （用户）、 `seat` （席位）。
+- `user` 即使用计算机的人。
+- `session` 也就是登录会话，[.red]#一个用户可以有多个会话#，例如：多个tty console登录的会话、多个ssh登录的会话、tty图形界面登录的会话等。
+- `seat` 字面翻译是席位的意思，是由特定的硬件组成的特殊工作空间。它由至少一个图形设备组成，通常还包括键盘、鼠标。它还可以包括摄像机、声卡等。当电脑有多个图形设备、鼠标以及键盘等设备时，可以将不同的设备分到不同的席位给不同的用户使用。
+- 所有有资格分配给席位的硬件设备都将分配给一个席位。一个设备一次只能分配给一个席位。如果设备未分配给任何特定的其他席位，则它会隐式分配给名为“seat0”的特殊默认席位。
+- 请注意，打印机、硬盘或网卡等硬件通常不会分配给特定的席位。所有座位均可平等使用它们。 （嗯，有一个例外：USB 记忆棒可以分配给一个座位。）
+- 一个用户的多个会话可以附加到同一个席位上，但是只能有一个会话可以处于活动状态，其他会话处于后台。
+
+
+所以当我们使用 `"loginctl terminate-user $USER"` 命令时是将用户的所有会话都结束了。
+
+如果只是想注销当前会话，应该执行 `loginctl terminate-session ''` 。 [.red]#当参数是空字符串时就是结束当前会话， 所以空字符串是必须的#。
+
+[#reboot-confirm]
+### 注销、关机、重启等提示用户还有未关闭的程序
+
+当注销、关机、重启的时候，目前都是直接操作，如果还有正在运行的程序将被关闭，虽然不是直接 `kill -9` ，但是还是提醒用户手动关闭比较稳妥。
+
+可能还有一些任务是用户忘记或者最小化到托盘的程序而没注意到的。
+
+因此我们需要对这些命令封装一层，先检测后执行。
+
+如何检测和如何展示给用户？？
+
 
 ## 引用
 
