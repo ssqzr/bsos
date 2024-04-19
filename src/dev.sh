@@ -87,10 +87,10 @@ function main() {
 
     case "$cmd" in
 
-    "create_app")
+    "create")
         create_app "${params[@]}"
         ;;
-    "update_template")
+    "update")
         update_template
         ;;
     *)

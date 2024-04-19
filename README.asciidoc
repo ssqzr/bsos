@@ -126,11 +126,15 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 * https://github.com/dpayne/cli-visualizer[cli-visualizer] 支持颜色主题，可以配合 pywal 一起使用实现多变的颜色主题。[.red]#2018-10-8后就没有发布新版本了#。
 * https://github.com/karlstav/cava?tab=readme-ov-file#configuration[cava] star数更多。截至目前（2024-4-17）发布频繁。
 * https://github.com/jarcode-foss/glava[glava] X11的，没有试过wayland是否可以。
+* https://github.com/TheWisker/Cavasik[Cavasik]
+* https://github.com/NickvisionApps/Cavalier[Cavalier]
 
-我目前选择的是 https://github.com/dpayne/cli-visualizer[cli-visualizer] 。
+我目前选择的是 https://github.com/TheWisker/Cavasik[Cavasik] 。
 
-* cli-visualizer 单个音频柱子有不同的颜色，cava只有一种颜色。
+* cli-visualizer 不知道怎么配置
 * cava文档太简单了，都不知道配置项有哪些
+* Cavasik 有图形化界面配置，我们可以在界面配置保存配置文件。
+* Cavalier 是C#的，可以通过faltpak安装，有图形化界面配置，界面和Cavasik差不多。但是我看特性没有Cavasik的多，先用Cavasik看看吧。
 
 [#fcitx5-vscode-input-repeat]
 ### vscode终端输入中文重复的问题
@@ -173,6 +177,25 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 
 xref:src/app/open_vm_tools/README.asciidoc[解决办法]
 
+### 命令行中“--”的含义
+
+在使用zsh的bindkey的时候发现有使用"bindkey --"的代码，查看 https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Zle-Builtins[bindkey]的文档，也没有查到其含义。
+
+其实以前也在其他命令看到过类似的用法，只是没特别在意而已。
+
+https://unix.stackexchange.com/questions/11376/what-does-double-dash-mean[What does "--" (double-dash) mean?]
+
+看上面这个解答就可以了。
+
+大多数 Bash 内置命令和许多其他命令中使用双破折号 ( -- ) 来表示命令选项的结束，之后仅接受位置参数。
+
+使用示例：假设您要在文件中查找字符串 -v 。通常 -v 将被视为反转匹配含义的选项（仅显示不匹配的行），但使用 -- 您可以 grep 查找字符串 -v 像这样：
+
+[source,console]
+----
+grep -- -v file
+----
+
 ## TODO
 
 * [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
@@ -183,10 +206,10 @@ xref:src/app/open_vm_tools/README.asciidoc[解决办法]
 * [*] wlogout 的使用
 * [ ] ags 的使用
 * [ ] grub 主题美化
-* [ ] https://github.com/dpayne/cli-visualizer[cli-visualizer] 的使用
+* [*] https://github.com/TheWisker/Cavasik[Cavasik] 的使用
 * [ ] 修改默认的应用程序
 * [ ] swaync 的样式没处理，字体也没处理
-* [*] 处理 vtty 的字体和shell的美化问题，
+* [*] 处理 vtty 的字体和shell的美化问题
 * [ ] 音频配置文件的处理
 * [ ] <<fcitx5-vscode-input-repeat>>
 * [*] <<Hyprland-pywal>>
@@ -195,6 +218,8 @@ xref:src/app/open_vm_tools/README.asciidoc[解决办法]
 * [ ] hyprlock 在 vmware 虚拟机上红屏
 * [*] 注销用户，会将ssh登录的也给注销。
 * [ ] xref:src/app/wlogout/README.asciidoc#reboot-confirm[重启提醒用户还有未关闭应用]
+* [ ] xref:src/app/hyprland/README.asciidoc#use-plugin[hyprland 插件的处理]
+* [ ] cavasik 需要修改为Hyprland的layer层运行
 
 ## 引用
 

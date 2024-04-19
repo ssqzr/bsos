@@ -240,6 +240,9 @@ function hyprland::trait::features() {
     # hypridle 会用到 brightnessctl
     apps+=("default:brightnessctl" "default:hypridle")
 
+    # 音乐舞动程序
+    apps+=("custom:cavasik")
+
     array::print apps
     return "${SHELL_TRUE}"
 }

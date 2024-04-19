@@ -11,7 +11,9 @@
 https://wiki.hyprland.org/[官方文档]
 
 
-## 显示器（ Monitor ）设置
+## 问题记录
+
+### 显示器（ Monitor ）设置
 
 我的初衷是运行 `Hyprland` 的安装向导的时候，自动探测显示器的个数，通过交互的方式询问用户应该怎么设置 `Hyprland` 的显示器。
 
@@ -34,9 +36,9 @@ https://wiki.hyprland.org/[官方文档]
 
 因此我们需要在不运行 `Hyprland` 的前提下可以获取到显示器的信息。
 
-### 查看显示器信息软件测试
+#### 查看显示器信息软件测试
 
-#### hyprctl
+##### hyprctl
 
 [source,console]
 ----
@@ -127,7 +129,7 @@ Virtual-1 "(null) (null) (Virtual-1)"
 
 `hyprctl` 在 `Hyprland` 没有运行的情况下不能获取到任何信息。
 
-#### lspci
+##### lspci
 
 [source,console]
 ----
@@ -140,7 +142,7 @@ Virtual-1 "(null) (null) (Virtual-1)"
 
 `lspci` 获取的是设备的接口信息，[.red]#并不能获取显示器的信息#。
 
-#### lshw
+##### lshw
 
 [source,console]
 ----
@@ -177,7 +179,7 @@ WARNING: output may be incomplete or inaccurate, you should run this program as 
 
 `lshw` 获取的是也是接口信息，[.red]#并不能获取显示器的信息#。
 
-#### xrandr
+##### xrandr
 
 [source,console]
 ----
@@ -205,7 +207,7 @@ Can't open display :0
 
 没有运行 `Hyprland` 时， `xrandr` 也是获取不到显示器信息的。
 
-#### wlr-randr
+##### wlr-randr
 
 [source,console]
 ----
@@ -259,7 +261,7 @@ Virtual-1 "(null) (null) (Virtual-1)"
 没有运行 `Hyprland` 时， `wlr-randr` 也是获取不到显示器信息的。
 
 
-#### hwinfo
+##### hwinfo
 
 [source,console]
 ----
@@ -356,7 +358,7 @@ Virtual-1 "(null) (null) (Virtual-1)"
 
 在 `vmware` 虚拟机， `hwinfo` 获取不到显示器的信息。但是物理机上可以。
 
-#### 测试结论
+##### 测试结论
 
 目前来看，只有 `hwinfo` 可以勉强可以获取到显示器的信息。
 
@@ -374,7 +376,7 @@ Virtual-1 "(null) (null) (Virtual-1)"
 
 而 `Hyprland` 配置显示器信息是需要 `id` 或 `name` 或 `description` 的。
 
-### 解决方案
+#### 解决方案
 
 [.red]#只是一个想法，还没有实现#。
 
@@ -388,9 +390,9 @@ Virtual-1 "(null) (null) (Virtual-1)"
 
 为了区分同一个厂商同一型号同一批次生产的显示器，还需要显示器的序列号 `Serial` 来区分。
 
-### 疑问
+#### 疑问
 
-#### 同一个厂商同一型号的显示器
+##### 同一个厂商同一型号的显示器
 
 同一个厂商同一型号的显示器，在同一个流水线上生产的同批次显示器，应该除了序列号，其他的硬件信息都是一样的。
 
@@ -450,7 +452,7 @@ Monitor HDMI-A-1 (ID 1):
 ====
 
 
-#### 运行向导时是否真的需要配置显示器
+##### 运行向导时是否真的需要配置显示器
 
 运行向导时配置显示器，用户是否真的知道怎么配置？？
 
@@ -466,15 +468,38 @@ Monitor HDMI-A-1 (ID 1):
 
 所以在安装脚本的安装向导里设置显示器配置是否是迫切需要的需求，还是一个实现了效果却不好的需求？？
 
-### 结论
+#### 结论
 
 [.red]#暂时不处理这个需求#。
 
 运行 `Hyprland` 后，运行屏幕设置 `GUI` 程序可能更好，所以我更倾向将时间花在屏幕设置 `GUI` 程序的开发上。
 
+### 让 Cavasik 以layer的形式运行在底部
+
+https://github.com/hyprwm/Hyprland/issues/2674[How to move any window to bottom layer?]
+
+https://www.reddit.com/r/hyprland/comments/15qithj/setting_layer_of_a_window/[Setting layer of a window]
 
 
-### 参考
+[#use-plugin]
+## 插件的处理
+
+https://wiki.hyprland.org/Plugins/Using-Plugins/[Using Plugins]
+
+https://github.com/hyprland-community/awesome-hyprland#plugins[awesome-hyprland plugins]
+
+### https://github.com/DreamMaoMao/hycov[hycov]
+
+### https://github.com/CMurtagh-LGTM/grab-workspace[grab-workspace]
+
+### https://github.com/VortexCoyote/hyprfocus[hyprfocus]
+
+### https://github.com/hyprwm/hyprland-plugins/tree/main/hyprwinwrap[hyprwinwrap]
+
+### https://github.com/H3rmt/hyprswitch[hyprswitch]
+
+
+## 参考
 
 * https://github.com/zDyanTB/HyprNova/tree/master[hyprlock配置参考]
 * https://wiki.hyprland.org/Hypr-Ecosystem/hypridle/[hypridle配置参考]

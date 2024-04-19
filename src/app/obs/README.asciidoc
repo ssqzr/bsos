@@ -1,0 +1,19 @@
+# obs 安装说明文档
+:sectnums:
+:sectnumlevels: 5
+:toc: right
+:toc-title: {doctitle}
+:toclevels: 5
+:table-caption: {doctitle}.
+:icons: font
+
+
+https://obsproject.com/[官方文档]
+
+## 问题记录
+
+### 添加 Spectralizer 的支持
+
+https://github.com/univrsal/spectralizer[Spectralizer]
+
+

@@ -38,7 +38,7 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/lib/history.zsh"
 # zkbd
 # run /usr/share/zsh/functions/Misc/zkbd to generate
 source "$HOME/.zkbd/$TERM-${${DISPLAY:t}:-$VENDOR-$OSTYPE}"
-# setup key accordingly
+# "--" 的解答： https://unix.stackexchange.com/questions/11376/what-does-double-dash-mean
 [[ -n "${key[Home]}"      ]] && bindkey -- "${key[Home]}"       beginning-of-line
 [[ -n "${key[End]}"       ]] && bindkey -- "${key[End]}"        end-of-line
 [[ -n "${key[Insert]}"    ]] && bindkey -- "${key[Insert]}"     overwrite-mode
