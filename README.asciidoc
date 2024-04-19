@@ -189,7 +189,7 @@ xref:src/app/open_vm_tools/README.asciidoc[解决办法]
 * [*] 处理 vtty 的字体和shell的美化问题，
 * [ ] 音频配置文件的处理
 * [ ] <<fcitx5-vscode-input-repeat>>
-* [ ] <<Hyprland-pywal>>
+* [*] <<Hyprland-pywal>>
 * [ ] <<rofi-focus>>
 * [*] <<vmware-tool>>
 
