@@ -171,6 +171,8 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 
 给虚拟机添加共享文件夹，虚拟机没有自动挂载。
 
+xref:src/app/open_vm_tools/README.asciidoc[解决办法]
+
 ## TODO
 
 * [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
@@ -189,7 +191,7 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 * [ ] <<fcitx5-vscode-input-repeat>>
 * [ ] <<Hyprland-pywal>>
 * [ ] <<rofi-focus>>
-* [ ] <<vmware-tool>>
+* [*] <<vmware-tool>>
 
 ## 引用
 

@@ -207,9 +207,14 @@ function manager::cache::do() {
         manager::cache::generate_apps_relation || return "$SHELL_FALSE"
     fi
 
-    if ! config::cache::top_apps::is_exists; then
-        # 生成需要处理的应用列表
+    # 指定 pm_apps 参数时，必须重新生成 top app list
+    if [ 0 -ne "${#pm_apps[@]}" ]; then
         manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
+    else
+        if ! config::cache::top_apps::is_exists; then
+            # 生成需要处理的应用列表
+            manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
+        fi
     fi
 
     return "$SHELL_TRUE"
