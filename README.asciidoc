@@ -140,6 +140,37 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 
 测试卸载了 `fcitx5-chinese-addons` 和安装 `fcitx5-rime` 。并且重启了，问题依旧。
 
+[#Hyprland-pywal]
+### Hyprland 使用 pywal 的问题
+
+在 `Hyprland` 中使用 `pywal` 生成的颜色。
+
+目前的做法是在Hyprland的第一行添加 `source = ~/.cache/wal/colors-hyprland.conf` 。
+
+文件 `~/.cache/wal/colors-hyprland.conf` 会由 `pywal` 生成。
+
+但是第一次运行时，是先启动 `Hyprland` ，然后运行 `hyprpaper` 时会调用 `pywal` 来生成颜色。
+
+因为 `hyprpaper` 先下载背景图， pywal 才可以根据背景图生成颜色。
+
+其实不管是不是使用 `hyprpaper` ，都会有这个问题，因为 `Hyprland` 是第一个运行的程序。
+
+[#rofi-focus]
+### rofi 使用问题
+
+启动 `rofi` 总是没有焦点，不能直接输入或者选中，需要鼠标移动到它上面才可以
+
+有时候启动 `rofi` 后，输入后界面会跑到另一个显示器上。
+
+有时候启动 `rofi` 后程序的宽度不一样，并且不能输入，鼠标移动上去没反应，也不能点击。
+
+[#vmware-tool]
+### vmware虚拟机安装性能优化工具
+
+如果检测到是vmware的虚拟机，安装性能优化工具。并且启用和启动。
+
+给虚拟机添加共享文件夹，虚拟机没有自动挂载。
+
 ## TODO
 
 * [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
@@ -156,6 +187,9 @@ https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_too
 * [ ] 处理 tty 的字体和shell的美化问题
 * [ ] 音频配置文件的处理
 * [ ] <<fcitx5-vscode-input-repeat>>
+* [ ] <<Hyprland-pywal>>
+* [ ] <<rofi-focus>>
+* [ ] <<vmware-tool>>
 
 ## 引用
 
