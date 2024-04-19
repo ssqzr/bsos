@@ -45,7 +45,6 @@ function zsh::trait::do_install() {
 function zsh::trait::post_install() {
 
     cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/p10k.zsh" "$HOME/.p10k.zsh" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history cp -rf "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
@@ -74,7 +73,6 @@ function zsh::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
     cmd::run_cmd_with_history rm -f "$HOME/.zshrc" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history rm -f "$HOME/.p10k.zsh" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
