@@ -186,7 +186,7 @@ xref:src/app/open_vm_tools/README.asciidoc[解决办法]
 * [ ] https://github.com/dpayne/cli-visualizer[cli-visualizer] 的使用
 * [ ] 修改默认的应用程序
 * [ ] swaync 的样式没处理，字体也没处理
-* [ ] 处理 tty 的字体和shell的美化问题
+* [*] 处理 vtty 的字体和shell的美化问题，
 * [ ] 音频配置文件的处理
 * [ ] <<fcitx5-vscode-input-repeat>>
 * [ ] <<Hyprland-pywal>>

@@ -94,6 +94,11 @@ else
     source "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/p10k/p10k_vtty.zsh"
 fi
 
+# 如果是 vtty ，设置本地化为C，不然执行命令会乱码
+if os::tty::is_vtty;then
+    LANG="C.UTF-8"
+fi
+
 # alias 配置
 alias ll='ls -l -h --group-directories-first --color=auto'
 alias rm="rm -i"
