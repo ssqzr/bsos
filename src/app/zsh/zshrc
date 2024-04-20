@@ -95,9 +95,11 @@ else
 fi
 
 # 如果是 vtty ，设置本地化为C，不然执行命令会乱码
-if os::tty::is_vtty;then
-    LANG="C.UTF-8"
-fi
+# FIXME:忘记启动Hyprland是从tty启动了，导致Hyprland启动时本地化语言不对
+# 暂时先注释掉，看后续怎么启动Hyprland比较好
+# if os::tty::is_vtty;then
+#     LANG="C.UTF-8"
+# fi
 
 # alias 配置
 alias ll='ls -l -h --group-directories-first --color=auto'
