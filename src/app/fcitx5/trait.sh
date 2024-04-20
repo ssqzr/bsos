@@ -9,7 +9,6 @@ source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 
-
 # 指定使用的包管理器
 function fcitx5::trait::package_manager() {
     echo "default"
@@ -44,6 +43,8 @@ function fcitx5::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function fcitx5::trait::post_install() {
+    # 拷贝配置文件前先结束掉 fcitx5 进程，不然当前运行的 fcitx5 会回写配置，一般开发环境会出现这个问题，导致配置不符合预期
+    process::kill_by_name "fcitx5"
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"

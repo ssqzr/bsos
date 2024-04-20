@@ -36,19 +36,13 @@ function process::kill_by_pid() {
 
 function process::kill_by_name() {
     local process_name="$1"
-    local pids
-    pids=$(pgrep -f "$process_name" | tr '\n' ' ')
-    if [ -z "$pids" ]; then
-        ldebug "find process($process_name) is not running"
+    process::is_running "$process_name"
+    if [ $? -eq "$SHELL_FALSE" ]; then
+        ldebug "process($process_name) is not running"
         return "$SHELL_TRUE"
     fi
 
-    linfo "find process($process_name) is running, pids=$pids"
-
-    local pid
-    for pid in $pids; do
-        process::kill_by_pid "$pid" || return "$SHELL_FALSE"
-    done
-
+    cmd::run_cmd_with_history pkill -f "$process_name" || return "$SHELL_FALSE"
+    linfo "kill process($process_name) success"
     return "$SHELL_TRUE"
 }
