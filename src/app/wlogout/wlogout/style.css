@@ -7,7 +7,7 @@
 
 
 window {
-    background-color: @background;
+    background-color: alpha(mix(@background, mix(@color1, @color4, 0.5), 0.3), 0.6);
 }
 
 button {
@@ -22,19 +22,48 @@ button {
     border-radius: 0px;
     box-shadow: none;
     text-shadow: none;
-    animation: gradient_f 20s ease-in infinite;
 }
 
 button:focus {
     background-color: @color2;
-    background-size: 30%;
+}
+
+button:focus, button:hover {
+    animation-name: breathing;
+    animation-duration: 2s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-delay: 0s;
+    animation-fill-mode: none;
+    animation-play-state: running;
+}
+
+@keyframes breathing {
+    0% {
+        background-size: 20%;
+    }
+
+    25% {
+        background-size: 25%;
+    }
+
+    50% {
+        background-size: 30%;
+    }
+
+    75% {
+        background-size: 25%;
+    }
+
+    100% {
+        background-size: 20%;
+    }
 }
 
 button:hover {
     background-color: @color3;
-    background-size: 40%;
     border-radius: ${active_radius}px;
-    animation: gradient_f 20s ease-in infinite;
     transition: all 0.3s cubic-bezier(.55,0.0,.28,1.682);
 }
 

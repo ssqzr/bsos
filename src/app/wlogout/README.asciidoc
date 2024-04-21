@@ -63,10 +63,30 @@ https://www.freedesktop.org/software/systemd/man/latest/loginctl.html[loginctl �
 
 如何检测和如何展示给用户？？
 
+### 使用 GTK4 的颜色表达式
+
+* https://docs.gtk.org/gtk3/css-properties.html[GTK3 CSS Properties Overview wiki]
+* https://docs.gtk.org/gtk4/css-properties.html[GTK4 CSS Properties Overview wiki]
+
+
+我看wlogout的安装依赖是gtk3,使用 `ldd /usr/bin/wlogout` 查看使用的gtk库也是 `libgtk-3.so.0` 。
+
+按道理支持css样式规则应该是GTK3版本的，但是我测试了 https://docs.gtk.org/gtk4/css-properties.html#colors[GTK4的颜色表达式]，发现也是可以用的。
+
+[source,css]
+----
+window {
+    background-color: alpha(mix(@background, mix(@color1, @color4, 0.5), 0.3), 0.6);
+}
+----
+
 
 ## 引用
 
 * https://gitlab.com/stephan-raabe/dotfiles/-/blob/main/wlogout/README.txt?ref_type=heads[ML4W Dotfiles]
 * https://github.com/end-4/dots-hyprland[dots-hyprland]
 * https://blog.gtk.org/2017/04/05/the-gtk-inspector/[The GTK+ Inspector]
+* https://docs.gtk.org/gtk3/css-overview.html[GTK3 CSS Overview wiki]
+* https://docs.gtk.org/gtk3/css-properties.html[GTK3 CSS Properties Overview wiki]
+* https://docs.gtk.org/gtk4/css-properties.html[GTK4 CSS Properties Overview wiki]
 
