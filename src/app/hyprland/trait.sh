@@ -8,6 +8,8 @@ SCRIPT_DIR_c084e0be="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
+# shellcheck disable=SC1091
+source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function hyprland::settings::hyprland_config_filepath() {
     echo "$XDG_CONFIG_HOME/hypr/hyprland.conf"
@@ -83,13 +85,79 @@ function hyprland::settings::monitor() {
 function hyprland::settings::workspace() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-    sed::delete_between_line "BEGIN Workspace Settings BEGIN" "END Workspace Settings END" "$config_filepath"
-    if [ "$?" -ne "$SHELL_TRUE" ]; then
-        lerror "hyprland setting workspace failed"
-        return "$SHELL_FALSE"
+    if os::is_vm; then
+        sed::delete_between_line "BEGIN Workspace Settings BEGIN" "END Workspace Settings END" "$config_filepath"
+        if [ "$?" -ne "$SHELL_TRUE" ]; then
+            lerror "hyprland setting workspace failed"
+            return "$SHELL_FALSE"
+        fi
     fi
     linfo "hyprland setting workspace success"
     return "${SHELL_TRUE}"
+}
+
+function hyprland::plugins::clean() {
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+
+    if ! hyprctl::is_can_connect; then
+        println_warn "${PM_APP_NAME}: can not connect to hyprland, do not clean plugin"
+        return "$SHELL_TRUE"
+    fi
+
+    linfo "start clean hyprland plugins"
+
+    # 修改配置文件
+    cmd::run_cmd_with_history sed -i "'s%^source = conf.d/hycov.conf%# source = conf.d/hycov.conf%g'" "$config_filepath" || return "${SHELL_FALSE}"
+
+    # 删除插件
+    local repository
+    local temp_str
+    local item
+    temp_str=$(hyprpm list | grep -o -E "Repository [^:]+" | awk '{print $2}')
+    array::readarray repository < <(echo "${temp_str}")
+
+    for item in "${repository[@]}"; do
+        cmd::run_cmd_with_history printf y '|' hyprpm -v remove "${item}" || return "${SHELL_FALSE}"
+        linfo "hyprpm remove ${item} success"
+    done
+
+    linfo "clean hyprland plugins success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::plugins::install() {
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+
+    if ! hyprctl::is_can_connect; then
+        println_warn "${PM_APP_NAME}: can not connect to hyprland, do not install plugin"
+        return "$SHELL_TRUE"
+    fi
+
+    # 先清理
+    hyprland::plugins::clean || return "${SHELL_FALSE}"
+
+    local hyprpm_state="$HOME/.local/share/hyprpm/state.toml"
+    cmd::run_cmd_with_history rm -f "$hyprpm_state" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history echo -e '"[state]\ndont_warn_install = true"' '>' "$hyprpm_state" || return "${SHELL_FALSE}"
+
+    # 先更新，安装 hyprland headers
+    cmd::run_cmd_with_history hyprpm update -v || return "${SHELL_FALSE}" || return "${SHELL_TRUE}"
+    linfo "hyprpm update success"
+
+    # 添加
+    cmd::run_cmd_with_history printf "y" '|' hyprpm -v add https://github.com/hyprwm/hyprland-plugins || return "${SHELL_FALSE}"
+    linfo "hyprpm add hyprland-plugins plugin success"
+
+    # 添加 hycov
+    cmd::run_cmd_with_history printf "y" '|' hyprpm -v add https://github.com/DreamMaoMao/hycov || return "${SHELL_FALSE}"
+    linfo "hyprpm add hycov plugin success"
+    cmd::run_cmd_with_history hyprpm -v enable hycov || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history sed -i "'s%^# source = conf.d/hycov.conf%source = conf.d/hycov.conf%g'" "$config_filepath" || return "${SHELL_FALSE}"
+    linfo "hyprpm enable hycov plugin success"
+
+    return "$SHELL_TRUE"
 }
 
 # 指定使用的包管理器
@@ -110,6 +178,13 @@ function hyprland::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function hyprland::trait::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    # TODO: 做你想做的
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -129,6 +204,12 @@ function hyprland::trait::post_install() {
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+
+    hyprland::settings::terminal || return "${SHELL_FALSE}"
+    hyprland::settings::file_manager || return "${SHELL_FALSE}"
+    hyprland::settings::monitor || return "${SHELL_FALSE}"
+    hyprland::settings::workspace || return "${SHELL_FALSE}"
+    hyprland::settings::cursors || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -149,16 +230,25 @@ function hyprland::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-# 全部安装完成后的操作
-function hyprland::trait::finally() {
-    hyprland::settings::terminal || return "${SHELL_FALSE}"
-    hyprland::settings::file_manager || return "${SHELL_FALSE}"
-    hyprland::settings::monitor || return "${SHELL_FALSE}"
-    hyprland::settings::workspace || return "${SHELL_FALSE}"
-    hyprland::settings::cursors || return "${SHELL_FALSE}"
-
+# 有一些操作是需要特定环境才可以进行的
+# 例如：
+# 1. Hyprland 的插件需要在Hyprland运行时才可以启动
+# 函数内部需要自己检测环境是否满足才进行相关操作。
+function hyprland::trait::fixme() {
     println_warn "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
-    println_warn "${PM_APP_NAME}: you should run 'Hyprland' to start it"
+
+    hyprland::plugins::install || return "${SHELL_FALSE}"
+
+    return "${SHELL_TRUE}"
+}
+
+# fixme 的逆操作
+# 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
+# 如果直接卸载也不会有残留就不用处理
+function hyprland::trait::unfixme() {
+    println_info "${PM_APP_NAME}: start undo fixme..."
+
+    hyprland::plugins::clean || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -180,6 +270,9 @@ function hyprland::trait::dependencies() {
 
     # xdg-desktop-portal
     apps+=("default:xdg-desktop-portal-hyprland" "default:xdg-desktop-portal-gtk")
+
+    # 插件hyprpm需要的
+    apps+=("default:cpio")
 
     array::print apps
     return "${SHELL_TRUE}"

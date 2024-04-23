@@ -10,6 +10,29 @@ source "${SCRIPT_DIR_28e227a8}/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_28e227a8}/string.sh"
 
+function hyprctl::version::tag() {
+    local tag
+    local temp_str
+    temp_str=$(hyprctl -j version)
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "get hyprland version failed, err=${temp_str}"
+        return "$SHELL_FALSE"
+    fi
+    tag=$(echo "$temp_str" | yq '.tag' 2>&1)
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "get hyprland version tag failed, err=${tag}"
+        return "$SHELL_FALSE"
+    fi
+    echo "$tag"
+    return "$SHELL_TRUE"
+}
+
+# 判断是否可以连接到Hyprland
+function hyprctl::is_can_connect() {
+    hyprctl::version::tag >/dev/null 2>&1 || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 function hyprctl::decoration::rounding::value() {
     hyprctl -j getoption decoration:rounding | yq '.int' || return "$SHELL_FALSE"
 }

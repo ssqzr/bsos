@@ -25,6 +25,13 @@ function git::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function git::trait::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    # TODO: 做你想做的
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     local username
     username=$(id -un)
     username=$(tui::input_required "used to git config --global user.name" "config git username: " "${username}") || return "$SHELL_FALSE"
@@ -114,14 +121,27 @@ function git::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-# 全部安装完成后的操作
-function git::trait::finally() {
+# 有一些操作是需要特定环境才可以进行的
+# 例如：
+# 1. Hyprland 的插件需要在Hyprland运行时才可以启动
+# 函数内部需要自己检测环境是否满足才进行相关操作。
+function git::trait::fixme() {
     println_info "${PM_APP_NAME}: you should copy you RSA key to github or gitee account"
 
     return "${SHELL_TRUE}"
 }
 
-# 安装和运行的依赖，如下的包才应该添加进来
+# fixme 的逆操作
+# 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
+# 如果直接卸载也不会有残留就不用处理
+function git::trait::unfixme() {
+    println_info "${PM_APP_NAME}: start undo fixme..."
+
+    return "${SHELL_TRUE}"
+}
+
+# 安装和运行的依赖
+# 如下的包才应该添加进来
 # 1. 使用包管理器安装，它没有处理的依赖，并且有额外的配置或者其他设置。如果没有额外的配置，可以在 git::trait::pre_install 函数里直接安装就可以了。
 # 2. 包管理器安装处理了依赖，但是这个依赖有额外的配置或者其他设置的
 # NOTE: 这里填写的依赖是必须要安装的

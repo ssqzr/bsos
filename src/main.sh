@@ -20,6 +20,14 @@ source "${SCRIPT_DIR_8dac019e}/manager/uninstall_flow.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/cache.sh"
 
+function main::check_root_user() {
+    if [ "$(id -u)" -eq 0 ]; then
+        println_error "this script cannot be run as root."
+        return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
 # 简单的单例，防止重复运行
 function main::_lock() {
     local lock_file="/tmp/arch_os_install.lock"
@@ -57,6 +65,28 @@ function main::_export_env() {
     export BUILD_ROOT_DIR="/var/tmp/arch_os_install/build"
 
     main::input_password
+}
+
+function main::ask() {
+    local flags=""
+    local code
+    tui::builtin::confirm "check apps loop dependencies ?" "y"
+    code=$?
+    if [ $code -eq 130 ]; then
+        return "$SHELL_FALSE"
+    elif [ $code -eq "$SHELL_TRUE" ]; then
+        flags+="|check_loop"
+    fi
+
+    tui::builtin::confirm "reuse cache if exists ?" "y"
+    code=$?
+    if [ $code -eq 130 ]; then
+        return "$SHELL_FALSE"
+    elif [ $code -eq "$SHELL_TRUE" ]; then
+        flags+="|reuse_cache"
+    fi
+    echo "$flags"
+    return "$SHELL_TRUE"
 }
 
 # 启用无需密码
@@ -148,8 +178,23 @@ function main::must_do() {
     cmd::run_cmd_with_history sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
 }
 
+function main::check() {
+    local flags="$1"
+
+    echo "${flags}" | grep -q "check_loop"
+    if [ $? -eq "$SHELL_TRUE" ]; then
+        manager::app::check_loop_dependencies
+        if [ $? -ne "$SHELL_TRUE" ]; then
+            lerror "check_loop_dependencies failed"
+            return "$SHELL_FALSE"
+        fi
+    fi
+
+    return "$SHELL_TRUE"
+}
+
 function main::command::install() {
-    local reuse_cache="$1"
+    local flags="$1"
     local app_names="$2"
     local temp_str
 
@@ -160,8 +205,7 @@ function main::command::install() {
         array::readarray pm_apps < <(echo "${temp_str}")
     fi
 
-    manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-    manager::cache::do "$reuse_cache" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     install_flow::main_flow || return "$SHELL_FALSE"
 
@@ -169,7 +213,7 @@ function main::command::install() {
 }
 
 function main::command::uninstall() {
-    local reuse_cache="$1"
+    local flags="$1"
     local app_names="$2"
     local temp_str
 
@@ -180,10 +224,47 @@ function main::command::uninstall() {
         array::readarray pm_apps < <(echo "${temp_str}")
     fi
 
-    manager::app::check_loop_dependencies || return "$SHELL_FALSE"
-    manager::cache::do "$reuse_cache" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     uninstall_flow::main_flow || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function main::command::fixme() {
+    local flags="$1"
+    local app_names="$2"
+    local temp_str
+
+    local pm_apps=()
+
+    if [ -n "${app_names}" ]; then
+        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
+        array::readarray pm_apps < <(echo "${temp_str}")
+    fi
+
+    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+
+    install_flow::fixme_flow || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function main::command::unfixme() {
+    local flags="$1"
+    local app_names="$2"
+    local temp_str
+
+    local pm_apps=()
+
+    if [ -n "${app_names}" ]; then
+        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
+        array::readarray pm_apps < <(echo "${temp_str}")
+    fi
+
+    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+
+    uninstall_flow::unfixme_flow || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -198,32 +279,6 @@ function main::command::check() {
     return "$SHELL_TRUE"
 }
 
-function main::ask_reuse_cache() {
-    local reuse_cache
-    while true; do
-        printf_blue "reuse cache if exists ??? (y/n)[Y] "
-        # 超时的退出码是1，Ctrl+C的退出码是130
-        read -t 5 -r -e -n 1 reuse_cache
-        if [ $? -eq 130 ]; then
-            lerror "quite input, exit"
-            return 130
-        fi
-        linfo "get input reuse_cache=${reuse_cache}"
-        if [ -z "$reuse_cache" ]; then
-            reuse_cache="y"
-            break
-        fi
-        if string::is_true_or_false "$reuse_cache"; then
-            break
-        fi
-        println_error "input invalid, please input y or n."
-    done
-    if string::is_true "$reuse_cache"; then
-        return "$SHELL_TRUE"
-    fi
-    return "$SHELL_FALSE"
-}
-
 function main::main() {
     local command="$1"
     local command_params=("${@:2}")
@@ -233,7 +288,10 @@ function main::main() {
     local log_filepath
     local cmd_history_filepath
     local config_filepath
-    local reuse_cache
+    local code
+    local flags=""
+
+    main::check_root_user || return "$SHELL_FALSE"
 
     # 单例
     main::_lock || return "$SHELL_FALSE"
@@ -254,32 +312,38 @@ function main::main() {
     # 导出全局变量
     main::_export_env || return "$SHELL_FALSE"
 
-    main::ask_reuse_cache
-    reuse_cache="$?"
-    if [ $reuse_cache -eq 130 ]; then
-        return "$SHELL_FALSE"
-    fi
+    flags=$(main::ask) || return "$SHELL_FALSE"
 
     main::enable_no_password || return "$SHELL_FALSE"
 
     main::must_do || return "$SHELL_FALSE"
     # NOTE: 在执行 main::must_do 之后才可以使用 yq 操作配置文件
 
-    local code
+    main::check "${flags}" || return "$SHELL_FALSE"
+
     case "${command}" in
     "install")
-        main::command::install "$reuse_cache" "${command_params[@]}"
+        main::command::install "$flags" "${command_params[@]}"
         code=$?
         ;;
 
     "uninstall")
-        main::command::uninstall "$reuse_cache" "${command_params[@]}"
+        main::command::uninstall "$flags" "${command_params[@]}"
+        code=$?
+        ;;
+
+    "fixme")
+        main::command::fixme "$flags" "${command_params[@]}"
+        code=$?
+        ;;
+
+    "unfixme")
+        main::command::unfixme "$flags" "${command_params[@]}"
         code=$?
         ;;
 
     "check")
-        main::command::check
-        code=$?
+        code="$SHELL_TRUE"
         ;;
     *)
         lerror "unknown cmd(${command})"

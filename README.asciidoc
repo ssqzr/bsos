@@ -218,7 +218,7 @@ grep -- -v file
 * [ ] hyprlock 在 vmware 虚拟机上红屏
 * [*] 注销用户，会将ssh登录的也给注销。
 * [ ] xref:src/app/wlogout/README.asciidoc#reboot-confirm[重启提醒用户还有未关闭应用]
-* [ ] xref:src/app/hyprland/README.asciidoc#use-plugin[hyprland 插件的处理]
+* [*] xref:src/app/hyprland/README.asciidoc#use-plugin[hyprland 插件的处理]
 * [ ] cavasik 需要修改为Hyprland的layer层运行
 * [ ] pywal xref:src/app/pywal/README.asciidoc#repeat-color[生成的颜色重复]
 

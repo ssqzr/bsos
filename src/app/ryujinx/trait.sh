@@ -8,6 +8,8 @@ SCRIPT_DIR_b3956090="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
+# shellcheck disable=SC1091
+source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function ryujinx::trait::package_manager() {
@@ -27,6 +29,13 @@ function ryujinx::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function ryujinx::trait::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    # TODO: 做你想做的
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -73,8 +82,11 @@ function ryujinx::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-# 全部安装完成后的操作
-function ryujinx::trait::finally() {
+# 有一些操作是需要特定环境才可以进行的
+# 例如：
+# 1. Hyprland 的插件需要在Hyprland运行时才可以启动
+# 函数内部需要自己检测环境是否满足才进行相关操作。
+function ryujinx::trait::fixme() {
     # firmware 文件太大了，下载很耗时。没有一个免费的支持直链下载的网站存储 firmware
     println_info "${PM_APP_NAME}: you should install firmware manually."
     # keys 文件不大，但是需要和firmware配套，就不自动处理了
@@ -83,6 +95,15 @@ function ryujinx::trait::finally() {
 
     println_info "${PM_APP_NAME}: you should add games manually."
     println_info "${PM_APP_NAME}: you should add games update and DLC manually."
+    return "${SHELL_TRUE}"
+}
+
+# fixme 的逆操作
+# 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
+# 如果直接卸载也不会有残留就不用处理
+function ryujinx::trait::unfixme() {
+    println_info "${PM_APP_NAME}: start undo fixme..."
+
     return "${SHELL_TRUE}"
 }
 

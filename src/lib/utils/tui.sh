@@ -12,6 +12,46 @@ source "${SCRIPT_DIR_825f52f6}/log.sh"
 
 __exit_code_ctrl_c=130
 
+function tui::builtin::confirm() {
+    local prompt="$1"
+    local default="$2"
+    local result
+    local default_prompt
+
+    if [ -z "$default" ]; then
+        default="y"
+    fi
+
+    if string::is_true "$default"; then
+        default_prompt="[Y/n]"
+    else
+        default_prompt="[y/N]"
+    fi
+
+    while true; do
+        printf_blue "${prompt} ${default_prompt} "
+        # 超时的退出码是1，Ctrl+C的退出码是130
+        read -t 5 -r -e -n 1 result
+        if [ $? -eq 130 ]; then
+            lerror "quite input, exit"
+            return 130
+        fi
+        linfo "get input result=${result}"
+        if [ -z "$result" ]; then
+            result="$default"
+            break
+        fi
+        if string::is_true_or_false "$result"; then
+            break
+        fi
+        println_error "input invalid, please input y or n."
+    done
+    if string::is_true "$result"; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
+}
+
 function tui::input_optional() {
     local placeholder="$1"
     local prompt="$2"

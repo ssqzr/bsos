@@ -8,6 +8,8 @@ SCRIPT_DIR_cbc6f008="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
+# shellcheck disable=SC1091
+source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function vscode::trait::package_manager() {
@@ -27,6 +29,13 @@ function vscode::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function vscode::trait::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    # TODO: 做你想做的
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -66,10 +75,22 @@ function vscode::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-# 全部安装完成后的操作
-function vscode::trait::finally() {
+# 有一些操作是需要特定环境才可以进行的
+# 例如：
+# 1. Hyprland 的插件需要在Hyprland运行时才可以启动
+# 函数内部需要自己检测环境是否满足才进行相关操作。
+function vscode::trait::fixme() {
     println_info "${PM_APP_NAME}: you should login vscode to sync settings."
     println_info "${PM_APP_NAME}: you should modify $XDG_CONFIG_HOME/code-flags.conf --profile setting to your default profile."
+
+    return "${SHELL_TRUE}"
+}
+
+# fixme 的逆操作
+# 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
+# 如果直接卸载也不会有残留就不用处理
+function vscode::trait::unfixme() {
+    println_info "${PM_APP_NAME}: start undo fixme..."
 
     return "${SHELL_TRUE}"
 }

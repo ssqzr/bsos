@@ -8,6 +8,8 @@ SCRIPT_DIR_fd204c06="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
+# shellcheck disable=SC1091
+source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function zsh::trait::package_manager() {
@@ -27,6 +29,13 @@ function zsh::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function zsh::trait::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    # TODO: 做你想做的
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -81,13 +90,26 @@ function zsh::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-# 全部安装完成后的操作
-function zsh::trait::finally() {
+# 有一些操作是需要特定环境才可以进行的
+# 例如：
+# 1. Hyprland 的插件需要在Hyprland运行时才可以启动
+# 函数内部需要自己检测环境是否满足才进行相关操作。
+function zsh::trait::fixme() {
     println_warn "if you found some keys not working, you can run '/usr/share/zsh/functions/Misc/zkbd' to define keys."
     return "${SHELL_TRUE}"
 }
 
-# 安装和运行的依赖，如下的包才应该添加进来
+# fixme 的逆操作
+# 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
+# 如果直接卸载也不会有残留就不用处理
+function zsh::trait::unfixme() {
+    println_info "${PM_APP_NAME}: start undo fixme..."
+
+    return "${SHELL_TRUE}"
+}
+
+# 安装和运行的依赖
+# 如下的包才应该添加进来
 # 1. 使用包管理器安装，它没有处理的依赖，并且有额外的配置或者其他设置。如果没有额外的配置，可以在 _pre_install 函数里直接安装就可以了。
 # 2. 包管理器安装处理了依赖，但是这个依赖有额外的配置或者其他设置的
 # NOTE: 这里填写的依赖是必须要安装的

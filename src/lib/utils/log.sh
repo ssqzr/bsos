@@ -71,7 +71,7 @@ function log::_log() {
 
     log::_create_log_parent_directory
 
-    echo "${datetime} ${level} [${pid}] ${filename}:${line_num} [${function_name}] ${message}" >>"${__log_filepath}"
+    printf "%s %s [%s] %s:%s [%s] %s\n" "${datetime}" "${level}" "${pid}" "${filename}" "${line_num}" "${function_name}" "${message}" >>"${__log_filepath}"
 }
 
 function linfo() {

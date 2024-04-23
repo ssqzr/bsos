@@ -196,10 +196,11 @@ function manager::cache::generate_apps_relation() {
 }
 
 function manager::cache::do() {
-    local reuse_cache="$1"
+    local flags="$1"
     local pm_apps=("${@:2}")
 
-    if [ "${reuse_cache}" -ne "$SHELL_TRUE" ]; then
+    echo "${flags}" | grep -q "reuse_cache"
+    if [ $? -ne "$SHELL_TRUE" ]; then
         config::cache::delete || return "$SHELL_FALSE"
     fi
 

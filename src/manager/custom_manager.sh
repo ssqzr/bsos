@@ -242,7 +242,7 @@ function custom_manager::install_guide() {
     "${app_name}::trait::install_guide"
 }
 
-function custom_manager::finally() {
+function custom_manager::fixme() {
     local app_name="$1"
 
     if [ -z "${app_name}" ]; then
@@ -250,7 +250,18 @@ function custom_manager::finally() {
         return "$SHELL_FALSE"
     fi
 
-    "${app_name}::trait::finally"
+    "${app_name}::trait::fixme"
+}
+
+function custom_manager::unfixme() {
+    local app_name="$1"
+
+    if [ -z "${app_name}" ]; then
+        lerror "param app_name is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    "${app_name}::trait::unfixme"
 }
 
 function custom_manager::main() {
@@ -315,10 +326,16 @@ function custom_manager::main() {
         return $?
         ;;
 
-    "finally")
-        custom_manager::finally "${app_name}"
+    "fixme")
+        custom_manager::fixme "${app_name}"
         return $?
         ;;
+
+    "unfixme")
+        custom_manager::unfixme "${app_name}"
+        return $?
+        ;;
+
     *)
         lerror "unknown cmd: $1"
         return $?

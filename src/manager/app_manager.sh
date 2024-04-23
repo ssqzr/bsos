@@ -173,64 +173,117 @@ function manager::app::check_loop_dependencies() {
     return "$SHELL_TRUE"
 }
 
-# 运行安装向导
-function manager::app::do_install_guide() {
-    local pm_app="$1"
-    local level_indent="$2"
+# 根据依赖关系递归调用 trait 的命令
+function manager::app::do_command_recursion() {
+    local command="$1"
+    local pm_app="$2"
+    local level_indent="$3"
 
     if [ -z "$pm_app" ]; then
         lerror "pm_app is empty"
         return "$SHELL_FALSE"
     fi
-
     local item
     local dependencies
     local features
     local temp_str
 
     if ! manager::app::is_custom "${pm_app}"; then
-        linfo "app(${pm_app}) is not custom, skip install guide"
-        println_info "${level_indent}${pm_app}: is not custom, skip install guide"
+        linfo "app(${pm_app}) is not custom, skip run ${command}"
+        println_info "${level_indent}${pm_app}: is not custom, skip run ${command}"
         return "$SHELL_TRUE"
     fi
 
-    linfo "app(${pm_app}) install guide..."
-    println_info "${level_indent}${pm_app}: install guide..."
+    linfo "app(${pm_app}) run ${command}..."
+    println_info "${level_indent}${pm_app}: run ${command}..."
 
     # 获取它的依赖
-    linfo "app(${pm_app}) dependencies install guide..."
-    println_info "${level_indent}${pm_app}: dependencies install guide..."
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
+    linfo "app(${pm_app}) dependencies run ${command}..."
+    println_info "${level_indent}${pm_app}: dependencies run ${command}..."
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")"
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_install_guide "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
+
+    linfo "app(${pm_app}) self run ${command}..."
+    println_info "${level_indent}${pm_app}: self run ${command}..."
+    manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
 
     # 获取它的feature
-    linfo "app(${pm_app}) features install guide..."
-    println_info "${level_indent}${pm_app}: features install guide..."
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")" || return "$SHELL_FALSE"
+    linfo "app(${pm_app}) features run ${command}..."
+    println_info "${level_indent}${pm_app}: features run ${command}..."
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
-        manager::app::do_install_guide "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) self install guide..."
-    println_info "${level_indent}${pm_app}: self install guide..."
-    if config::app::is_configed::get "$pm_app"; then
-        # 说明已经配置过了
-        linfo "app(${pm_app}) has configed, not need to config again"
-        println_info "${level_indent}${pm_app}: self has configed, not need to config again"
-        return "$SHELL_TRUE"
-    fi
-    manager::app::run_custom_manager "${pm_app}" "install_guide" || return "$SHELL_FALSE"
-    config::app::is_configed::set_true "$pm_app" || return "$SHELL_FALSE"
-
-    linfo "app(${pm_app}) install guide done"
-    println_info "${level_indent}${pm_app}: install guide done"
+    linfo "app(${pm_app}) run ${command} done"
+    println_info "${level_indent}${pm_app}: run ${command} done"
 
     return "${SHELL_TRUE}"
+}
+
+# 根据依赖关系递归调用 trait 的命令
+function manager::app::do_command_recursion_reverse() {
+    local command="$1"
+    local pm_app="$2"
+    local level_indent="$3"
+
+    if [ -z "$pm_app" ]; then
+        lerror "pm_app is empty"
+        return "$SHELL_FALSE"
+    fi
+    local item
+    local dependencies
+    local features
+    local temp_str
+
+    if ! manager::app::is_custom "${pm_app}"; then
+        linfo "app(${pm_app}) is not custom, skip run ${command}"
+        println_info "${level_indent}${pm_app}: is not custom, skip run ${command}"
+        return "$SHELL_TRUE"
+    fi
+
+    linfo "app(${pm_app}) run ${command}..."
+    println_info "${level_indent}${pm_app}: run ${command}..."
+
+    # 获取它的feature
+    linfo "app(${pm_app}) features run ${command}..."
+    println_info "${level_indent}${pm_app}: features run ${command}..."
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
+    array::readarray features < <(echo "$temp_str")
+    for item in "${features[@]}"; do
+        manager::app::do_command_recursion_reverse "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+    done
+
+    linfo "app(${pm_app}) self run ${command}..."
+    println_info "${level_indent}${pm_app}: self run ${command}..."
+    manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
+
+    # 获取它的依赖
+    linfo "app(${pm_app}) dependencies run ${command}..."
+    println_info "${level_indent}${pm_app}: dependencies run ${command}..."
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")"
+    array::readarray dependencies < <(echo "$temp_str")
+
+    for item in "${dependencies[@]}"; do
+        manager::app::do_command_recursion_reverse "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+    done
+
+    linfo "app(${pm_app}) run ${command} done"
+    println_info "${level_indent}${pm_app}: run ${command} done"
+
+    return "${SHELL_TRUE}"
+}
+
+# 运行安装向导
+function manager::app::do_install_guide() {
+    local pm_app="$1"
+    manager::app::do_command_recursion "install_guide" "${pm_app}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 使用包管理器直接安装
@@ -366,56 +419,17 @@ function manager::app::do_install() {
     return "${SHELL_TRUE}"
 }
 
-# 运行安装向导
-function manager::app::do_finally() {
+# 运行 fixme
+function manager::app::do_fixme() {
     local pm_app="$1"
-    local level_indent="$2"
+    manager::app::do_command_recursion "fixme" "${pm_app}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
 
-    if [ -z "$pm_app" ]; then
-        lerror "pm_app is empty"
-        return "$SHELL_FALSE"
-    fi
-    local item
-    local dependencies
-    local features
-    local temp_str
-
-    if ! manager::app::is_custom "${pm_app}"; then
-        linfo "app(${pm_app}) is not custom, skip run finally"
-        println_info "${level_indent}${pm_app}: is not custom, skip run finally"
-        return "$SHELL_TRUE"
-    fi
-
-    linfo "app(${pm_app}) run finally..."
-    println_info "${level_indent}${pm_app}: run finally..."
-
-    # 获取它的依赖
-    linfo "app(${pm_app}) dependencies run finally..."
-    println_info "${level_indent}${pm_app}: dependencies run finally..."
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")"
-    array::readarray dependencies < <(echo "$temp_str")
-
-    for item in "${dependencies[@]}"; do
-        manager::app::do_finally "${item}" "${level_indent}  " || return "$SHELL_FALSE"
-    done
-
-    # 获取它的feature
-    linfo "app(${pm_app}) features run finally..."
-    println_info "${level_indent}${pm_app}: features run finally..."
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
-    array::readarray features < <(echo "$temp_str")
-    for item in "${features[@]}"; do
-        manager::app::do_finally "${item}" "${level_indent}  " || return "$SHELL_FALSE"
-    done
-
-    linfo "app(${pm_app}) self run finally..."
-    println_info "${level_indent}${pm_app}: self run finally..."
-    manager::app::run_custom_manager "${pm_app}" "finally" || return "$SHELL_FALSE"
-
-    linfo "app(${pm_app}) run finally done"
-    println_info "${level_indent}${pm_app}: run finally done"
-
-    return "${SHELL_TRUE}"
+function manager::app::do_unfixme() {
+    local pm_app="$1"
+    manager::app::do_command_recursion_reverse "unfixme" "${pm_app}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 使用包管理器直接安装

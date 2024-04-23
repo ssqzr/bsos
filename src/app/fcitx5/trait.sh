@@ -8,6 +8,8 @@ SCRIPT_DIR_3ce25d5f="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
+# shellcheck disable=SC1091
+source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function fcitx5::trait::package_manager() {
@@ -27,6 +29,13 @@ function fcitx5::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function fcitx5::trait::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    # TODO: 做你想做的
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -44,7 +53,7 @@ function fcitx5::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function fcitx5::trait::post_install() {
     # 拷贝配置文件前先结束掉 fcitx5 进程，不然当前运行的 fcitx5 会回写配置，一般开发环境会出现这个问题，导致配置不符合预期
-    process::kill_by_name "fcitx5"
+    process::kill_by_name "fcitx5" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
@@ -68,10 +77,20 @@ function fcitx5::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-# 全部安装完成后的操作
-function fcitx5::trait::finally() {
-    println_info "${PM_APP_NAME}: TODO: copy fcitx5 config file, theme, keymap, etc."
-    println_info "${PM_APP_NAME}: you should run 'fcitx5-configtool' to set theme and keymap"
+# 有一些操作是需要特定环境才可以进行的
+# 例如：
+# 1. Hyprland 的插件需要在Hyprland运行时才可以启动
+# 函数内部需要自己检测环境是否满足才进行相关操作。
+function fcitx5::trait::fixme() {
+    return "${SHELL_TRUE}"
+}
+
+# fixme 的逆操作
+# 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
+# 如果直接卸载也不会有残留就不用处理
+function fcitx5::trait::unfixme() {
+    println_info "${PM_APP_NAME}: start undo fixme..."
+
     return "${SHELL_TRUE}"
 }
 

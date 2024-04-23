@@ -42,10 +42,10 @@ function install_flow::app::do_install() {
     return "$SHELL_TRUE"
 }
 
-function install_flow::app::do_finally() {
+function install_flow::app::do_fixme() {
     local top_apps=()
     local temp_str
-    linfo "start run all apps install finally..."
+    linfo "start run all apps install fixme..."
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
@@ -53,7 +53,7 @@ function install_flow::app::do_finally() {
     ldebug "top_apps=${top_apps[*]}"
     local pm_app
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_finally "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::do_fixme "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"
@@ -72,11 +72,6 @@ function install_flow::do_install() {
     # 运行安装
     install_flow::app::do_install || return "$SHELL_FALSE"
 
-    println_info "start run apps finally hook..."
-    println_info "---------------------------------------------"
-
-    # 运行 finally 钩子
-    install_flow::app::do_finally || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -91,6 +86,14 @@ function install_flow::post_install() {
     return "$SHELL_TRUE"
 }
 
+function install_flow::do_fixme() {
+    # 运行 app 的 fixme 钩子
+    install_flow::app::do_fixme || return "$SHELL_FALSE"
+
+    # 运行全局的 fixme 功能
+    return "$SHELL_TRUE"
+}
+
 function install_flow::main_flow() {
     # 先更新系统
     println_info "upgrade system first..."
@@ -101,6 +104,22 @@ function install_flow::main_flow() {
     install_flow::pre_install || return "$SHELL_FALSE"
     install_flow::do_install || return "$SHELL_FALSE"
     install_flow::post_install || return "$SHELL_FALSE"
+    install_flow::do_fixme || return "$SHELL_FALSE"
+
+    println_success "all success."
+    println_warn "you should reboot you system."
+
+    return "$SHELL_TRUE"
+}
+
+function install_flow::fixme_flow() {
+    # 先更新系统
+    println_info "upgrade system first..."
+    package_manager::upgrade "pacman" || return "$SHELL_FALSE"
+    println_success "upgrade system success."
+
+    install_flow::do_fixme || return "$SHELL_FALSE"
+
     println_success "all success."
     println_warn "you should reboot you system."
 

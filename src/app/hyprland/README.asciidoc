@@ -490,9 +490,25 @@ https://github.com/hyprland-community/awesome-hyprland#plugins[awesome-hyprland 
 
 ### https://github.com/DreamMaoMao/hycov[hycov]
 
+已经处理
+
 ### https://github.com/CMurtagh-LGTM/grab-workspace[grab-workspace]
 
+已经存档了，因为Hyprland已经支持。所以这个不用处理了。
+
 ### https://github.com/VortexCoyote/hyprfocus[hyprfocus]
+
+编译错误，目前（2024年 04月 24日）仓库还没处理，不支持最新版本的Hyprland。
+
+- https://github.com/VortexCoyote/hyprfocus/issues/18[Build error]
+- https://github.com/VortexCoyote/hyprfocus/issues/21[I can't build hyprfocus using hyprpm]
+- https://github.com/VortexCoyote/hyprfocus/pull/9[fixes for latest version of Hyprland]
+
+仓库好像没什么动静了。
+
+https://github.com/pyt0xic/hyprfocus[Fork hyprfocus] 这个仓库支持。
+
+[.red]#主仓库开发像是停滞了。先不处理这个插件，观察观察。#
 
 ### https://github.com/hyprwm/hyprland-plugins/tree/main/hyprwinwrap[hyprwinwrap]
 
