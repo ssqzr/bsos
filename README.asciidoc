@@ -207,7 +207,7 @@ grep -- -v file
 * [ ] ags 的使用
 * [*] grub 主题美化
 * [*] https://github.com/TheWisker/Cavasik[Cavasik] 的使用
-* [ ] 修改默认的应用程序
+* [*] 修改默认的应用程序
 * [ ] swaync 的样式没处理，字体也没处理
 * [*] 处理 vtty 的字体和shell的美化问题
 * [ ] 音频配置文件的处理

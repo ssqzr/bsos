@@ -11,6 +11,23 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
+function google_chrome::undo_set_xdg_mime() {
+    if [ -f "${XDG_CONFIG_HOME}/mimeapps.list" ]; then
+        cmd::run_cmd_with_history sed -i "'/google-chrome.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
+    fi
+    return "$SHELL_TRUE"
+}
+
+function google_chrome::set_xdg_mime() {
+    google_chrome::undo_set_xdg_mime || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "text/html" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/http" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/https" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/about" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/unknown" || return "${SHELL_FALSE}"
+    return "$SHELL_TRUE"
+}
+
 # 指定使用的包管理器
 function google_chrome::trait::package_manager() {
     echo "default"
@@ -53,6 +70,9 @@ function google_chrome::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function google_chrome::trait::post_install() {
     # 可以修改启动参数配置文件 ~/.config/chrome-flags.conf
+
+    # 修改浏览器为默认浏览器
+    google_chrome::set_xdg_mime || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -69,6 +89,7 @@ function google_chrome::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function google_chrome::trait::post_uninstall() {
+    google_chrome::undo_set_xdg_mime || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
