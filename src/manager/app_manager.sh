@@ -349,8 +349,8 @@ function manager::app::do_install_use_custom() {
     fi
 
     # 安装所有 dependencies
-    linfo "start install app(${pm_app}) dependencies..."
-    println_info "${level_indent}${pm_app}: install dependencies..."
+    linfo "app(${pm_app}) install all dependencies..."
+    println_info "${level_indent}${pm_app}: install all dependencies..."
 
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
     array::readarray dependencies < <(echo "$temp_str")
@@ -359,22 +359,36 @@ function manager::app::do_install_use_custom() {
         manager::app::do_install "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) all dependencies install success"
-    println_success "${level_indent}${pm_app}: all dependencies install success"
+    linfo "app(${pm_app}) install all dependencies success"
+    println_success "${level_indent}${pm_app}: install all dependencies success"
 
-    # 安装自己
-    linfo "start install app(${pm_app}) ..."
-    println_info "${level_indent}${pm_app}: installing self... "
-    manager::app::run_custom_manager "${pm_app}" "install"
+    # 安装前置操作
+    linfo "app(${pm_app}) run pre_install..."
+    println_info "${level_indent}${pm_app}: run pre_install..."
+    manager::app::run_custom_manager "${pm_app}" "pre_install"
     if [ $? -ne "${SHELL_TRUE}" ]; then
-        lerror "install app(${pm_app}) failed"
-        println_error "${level_indent}${pm_app}: install failed."
+        lerror "app(${pm_app}) pre_install failed"
+        println_error "${level_indent}${pm_app}: pre_install failed."
         return "$SHELL_FALSE"
     fi
+    linfo "app(${pm_app}) run pre_install success."
+    println_info "${level_indent}${pm_app}: run pre_install success."
+
+    # 安装流程
+    linfo "app(${pm_app}) run do_install..."
+    println_info "${level_indent}${pm_app}: run do_install..."
+    manager::app::run_custom_manager "${pm_app}" "do_install"
+    if [ $? -ne "${SHELL_TRUE}" ]; then
+        lerror "app(${pm_app}) do_install failed"
+        println_error "${level_indent}${pm_app}: do_install failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "app(${pm_app}) run do_install success."
+    println_info "${level_indent}${pm_app}: run do_install success."
 
     # 安装所有 features
-    linfo "start install app(${pm_app}) features..."
-    println_info "${level_indent}${pm_app}: install features..."
+    linfo "app(${pm_app}) install all features..."
+    println_info "${level_indent}${pm_app}: install all features..."
 
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
@@ -382,8 +396,20 @@ function manager::app::do_install_use_custom() {
     for item in "${features[@]}"; do
         manager::app::do_install "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
-    linfo "app(${pm_app}) all features install success..."
-    println_success "${level_indent}${pm_app}: all features install success"
+    linfo "app(${pm_app}) all features install success."
+    println_success "${level_indent}${pm_app}: all features install success."
+
+    # 安装后置操作
+    linfo "app(${pm_app}) run post_install..."
+    println_info "${level_indent}${pm_app}: run post_install..."
+    manager::app::run_custom_manager "${pm_app}" "post_install"
+    if [ $? -ne "${SHELL_TRUE}" ]; then
+        lerror "app(${pm_app}) post_install failed"
+        println_error "${level_indent}${pm_app}: post_install failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "app(${pm_app}) run post_install success."
+    println_info "${level_indent}${pm_app}: run post_install success."
     return "$SHELL_TRUE"
 }
 
@@ -414,7 +440,7 @@ function manager::app::do_install() {
 
     config::cache::installed_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
 
-    linfo "install app(${pm_app}) success."
+    linfo "app(${pm_app}) install success."
     println_success "${level_indent}${pm_app}: install success."
     return "${SHELL_TRUE}"
 }
@@ -494,23 +520,52 @@ function manager::app::_do_uninstall_use_custom() {
         return "$SHELL_FALSE"
     fi
 
-    # 先卸载所有 features
-    linfo "start uninstall app(${pm_app}) features..."
-    println_info "${level_indent}${pm_app}: uninstall features..."
+    # 先运行卸载前置操作
+    linfo "app(${pm_app}) run pre_uninstall..."
+    println_info "${level_indent}${pm_app}: run pre_uninstall..."
+    manager::app::run_custom_manager "${pm_app}" "pre_uninstall"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "app(${pm_app}) run pre_uninstall failed"
+        println_error "${level_indent}${pm_app}: run pre_uninstall failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "app(${pm_app}) run pre_uninstall success"
+    println_success "${level_indent}${pm_app}: run pre_uninstall success"
+
+    # 卸载所有 features
+    linfo "app(${pm_app}) uninstall all features..."
+    println_info "${level_indent}${pm_app}: uninstall all features..."
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
         manager::app::do_uninstall "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
-    linfo "app(${pm_app}) all features uninstall success"
-    println_success "${level_indent}${pm_app}: all features uninstall success"
+    linfo "app(${pm_app}) uninstall all features success"
+    println_success "${level_indent}${pm_app}: uninstall all features success"
 
     # 卸载自己
-    linfo "start uninstall app(${pm_app}) self..."
-    println_info "${level_indent}${pm_app}: uninstall self..."
-    manager::app::run_custom_manager "${pm_app}" "uninstall" || return "$SHELL_FALSE"
-    linfo "app(${pm_app}) uninstall self success"
-    println_success "${level_indent}${pm_app}: uninstall self success"
+    linfo "app(${pm_app}) run do_uninstall..."
+    println_info "${level_indent}${pm_app}: run do_uninstall..."
+    manager::app::run_custom_manager "${pm_app}" "do_uninstall"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "app(${pm_app}) run do_uninstall failed"
+        println_error "${level_indent}${pm_app}: run do_uninstall failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "app(${pm_app}) run do_uninstall success"
+    println_success "${level_indent}${pm_app}: run do_uninstall success"
+
+    # 运行卸载后置操作
+    linfo "app(${pm_app}) run post_uninstall..."
+    println_info "${level_indent}${pm_app}: run post_uninstall..."
+    manager::app::run_custom_manager "${pm_app}" "post_uninstall"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "app(${pm_app}) run post_uninstall failed"
+        println_error "${level_indent}${pm_app}: run post_uninstall failed"
+        return "$SHELL_FALSE"
+    fi
+    linfo "app(${pm_app}) run post_uninstall success"
+    println_success "${level_indent}${pm_app}: run post_uninstall success"
 
     # 卸载所有 dependencies
     linfo "start uninstall app(${pm_app}) dependencies..."
@@ -523,11 +578,9 @@ function manager::app::_do_uninstall_use_custom() {
         manager::app::do_uninstall "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) all dependencies uninstall success"
-    println_success "${level_indent}${pm_app}: all dependencies uninstall success"
+    linfo "app(${pm_app}) uninstall all dependencies success"
+    println_success "${level_indent}${pm_app}: uninstall all dependencies success"
 
-    linfo "app(${pm_app}) use custom uninstall done"
-    println_success "${level_indent}${pm_app}: use custom uninstall done"
     return "$SHELL_TRUE"
 }
 
@@ -556,7 +609,7 @@ function manager::app::do_uninstall() {
 
     config::cache::uninstalled_apps::rpush "${pm_app}" || return "$SHELL_FALSE"
 
-    linfo "uninstall app(${pm_app}) success."
+    linfo "app(${pm_app}) uninstall success."
     println_success "${level_indent}${pm_app}: uninstall success."
     return "$SHELL_TRUE"
 }

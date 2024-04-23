@@ -11,6 +11,51 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
+function grub::theme::unset() {
+    local theme="$1"
+    if [ -z "${theme}" ]; then
+        lerror "param theme is empty"
+        return "$SHELL_FALSE"
+    fi
+    local grub_default_config_file="/etc/default/grub"
+    local grub_theme_dir="/boot/grub/themes"
+
+    cmd::run_cmd_with_history sudo sed -i "'/GRUB_THEME=.*${theme}.*/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
+
+    # 还原
+    cmd::run_cmd_with_history sudo sed -i "'s/^# __backup__flag__ GRUB_THEME=\\(.*\\)/GRUB_THEME=\\1/g'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
+
+    cmd::run_cmd_with_history sudo rm -rf "'${grub_theme_dir}/${theme}'" || return "${SHELL_FALSE}"
+
+    return "$SHELL_TRUE"
+}
+
+function grub::theme::set() {
+    local theme="$1"
+    if [ -z "${theme}" ]; then
+        lerror "param theme is empty"
+        return "$SHELL_FALSE"
+    fi
+    local grub_default_config_file="/etc/default/grub"
+    local grub_theme_dir="/boot/grub/themes"
+
+    grub::theme::unset "${theme}" || return "${SHELL_FALSE}"
+
+    cmd::run_cmd_with_history sudo cp -r "'/usr/share/grub/themes/${theme}'" "'${grub_theme_dir}/${theme}'" || return "${SHELL_FALSE}"
+    # 备份
+    cmd::run_cmd_with_history sudo sed -i "'s/^GRUB_THEME=\\(.*\\)/# __backup__flag__ GRUB_THEME=\\1/g'" "'${grub_default_config_file}'" || return "${SHELL_FALSE}"
+    # 设置
+    cmd::run_cmd_with_history echo "'GRUB_THEME=${grub_theme_dir}/${theme}/theme.txt'" "|" sudo tee -a "${grub_default_config_file}" || return "${SHELL_FALSE}"
+
+    return "${SHELL_TRUE}"
+}
+
+function grub::mkconfig() {
+    local grub_config_file="/boot/grub/grub.cfg"
+    cmd::run_cmd_with_history sudo grub-mkconfig -o "$grub_config_file" || return "${SHELL_FALSE}"
+    return "$SHELL_TRUE"
+}
+
 # 指定使用的包管理器
 function grub::trait::package_manager() {
     echo "default"
@@ -54,8 +99,13 @@ function grub::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function grub::trait::post_install() {
-    cmd::run_cmd_with_history sudo sed -i "'s/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/'" "/etc/default/grub" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history sudo grub-mkconfig -o /boot/grub/grub.cfg || return "${SHELL_FALSE}"
+
+    cmd::run_cmd_with_history sudo sed -i "'s/^#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g'" "/etc/default/grub" || return "${SHELL_FALSE}"
+
+    grub::theme::set "whitesur-whitesur-1080p" || return "${SHELL_FALSE}"
+
+    grub::mkconfig || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
@@ -72,6 +122,9 @@ function grub::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function grub::trait::post_uninstall() {
+    cmd::run_cmd_with_history sudo sed -i "'s/^GRUB_DISABLE_OS_PROBER/#GRUB_DISABLE_OS_PROBER/g'" "/etc/default/grub" || return "${SHELL_FALSE}"
+    grub::theme::unset "whitesur-whitesur-1080p" || return "${SHELL_FALSE}"
+    grub::mkconfig || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -118,6 +171,8 @@ function grub::trait::dependencies() {
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function grub::trait::features() {
     local apps=()
+    # 主题
+    apps+=("default:grub-theme-whitesur-whitesur-1080p-git")
     array::print apps
     return "${SHELL_TRUE}"
 }

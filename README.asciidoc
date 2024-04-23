@@ -205,7 +205,7 @@ grep -- -v file
 * [ ] hyprcursor 的使用
 * [*] wlogout 的使用
 * [ ] ags 的使用
-* [ ] grub 主题美化
+* [*] grub 主题美化
 * [*] https://github.com/TheWisker/Cavasik[Cavasik] 的使用
 * [ ] 修改默认的应用程序
 * [ ] swaync 的样式没处理，字体也没处理

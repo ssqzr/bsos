@@ -158,11 +158,18 @@ function main::install_core_dependencies() {
     temp_str="$(base::core_apps::list)" || return "$SHELL_FALSE"
     array::readarray core_apps < <(echo "${temp_str}")
     for pm_app in "${core_apps[@]}"; do
+        linfo "core app(${pm_app}) install..."
         if ! manager::app::is_custom "$pm_app"; then
             manager::app::do_install_use_pm "$pm_app" || return "$SHELL_FALSE"
         else
-            manager::app::run_custom_manager "${pm_app}" "install" || return "$SHELL_FALSE"
+            linfo "app(${pm_app}) run pre_install..."
+            manager::app::run_custom_manager "${pm_app}" "pre_install" || return "$SHELL_FALSE"
+            linfo "app(${pm_app}) run do_install..."
+            manager::app::run_custom_manager "${pm_app}" "do_install" || return "$SHELL_FALSE"
+            linfo "app(${pm_app}) run post_install..."
+            manager::app::run_custom_manager "${pm_app}" "post_install" || return "$SHELL_FALSE"
         fi
+        linfo "core app(${pm_app}) install success."
     done
 
     linfo "install core dependencies success."
