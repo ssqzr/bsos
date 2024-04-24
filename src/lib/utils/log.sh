@@ -20,6 +20,7 @@ function log::_init_log_filepath() {
     fi
 
     export __log_filepath="${log_dir}/lzw/lzw.log"
+    log::_create_log_parent_directory
 }
 
 function log::_create_dir_recursive() {
@@ -68,8 +69,6 @@ function log::_log() {
     filename=$(get_caller_filename 2)
     line_num=$(get_caller_file_line_num 2)
     datetime="$(get_human_datetime)"
-
-    log::_create_log_parent_directory
 
     printf "%s %s [%s] %s:%s [%s] %s\n" "${datetime}" "${level}" "${pid}" "${filename}" "${line_num}" "${function_name}" "${message}" >>"${__log_filepath}"
 }

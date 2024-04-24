@@ -221,6 +221,7 @@ grep -- -v file
 * [*] xref:src/app/hyprland/README.asciidoc#use-plugin[hyprland 插件的处理]
 * [ ] cavasik 需要修改为Hyprland的layer层运行
 * [ ] pywal xref:src/app/pywal/README.asciidoc#repeat-color[生成的颜色重复]
+* [ ] `manager::app::do_command_recursion` 等递归调用时重复执行的问题
 
 ## 引用
 

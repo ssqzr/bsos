@@ -24,8 +24,15 @@ fi
 # shellcheck disable=SC1090
 source "$source_filepath" || exit 1
 
-function hyprland::wallpaper::cache_dir() {
-    local wallpaper_dir="$HOME/.cache/hypr/wallpapers"
+function hyprland::cache_dir() {
+    local cache_dir="$HOME/.cache/hypr"
+    echo "$cache_dir"
+}
+
+function hyprland::wallpaper::directory() {
+    local cache_dir
+    cache_dir="$(hyprland::cache_dir)"
+    local wallpaper_dir="$cache_dir/wallpapers"
     echo "$wallpaper_dir"
 }
 
@@ -35,13 +42,13 @@ function hyprland::wallpaper::today() {
 
 function hyprland::wallpaper::bing_wallpaper_filepath() {
     local monitor_name="$1"
-    local cache_dir
+    local wallpaper_dir
     local day
 
-    cache_dir="$(hyprland::wallpaper::cache_dir)" || return "$SHELL_FALSE"
+    wallpaper_dir="$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
 
     day=$(hyprland::wallpaper::today)
-    echo "${cache_dir}/bing_${day}_${monitor_name}.jpg"
+    echo "${wallpaper_dir}/bing_${day}_${monitor_name}.jpg"
 }
 
 function hyprland::wallpaper::bing_wallpaper_url() {
@@ -80,13 +87,17 @@ function hyprland::wallpaper::bing_wallpaper_download() {
 }
 
 function hyprland::wallpaper::clean_old_file() {
-    local cache_dir
+    local wallpaper_dir
     local today
-    local cache_dir
+
+    wallpaper_dir="$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
+    if [ ! -e "$wallpaper_dir" ]; then
+        cmd::run_cmd_with_history mkdir -p "$wallpaper_dir" || return "${SHELL_FALSE}"
+        return "$SHELL_TRUE"
+    fi
 
     today="$(hyprland::wallpaper::today)" || return "$SHELL_FALSE"
-    cache_dir="$(hyprland::wallpaper::cache_dir)" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history find "$cache_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history find "$wallpaper_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
 
     return "$SHELL_TRUE"
 }
@@ -106,11 +117,20 @@ function hyprland::wallpaper::check_hyprpaper_ready() {
     ldebug "hyprpapre ready"
 }
 
+function hyprland::wallpaper::set_log_file() {
+    local log_filename="${BASH_SOURCE[0]}"
+    log_filename="${log_filename##*/}"
+    log::set_log_file "$(hyprland::cache_dir)/${log_filename}.log" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 function hyprland::wallpaper::main() {
     local filepath
     local monitors
     local monitor_count
     local index
+
+    hyprland::wallpaper::set_log_file || return "$SHELL_FALSE"
 
     hyprland::wallpaper::check_hyprpaper_ready
 
@@ -143,7 +163,7 @@ function hyprland::wallpaper::main() {
     cmd::run_cmd_with_history hyprctl hyprpaper unload unused || return "$SHELL_FALSE"
     # NOTE: 对于 terminator 等VTE终端，wal 需要指定 --vte 参数才可以。
     # wal -l 是亮色主题
-    cmd::run_cmd_with_history wal -l -i "$(hyprland::wallpaper::cache_dir)" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history wal -l -i "$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

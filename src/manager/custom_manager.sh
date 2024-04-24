@@ -15,6 +15,8 @@ fi
 
 # shellcheck source=/dev/null
 source "${SRC_ROOT_DIR}/lib/utils/all.sh" || exit 1
+# shellcheck disable=SC1091
+source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # NOTE: 一些全局的变量必须已经初始化，后面会用到
 # NOTE: 可以用到的环境变量如下：
@@ -64,20 +66,33 @@ function custom_manager::_env() {
     return "$SHELL_TRUE"
 }
 
-function custom_manager::prepare() {
-    if [ ! -e "${XDG_CONFIG_HOME}" ]; then
-        cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
-    fi
-
-    return "$SHELL_TRUE"
-}
-
 function custom_manager::_clean_build() {
     linfo "clean app(${PM_APP_NAME}) build env..."
     file::delete_dir_safe "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
     file::create_dir_recursive "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
     linfo "clean app(${PM_APP_NAME}) build env success."
     return "${SHELL_TRUE}"
+}
+
+function custom_manager::prepare() {
+    if [ ! -e "${XDG_CONFIG_HOME}" ]; then
+        cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    fi
+
+    custom_manager::_clean_build || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function custom_manager::command::install_guide() {
+    if config::app::is_configed::get "$PM_APP_NAME"; then
+        # 说明已经配置过了
+        linfo "app(${PM_APP_NAME}) install guide has configed, not need to config again"
+        return "$SHELL_TRUE"
+    fi
+    "${app_name}::trait::install_guide"
+    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) install guide config success"
 }
 
 function custom_manager::main() {
@@ -105,12 +120,25 @@ function custom_manager::main() {
     # shellcheck source=/dev/null
     source "${SRC_ROOT_DIR}/app/${app_name}/trait.sh" || return "$SHELL_FALSE"
 
-    "${app_name}::trait::${command}"
-    if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "run ${app_name}::trait::${command} failed"
+    case "$command" in
+    "install_guide")
+        custom_manager::command::install_guide || return "$SHELL_FALSE"
+        ;;
+
+    "description" | "pre_install" | "do_install" | "post_install" | "pre_uninstall" | "do_uninstall" | "post_uninstall" | "fixme" | "unfixme" | "dependencies" | "features")
+        "${app_name}::trait::${command}"
+        if [ $? -ne "$SHELL_TRUE" ]; then
+            lerror "run ${app_name}::trait::${command} failed"
+            return "$SHELL_FALSE"
+        fi
+        linfo "run ${app_name}::trait::${command} success."
+        ;;
+
+    *)
+        lerror "command($command) is not exists"
         return "$SHELL_FALSE"
-    fi
-    linfo "run ${app_name}::trait::${command} success."
+        ;;
+    esac
 
     return "${SHELL_TRUE}"
 }

@@ -88,7 +88,9 @@ function manager::app::run_custom_manager() {
         return "${SHELL_FALSE}"
     fi
 
+    linfo "run app custom manager: ${custom_manager_path} ${app_name} ${sub_command}"
     "$custom_manager_path" "${app_name}" "${sub_command}" || return "$SHELL_FALSE"
+    linfo "run app custom manager success: ${custom_manager_path} ${app_name} ${sub_command}"
     return "$SHELL_TRUE"
 }
 

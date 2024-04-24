@@ -15,12 +15,17 @@ function hyprland::settings::hyprland_config_filepath() {
     echo "$XDG_CONFIG_HOME/hypr/hyprland.conf"
 }
 
+function hyprland::settings::base_config_filepath() {
+    echo "$XDG_CONFIG_HOME/hypr/conf.d/base.conf"
+}
+
 function hyprland::settings::cursors() {
+    # 反复安装直接覆盖就可以了
     local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+    config_filepath="$(hyprland::settings::base_config_filepath)"
 
     if os::is_vm; then
-        cmd::run_cmd_with_history sed -i "'s/^#env = WLR_NO_HARDWARE_CURSORS,1/env = WLR_NO_HARDWARE_CURSORS,1/g'" "$config_filepath"
+        cmd::run_cmd_with_history sed -i "'s/^# \(env = WLR_NO_HARDWARE_CURSORS, 1\)/\\1/g'" "$config_filepath"
         if [ "$?" -ne "$SHELL_TRUE" ]; then
             lerror "hyprland setting cursors failed"
             return "$SHELL_FALSE"
@@ -31,9 +36,10 @@ function hyprland::settings::cursors() {
 }
 
 function hyprland::settings::terminal() {
+    # 反复安装直接覆盖就可以了
     local terminal
     local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+    config_filepath="$(hyprland::settings::base_config_filepath)"
     if os::is_vm; then
         terminal="terminator"
     else
@@ -50,9 +56,10 @@ function hyprland::settings::terminal() {
 }
 
 function hyprland::settings::file_manager() {
+    # 反复安装直接覆盖就可以了
     local file_manager
     local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+    config_filepath="$(hyprland::settings::base_config_filepath)"
     if os::is_vm; then
         file_manager="terminator -e yazi"
     else
@@ -72,7 +79,8 @@ function hyprland::settings::monitor() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     if os::is_vm; then
-        sed::delete_between_line "BEGIN Monitor Settings BEGIN" "END Monitor Settings END" "$config_filepath"
+        # 反复安装也不会有问题
+        cmd::run_cmd_with_history sed -i "'s%^\(source = conf.d/monitor.conf\)%# \\1%g'" "$config_filepath"
         if [ "$?" -ne "$SHELL_TRUE" ]; then
             lerror "hyprland setting monitor failed"
             return "$SHELL_FALSE"
@@ -86,13 +94,31 @@ function hyprland::settings::workspace() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     if os::is_vm; then
-        sed::delete_between_line "BEGIN Workspace Settings BEGIN" "END Workspace Settings END" "$config_filepath"
+        # 反复安装也不会有问题
+        # 还有一个直接的方式就是清空 monitor 设置文件内容
+        cmd::run_cmd_with_history sed -i "'s%^\(source = conf.d/workspace.conf\)%# \\1%g'" "$config_filepath"
         if [ "$?" -ne "$SHELL_TRUE" ]; then
             lerror "hyprland setting workspace failed"
             return "$SHELL_FALSE"
         fi
     fi
     linfo "hyprland setting workspace success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::settings::hypridle() {
+    local config_filepath
+    config_filepath="$(hyprland::settings::base_config_filepath)"
+    if os::is_vm; then
+        # 反复安装也不会有问题
+        # 还有一个直接的方式就是清空 monitor 设置文件内容
+        cmd::run_cmd_with_history sed -i "'s%^\(exec-once = hypridle\)%# \\1%g'" "$config_filepath"
+        if [ "$?" -ne "$SHELL_TRUE" ]; then
+            lerror "hyprland setting hypridle failed"
+            return "$SHELL_FALSE"
+        fi
+    fi
+    linfo "hyprland setting hypridle success"
     return "${SHELL_TRUE}"
 }
 
@@ -108,7 +134,7 @@ function hyprland::plugins::clean() {
     linfo "start clean hyprland plugins"
 
     # 修改配置文件
-    cmd::run_cmd_with_history sed -i "'s%^source = conf.d/hycov.conf%# source = conf.d/hycov.conf%g'" "$config_filepath" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history sed -i "'s%^\(source = conf.d/hycov.conf\)%# \\1%g'" "$config_filepath" || return "${SHELL_FALSE}"
 
     # 删除插件
     local repository
@@ -154,7 +180,7 @@ function hyprland::plugins::install() {
     cmd::run_cmd_with_history printf "y" '|' hyprpm -v add https://github.com/DreamMaoMao/hycov || return "${SHELL_FALSE}"
     linfo "hyprpm add hycov plugin success"
     cmd::run_cmd_with_history hyprpm -v enable hycov || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history sed -i "'s%^# source = conf.d/hycov.conf%source = conf.d/hycov.conf%g'" "$config_filepath" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history sed -i "'s%^# \(source = conf.d/hycov.conf\)%\\1%g'" "$config_filepath" || return "${SHELL_FALSE}"
     linfo "hyprpm enable hycov plugin success"
 
     return "$SHELL_TRUE"
@@ -178,13 +204,6 @@ function hyprland::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function hyprland::trait::install_guide() {
-    if config::app::is_configed::get "$PM_APP_NAME"; then
-        # 说明已经配置过了
-        linfo "app(${PM_APP_NAME}) has configed, not need to config again"
-        return "$SHELL_TRUE"
-    fi
-    # TODO: 做你想做的
-    config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -201,15 +220,30 @@ function hyprland::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function hyprland::trait::post_install() {
+    local config_filepath
+    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
+
     cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+
+    # 先备份配置
+    if [ -e "${XDG_CONFIG_HOME}/hypr" ]; then
+        cmd::run_cmd_with_history cp -rf "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    fi
+
     cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+
+    # 恢复主要的配置
+    if [ -e "${BUILD_TEMP_DIR}/hypr/hyprland.conf" ]; then
+        cmd::run_cmd_with_history cp -f "${BUILD_TEMP_DIR}/hypr/hyprland.conf" "${config_filepath}" || return "${SHELL_FALSE}"
+    fi
 
     hyprland::settings::terminal || return "${SHELL_FALSE}"
     hyprland::settings::file_manager || return "${SHELL_FALSE}"
     hyprland::settings::monitor || return "${SHELL_FALSE}"
     hyprland::settings::workspace || return "${SHELL_FALSE}"
     hyprland::settings::cursors || return "${SHELL_FALSE}"
+    hyprland::settings::hypridle || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -234,6 +268,7 @@ function hyprland::trait::post_uninstall() {
 # 例如：
 # 1. Hyprland 的插件需要在Hyprland运行时才可以启动
 # 函数内部需要自己检测环境是否满足才进行相关操作。
+# NOTE: 注意重复安装是否会覆盖fixme做的修改
 function hyprland::trait::fixme() {
     println_warn "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
 

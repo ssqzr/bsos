@@ -9,30 +9,33 @@ SCRIPT_DIR_d6dc03c7="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR_d6dc03c7/lib/utils/all.sh"
-log::set_log_file "${SCRIPT_DIR_d6dc03c7}/dev.log"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR_d6dc03c7/manager/base.sh"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR_d6dc03c7/manager/app_manager.sh"
 
-function gen_uuid() {
+function develop::gen_uuid() {
     uuidgen | awk -F '-' '{print $1}'
 }
 
-function update_trait_script() {
+function develop::update_trait_script() {
     local app_name="$1"
     local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
 
     local uuid
-    uuid=$(gen_uuid)
+    uuid=$(develop::gen_uuid)
     sed -i "s/SCRIPT_DIR_uuid/SCRIPT_DIR_$uuid/g" "${app_dir}/trait.sh"
     sed -i "s/template/""${app_name}""/g" "${app_dir}/trait.sh"
 }
 
-function update_readme() {
+function develop::update_readme() {
     local app_name="$1"
     local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
 
     sed -i "s/app_name/$app_name/" "${app_dir}/README.asciidoc"
 }
 
-function create_app() {
+function develop::create_app() {
     if [ $# -ne 1 ]; then
         lerror "add app failed, param app_name is empty"
     fi
@@ -55,12 +58,12 @@ function create_app() {
 
     cp -r "${SCRIPT_DIR_d6dc03c7}/app_template" "${app_dir}"
 
-    update_trait_script "$app_name" || return "$SHELL_FALSE"
+    develop::update_trait_script "$app_name" || return "$SHELL_FALSE"
 
-    update_readme "$app_name" || return "$SHELL_FALSE"
+    develop::update_readme "$app_name" || return "$SHELL_FALSE"
 }
 
-function update_template() {
+function develop::update_template() {
     local app_dir
     for app_dir in "${SCRIPT_DIR_d6dc03c7}/app"/*; do
         local app_name
@@ -81,22 +84,52 @@ function update_template() {
     done
 }
 
-function main() {
-    local cmd="$1"
-    local params=("${@:2}")
+function develop::call_trait() {
+    local app_name="$1"
+    local sub_command="$2"
 
-    case "$cmd" in
+    if [ -z "$app_name" ]; then
+        lerror "call trait failed, param app_name is empty"
+        println_error "call trait failed, param app_name is empty"
+        return "$SHELL_FALSE"
+    fi
 
-    "create")
-        create_app "${params[@]}"
-        ;;
-    "update")
-        update_template
-        ;;
-    *)
-        println_error "unknown cmd: $cmd"
-        ;;
-    esac
+    if [ -z "$sub_command" ]; then
+        lerror "call trait failed, param sub_command is empty"
+        println_error "call trait failed, param sub_command is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    manager::app::run_custom_manager "custom:${app_name}" "${sub_command}" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
 }
 
-main "$@"
+function develop::command() {
+    local sum_command="$1"
+    local command_params=("${@:2}")
+    case "${sum_command}" in
+
+    "create")
+        develop::create_app "${command_params[@]}" || return "$SHELL_FALSE"
+        ;;
+
+    "update")
+        develop::update_template || return "$SHELL_FALSE"
+        ;;
+
+    "check_loop")
+        manager::app::check_loop_dependencies || return "$SHELL_FALSE"
+        ;;
+
+    "trait")
+        develop::call_trait "${command_params[@]}" || return "$SHELL_FALSE"
+        ;;
+
+    *)
+        lerror "unknown sub cmd(${sum_command})"
+        return "$SHELL_FALSE"
+        ;;
+    esac
+    return "$SHELL_TRUE"
+}
