@@ -90,7 +90,7 @@ function main::check() {
 
     echo "${flags}" | grep -q "check_loop"
     if [ $? -eq "$SHELL_TRUE" ]; then
-        manager::app::check_loop_dependencies
+        manager::app::check_loop_relationships
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "check_loop_dependencies failed"
             return "$SHELL_FALSE"
@@ -174,16 +174,6 @@ function main::command::unfixme() {
     manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     uninstall_flow::unfixme_flow || return "$SHELL_FALSE"
-
-    return "$SHELL_TRUE"
-}
-
-function main::command::check() {
-    manager::app::check_loop_dependencies
-    if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "check_loop_dependencies failed"
-        return "$SHELL_FALSE"
-    fi
 
     return "$SHELL_TRUE"
 }

@@ -94,9 +94,17 @@ function manager::app::run_custom_manager() {
     return "$SHELL_TRUE"
 }
 
-function manager::app::is_no_loop_dependencies() {
-    local pm_app="$1"
-    local link_path="$2"
+# 应该是检查顶层的app没有循环依赖就可以了，但是需要先找到顶层的app。也很麻烦，所以采用缓存的方式。
+# app1依赖app2，app2没有循环依赖，那么app1也没有循环依赖
+# app1依赖app2，app2有循环依赖，那么app1也有循环依赖
+# app1依赖app2，app2依赖app3，app3没有循环依赖，那么app2也没有循环依赖，那么app1也没有循环依赖
+# app1依赖app2，app2依赖app3，app3有循环依赖，那么app2也有循环依赖，那么app1也有循环依赖
+function manager::app::is_no_loop_relationships() {
+    local -n _6735aa7e_cache_apps="$1"
+    # relation_type 取值：dependencies 或者 features
+    local relation_type="$2"
+    local pm_app="$3"
+    local link_path="$4"
 
     manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
 
@@ -109,77 +117,60 @@ function manager::app::is_no_loop_dependencies() {
         return "$SHELL_TRUE"
     fi
 
-    echo "$link_path" | grep -wq "$pm_app"
+    echo "${_6735aa7e_cache_apps}" | grep -wq "$pm_app"
     if [ $? -eq "${SHELL_TRUE}" ]; then
-        println_error "app($pm_app) has loop dependencies. dependencies link path: ${link_path} $pm_app"
-        lerror "app($pm_app) has loop dependencies. dependencies link path: ${link_path} $pm_app"
-        return "$SHELL_FALSE"
-    fi
-
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
-    array::readarray temp_array < <(echo "$temp_str")
-    for item in "${temp_array[@]}"; do
-        manager::app::is_no_loop_dependencies "${item}" "$link_path $pm_app" || return "$SHELL_FALSE"
-    done
-
-    return "$SHELL_TRUE"
-}
-
-function manager::app::is_no_loop_features() {
-    local pm_app="$1"
-    local link_path="$2"
-
-    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
-
-    local temp_array=()
-    local item
-    local temp_str
-
-    if ! manager::app::is_custom "$pm_app"; then
-        # 如果不是自定义的包，那么不需要检查循环依赖
+        # 如果已经在缓存中，那么不需要检查循环依赖
+        linfo "app($pm_app) has checked no loop ${relation_type}. skip it."
+        println_info "app($pm_app) has checked no loop ${relation_type}. skip it."
         return "$SHELL_TRUE"
     fi
 
     echo "$link_path" | grep -wq "$pm_app"
     if [ $? -eq "${SHELL_TRUE}" ]; then
-        println_error "app($pm_app) has loop features. features link path: $pm_app ${link_path}"
-        lerror "app($pm_app) has loop features. features link path: $pm_app ${link_path}"
+        println_error "app($pm_app) has loop ${relation_type}. ${relation_type} link path: ${link_path} $pm_app"
+        lerror "app($pm_app) has loop ${relation_type}. ${relation_type} link path: ${link_path} $pm_app"
         return "$SHELL_FALSE"
     fi
 
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")" || return "$SHELL_FALSE"
+    temp_str="$(manager::app::run_custom_manager "${pm_app}" "${relation_type}")" || return "$SHELL_FALSE"
     array::readarray temp_array < <(echo "$temp_str")
     for item in "${temp_array[@]}"; do
-        manager::app::is_no_loop_features "${item}" "$pm_app $link_path" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_relationships "${!_6735aa7e_cache_apps}" "${relation_type}" "${item}" "$link_path $pm_app" || return "$SHELL_FALSE"
     done
+
+    _6735aa7e_cache_apps+=" $pm_app"
     return "$SHELL_TRUE"
 }
 
 # 检查循环依赖
-function manager::app::check_loop_dependencies() {
+function manager::app::check_loop_relationships() {
 
-    linfo "start check all app loop dependencies..."
-    println_info "start check all app loop dependencies, it may take a long time..."
+    linfo "start check all app loop relationships..."
+    println_info "start check all app loop relationships, it may take a long time..."
+
+    local _d4dd25bd_dependencies_cache_apps=""
+    local _83bf212f_features_cache_apps=""
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         local app_name
         app_name=$(basename "${app_path}")
         local pm_app="custom:$app_name"
 
-        manager::app::is_no_loop_dependencies "${pm_app}" || return "$SHELL_FALSE"
-        manager::app::is_no_loop_features "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_relationships _d4dd25bd_dependencies_cache_apps "dependencies" "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_relationships _83bf212f_features_cache_apps "features" "${pm_app}" || return "$SHELL_FALSE"
     done
 
-    linfo "check all app loop dependencies success"
-    println_success "check all app loop dependencies success"
+    linfo "check all app loop relationships success"
+    println_success "check all app loop relationships success"
     return "$SHELL_TRUE"
 }
 
 # 根据依赖关系递归调用 trait 的命令
 function manager::app::do_command_recursion() {
-    local command="$1"
-    local pm_app="$2"
-    local level_indent="$3"
+    local -n _7bc9f611_cache_apps="$1"
+    local command="$2"
+    local pm_app="$3"
+    local level_indent="$4"
 
     if [ -z "$pm_app" ]; then
         lerror "pm_app is empty"
@@ -206,12 +197,19 @@ function manager::app::do_command_recursion() {
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_command_recursion "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion "${!_7bc9f611_cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) self run ${command}..."
-    println_info "${level_indent}${pm_app}: self run ${command}..."
-    manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
+    echo "$_7bc9f611_cache_apps" | grep -qw "${pm_app}"
+    if [ $? -eq "${SHELL_TRUE}" ]; then
+        linfo "app(${pm_app}) has run command(${command}), skip it"
+        println_info "${level_indent}${pm_app}: has run command(${command}), skip it"
+    else
+        linfo "app(${pm_app}) self run ${command}..."
+        println_info "${level_indent}${pm_app}: self run ${command}..."
+        manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
+        _7bc9f611_cache_apps+=" ${pm_app}"
+    fi
 
     # 获取它的feature
     linfo "app(${pm_app}) features run ${command}..."
@@ -219,7 +217,7 @@ function manager::app::do_command_recursion() {
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
-        manager::app::do_command_recursion "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion "${!_7bc9f611_cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
     linfo "app(${pm_app}) run ${command} done"
@@ -230,9 +228,10 @@ function manager::app::do_command_recursion() {
 
 # 根据依赖关系递归调用 trait 的命令
 function manager::app::do_command_recursion_reverse() {
-    local command="$1"
-    local pm_app="$2"
-    local level_indent="$3"
+    local -n _a7390390_cache_apps="$1"
+    local command="$2"
+    local pm_app="$3"
+    local level_indent="$4"
 
     if [ -z "$pm_app" ]; then
         lerror "pm_app is empty"
@@ -258,12 +257,19 @@ function manager::app::do_command_recursion_reverse() {
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
-        manager::app::do_command_recursion_reverse "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion_reverse "${!_a7390390_cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) self run ${command}..."
-    println_info "${level_indent}${pm_app}: self run ${command}..."
-    manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
+    echo "$_a7390390_cache_apps" | grep -qw "${pm_app}"
+    if [ $? -eq "${SHELL_TRUE}" ]; then
+        linfo "app(${pm_app}) has run command(${command}), skip it"
+        println_info "${level_indent}${pm_app}: has run command(${command}), skip it"
+    else
+        linfo "app(${pm_app}) self run ${command}..."
+        println_info "${level_indent}${pm_app}: self run ${command}..."
+        manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
+        _a7390390_cache_apps+=" ${pm_app}"
+    fi
 
     # 获取它的依赖
     linfo "app(${pm_app}) dependencies run ${command}..."
@@ -272,7 +278,7 @@ function manager::app::do_command_recursion_reverse() {
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_command_recursion_reverse "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion_reverse "${!_a7390390_cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
     linfo "app(${pm_app}) run ${command} done"
@@ -283,8 +289,9 @@ function manager::app::do_command_recursion_reverse() {
 
 # 运行安装向导
 function manager::app::do_install_guide() {
-    local pm_app="$1"
-    manager::app::do_command_recursion "install_guide" "${pm_app}" || return "$SHELL_FALSE"
+    local -n _7eaacdaf_cache_apps="$1"
+    local pm_app="$2"
+    manager::app::do_command_recursion "${!_7eaacdaf_cache_apps}" "install_guide" "${pm_app}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -449,14 +456,16 @@ function manager::app::do_install() {
 
 # 运行 fixme
 function manager::app::do_fixme() {
-    local pm_app="$1"
-    manager::app::do_command_recursion "fixme" "${pm_app}" || return "$SHELL_FALSE"
+    local -n _b1bd80a9_cache_apps="$1"
+    local pm_app="$2"
+    manager::app::do_command_recursion "${!_b1bd80a9_cache_apps}" "fixme" "${pm_app}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function manager::app::do_unfixme() {
-    local pm_app="$1"
-    manager::app::do_command_recursion_reverse "unfixme" "${pm_app}" || return "$SHELL_FALSE"
+    local -n _23c11f1a_cache_apps="$1"
+    local pm_app="$2"
+    manager::app::do_command_recursion_reverse "${!_23c11f1a_cache_apps}" "unfixme" "${pm_app}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

@@ -79,8 +79,6 @@ function custom_manager::prepare() {
         cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     fi
 
-    custom_manager::_clean_build || return "$SHELL_FALSE"
-
     return "$SHELL_TRUE"
 }
 
@@ -93,6 +91,12 @@ function custom_manager::command::install_guide() {
     "${app_name}::trait::install_guide"
     config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     linfo "app(${PM_APP_NAME}) install guide config success"
+}
+
+function custom_manager::command::pre_install() {
+    custom_manager::_clean_build || return "$SHELL_FALSE"
+    "${app_name}::trait::pre_install" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) pre_install success"
 }
 
 function custom_manager::main() {
@@ -125,7 +129,11 @@ function custom_manager::main() {
         custom_manager::command::install_guide || return "$SHELL_FALSE"
         ;;
 
-    "description" | "pre_install" | "do_install" | "post_install" | "pre_uninstall" | "do_uninstall" | "post_uninstall" | "fixme" | "unfixme" | "dependencies" | "features")
+    "pre_install")
+        custom_manager::command::pre_install || return "$SHELL_FALSE"
+        ;;
+
+    "description" | "do_install" | "post_install" | "pre_uninstall" | "do_uninstall" | "post_uninstall" | "fixme" | "unfixme" | "dependencies" | "features")
         "${app_name}::trait::${command}"
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "run ${app_name}::trait::${command} failed"

@@ -12,6 +12,7 @@ function install_flow::app::do_guide() {
 
     local top_apps=()
     local temp_str
+    local _36317254_cache_apps=""
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
@@ -19,7 +20,7 @@ function install_flow::app::do_guide() {
     ldebug "top_apps=${top_apps[*]}"
     local pm_app
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_install_guide "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::do_install_guide _36317254_cache_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"
@@ -45,6 +46,7 @@ function install_flow::app::do_install() {
 function install_flow::app::do_fixme() {
     local top_apps=()
     local temp_str
+    local _b81225cf_cache_apps=""
     linfo "start run all apps install fixme..."
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
@@ -53,7 +55,7 @@ function install_flow::app::do_fixme() {
     ldebug "top_apps=${top_apps[*]}"
     local pm_app
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_fixme "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::do_fixme _b81225cf_cache_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"

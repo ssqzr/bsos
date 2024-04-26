@@ -30,6 +30,7 @@ function uninstall_flow::app::do_uninstall() {
 function uninstall_flow::app::do_unfixme() {
     local top_apps=()
     local temp_str
+    local _691b5ab9_cache_apps=""
     linfo "start run apps unfixme..."
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
@@ -42,7 +43,7 @@ function uninstall_flow::app::do_unfixme() {
 
     local pm_app
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_unfixme "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::do_unfixme _691b5ab9_cache_apps "${pm_app}" || return "$SHELL_FALSE"
     done
     return "$SHELL_TRUE"
 }

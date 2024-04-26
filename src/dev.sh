@@ -119,7 +119,7 @@ function develop::command() {
         ;;
 
     "check_loop")
-        manager::app::check_loop_dependencies || return "$SHELL_FALSE"
+        manager::app::check_loop_relationships || return "$SHELL_FALSE"
         ;;
 
     "trait")
