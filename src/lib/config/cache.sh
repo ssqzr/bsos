@@ -26,36 +26,6 @@ function config::cache::is_exists() {
 
 ################################################### global 相关 ############################################
 
-function config::cache::installed_apps::clean() {
-    config::array::clean ".cache.installed_apps" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::installed_apps::is_contain() {
-    local app="$1"
-    config::array::is_contain ".cache.installed_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
-    return "$SHELL_TRUE"
-}
-
-function config::cache::installed_apps::rpush() {
-    local app="$1"
-    config::array::rpush ".cache.installed_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::uninstalled_apps::clean() {
-    config::array::clean ".cache.uninstalled_apps" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
-function config::cache::uninstalled_apps::is_contain() {
-    local app="$1"
-    config::array::is_contain ".cache.uninstalled_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
-    return "$SHELL_TRUE"
-}
-
-function config::cache::uninstalled_apps::rpush() {
-    local app="$1"
-    config::array::rpush ".cache.uninstalled_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
-}
-
 function config::cache::top_apps::is_exists() {
     config::map::has_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }

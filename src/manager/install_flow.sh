@@ -12,7 +12,7 @@ function install_flow::app::do_guide() {
 
     local top_apps=()
     local temp_str
-    local _36317254_cache_apps=""
+    local _36317254_cache_apps=()
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
@@ -36,8 +36,9 @@ function install_flow::app::do_install() {
 
     ldebug "top_apps=${top_apps[*]}"
     local pm_app
+    local _6ce8e784_installed_apps=()
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_install "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::do_install _6ce8e784_installed_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"
@@ -46,7 +47,7 @@ function install_flow::app::do_install() {
 function install_flow::app::do_fixme() {
     local top_apps=()
     local temp_str
-    local _b81225cf_cache_apps=""
+    local _b81225cf_cache_apps=()
     linfo "start run all apps install fixme..."
 
     temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
@@ -102,7 +103,6 @@ function install_flow::main_flow() {
     package_manager::upgrade "pacman" || return "$SHELL_FALSE"
     println_success "upgrade system success."
 
-    config::cache::installed_apps::clean || return "$SHELL_FALSE"
     install_flow::pre_install || return "$SHELL_FALSE"
     install_flow::do_install || return "$SHELL_FALSE"
     install_flow::post_install || return "$SHELL_FALSE"
