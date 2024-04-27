@@ -101,6 +101,7 @@ function all_direct_pm::trait::dependencies() {
     apps+=("flatpak:com.github.tchx84.Flatseal")
     apps+=("flatpak:org.torproject.torbrowser-launcher" "flatpak:com.valvesoftware.Steam")
     apps+=("flatpak:com.github.xournalpp.xournalpp" "flatpak:ch.openboard.OpenBoard")
+    apps+=("flatpak:net.agalwood.Motrix")
     array::print apps
     return "${SHELL_TRUE}"
 }
