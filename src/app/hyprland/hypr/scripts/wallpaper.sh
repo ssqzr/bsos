@@ -65,6 +65,7 @@ function hyprland::wallpaper::bing_wallpaper_url() {
 function hyprland::wallpaper::bing_wallpaper_download() {
     local index="$1"
     local filepath="$2"
+    local tmp_filepath="${filepath}.tmp"
 
     local url
     local wallpaper_dir
@@ -73,7 +74,9 @@ function hyprland::wallpaper::bing_wallpaper_download() {
 
     # 使用curl总是出现命令执行完，立即检测文件不存在的情况
     # cmd::run_cmd_with_history curl -s -k -L -o "$filepath" "'$url'" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history wget -q -O "$filepath" "'$url'" || return "$SHELL_FALSE"
+    # wget 命令失败时可能会残留空文件，所以先保存到临时文件
+    cmd::run_cmd_with_history wget -q -O "$tmp_filepath" "'$url'" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history mv -f "'$tmp_filepath'" "'$filepath'" || return "$SHELL_FALSE"
 
     if [ ! -f "$filepath" ]; then
         # 刚开始在虚拟机测试，当 curl 执行完成后，检测下载的文件并不存在

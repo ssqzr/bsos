@@ -186,7 +186,6 @@ function wlogout_wrap::main() {
 
     local style
     style=$(envsubst <"$style_filepath")
-    echo "$style" >style.css
 
     wlogout -b 2 -c 0 -r 0 -m 0 --layout "$layout_filepath" --css <(echo "$style") --protocol layer-shell
     return "$SHELL_TRUE"
