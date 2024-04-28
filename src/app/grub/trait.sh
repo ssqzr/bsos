@@ -20,10 +20,16 @@ function grub::theme::unset() {
     local grub_default_config_file="/etc/default/grub"
     local grub_theme_dir="/boot/grub/themes"
 
-    cmd::run_cmd_with_history sudo sed -i "'/GRUB_THEME=.*${theme}.*/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
+    # 删除我们设置的 GRUB_THEME 字段
+    cmd::run_cmd_with_history sudo sed -i "'/^GRUB_THEME=.*${theme}.*/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
 
-    # 还原
+    # 还原以前的 GRUB_THEME
     cmd::run_cmd_with_history sudo sed -i "'s/^# __backup__flag__ GRUB_THEME=\\(.*\\)/GRUB_THEME=\\1/g'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
+
+    # 删除我们设置的 GRUB_GFXMODE 字段
+    cmd::run_cmd_with_history sudo sed -i "'/^GRUB_GFXMODE=1920x1080,auto/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
+    # 还原以前的 GRUB_GFXMODE
+    cmd::run_cmd_with_history sudo sed -i "'s/^# __backup__flag__ GRUB_GFXMODE=\\(.*\\)/GRUB_GFXMODE=\\1/g'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
 
     cmd::run_cmd_with_history sudo rm -rf "'${grub_theme_dir}/${theme}'" || return "${SHELL_FALSE}"
 
@@ -42,10 +48,16 @@ function grub::theme::set() {
     grub::theme::unset "${theme}" || return "${SHELL_FALSE}"
 
     cmd::run_cmd_with_history sudo cp -r "'/usr/share/grub/themes/${theme}'" "'${grub_theme_dir}/${theme}'" || return "${SHELL_FALSE}"
-    # 备份
+    # 备份 GRUB_THEME 字段
     cmd::run_cmd_with_history sudo sed -i "'s/^GRUB_THEME=\\(.*\\)/# __backup__flag__ GRUB_THEME=\\1/g'" "'${grub_default_config_file}'" || return "${SHELL_FALSE}"
-    # 设置
+    # 设置 GRUB_THEME 字段
     cmd::run_cmd_with_history echo "'GRUB_THEME=${grub_theme_dir}/${theme}/theme.txt'" "|" sudo tee -a "${grub_default_config_file}" || return "${SHELL_FALSE}"
+
+    # 设置分辨率，默认的分辨率可能不对
+    # 备份 GRUB_GFXMODE 字段
+    cmd::run_cmd_with_history sudo sed -i "'s/^GRUB_GFXMODE=\\(.*\\)/# __backup__flag__ GRUB_GFXMODE=\\1/g'" "'${grub_default_config_file}'" || return "${SHELL_FALSE}"
+    # 设置 GRUB_GFXMODE 字段
+    cmd::run_cmd_with_history echo "'GRUB_GFXMODE=1920x1080,auto'" "|" sudo tee -a "${grub_default_config_file}" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
