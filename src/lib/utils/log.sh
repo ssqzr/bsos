@@ -19,7 +19,7 @@ function log::_init_log_filepath() {
         log_dir="${HOME}/.cache"
     fi
 
-    export __log_filepath="${log_dir}/lzw/lzw.log"
+    export __log_filepath="${log_dir}/bsos/bsos.log"
     log::_create_log_parent_directory
 }
 

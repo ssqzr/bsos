@@ -7,7 +7,7 @@ SCRIPT_DIR_383af515="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "${SCRIPT_DIR_383af515}/../utils/all.sh"
 
 if [ -z "${__config_filepath}" ]; then
-    __config_filepath="${HOME}/.config/os_install.yml"
+    __config_filepath="${HOME}/.config/bsos.yml"
     export __config_filepath="${__config_filepath}"
 fi
 

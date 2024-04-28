@@ -83,11 +83,11 @@ Monitor HDMI-A-1 (ID 1):
 
 
 # 在虚拟机测试，没有运行Hyprland
-[lzw@lzw ~]$ hyprctl monitors
+[bsos@bsos ~]$ hyprctl monitors
 HYPRLAND_INSTANCE_SIGNATURE not set! (is hyprland running?)
 
 # 在虚拟机测试，有运行Hyprland
-[lzw@lzw ~]$ hyprctl monitors
+[bsos@bsos ~]$ hyprctl monitors
 Virtual-1 "(null) (null) (Virtual-1)"
   Make: (null)
   Model: (null)
@@ -191,7 +191,7 @@ Monitors: 2
  1: +HDMI-A-1 960/700x540/390+1920+0  HDMI-A-1
 
 # 在虚拟机测试，有运行Hyprland
-[lzw@lzw ~]$ DISPLAY=:0 xrandr
+[bsos@bsos ~]$ DISPLAY=:0 xrandr
 Screen 0: minimum 16 x 16, current 640 x 400, maximum 32767 x 32767
 Virtual-1 connected 640x400+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
    640x400       59.95*+
@@ -200,7 +200,7 @@ Virtual-1 connected 640x400+0+0 (normal left inverted right x axis y axis) 0mm x
    640x350       59.77
 
 # 在虚拟机测试，没有运行Hyprland
-[lzw@lzw ~]$ DISPLAY=:0 xrandr
+[bsos@bsos ~]$ DISPLAY=:0 xrandr
 Can't open display :0
 
 ----
@@ -213,13 +213,13 @@ Can't open display :0
 ----
 
 # 在虚拟机测试，没有运行Hyprland
-[lzw@lzw ~]$ wlr-randr
+[bsos@bsos ~]$ wlr-randr
 failed to connect to display
-[lzw@lzw ~]$ DISPLAY=:0 wlr-randr
+[bsos@bsos ~]$ DISPLAY=:0 wlr-randr
 failed to connect to display
 
 # 在虚拟机测试，有运行Hyprland
-[lzw@lzw ~]$ wlr-randr
+[bsos@bsos ~]$ wlr-randr
 Virtual-1 "(null) (null) (Virtual-1)"
   Make: (null)
   Model: (null)
@@ -352,8 +352,8 @@ Virtual-1 "(null) (null) (Virtual-1)"
   Attached to: #23 (VGA compatible controller)
 
 # 在vmware虚拟机测试，没有运行Hyprland
-[lzw@lzw ~]$ hwinfo --monitor
-[lzw@lzw ~]$
+[bsos@bsos ~]$ hwinfo --monitor
+[bsos@bsos ~]$
 ----
 
 在 `vmware` 虚拟机， `hwinfo` 获取不到显示器的信息。但是物理机上可以。

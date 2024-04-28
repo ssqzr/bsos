@@ -57,7 +57,7 @@ function base::check_root_user() {
 
 # 简单的单例，防止重复运行
 function base::lock() {
-    local lock_file="/tmp/arch_os_install.lock"
+    local lock_file="/tmp/bsos.lock"
     exec 99>"$lock_file"
     flock -n 99
     if [ $? -ne "$SHELL_TRUE" ]; then
@@ -91,7 +91,7 @@ function base::export_env() {
     local src_dir
     src_dir="$(dirname "${SCRIPT_DIR_b5b83ba6}")"
     export SRC_ROOT_DIR="${src_dir}"
-    export BUILD_ROOT_DIR="/var/tmp/arch_os_install/build"
+    export BUILD_ROOT_DIR="/var/tmp/bsos/build"
 
     # 处理 ROOT_PASSWORD
     base::input_root_password

@@ -30,7 +30,7 @@ function cmd::_init_cmd_history_filepath() {
         cmd_history_dir="${HOME}/.cache"
     fi
 
-    export __cmd_history_filepath="${cmd_history_dir}/lzw/cmd.history"
+    export __cmd_history_filepath="${cmd_history_dir}/bsos/cmd.history"
 }
 
 function cmd::_default_stdout_handler() {
