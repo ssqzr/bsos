@@ -22,6 +22,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 # NOTE: 可以用到的环境变量如下：
 # - HOME 用户主目录
 # - XDG_CONFIG_HOME 用户配置文件的根目录
+# - XDG_CACHE_HOME 存储用户特定的非重要性数据文件的基准目录
 # - ROOT_PASSWORD root用户的密码
 # - SRC_ROOT_DIR 代码的根目录
 # - PM_APP_NAME 模板
@@ -41,6 +42,10 @@ function custom_manager::_env() {
 
     if [ -z "$XDG_CONFIG_HOME" ]; then
         export XDG_CONFIG_HOME="$HOME/.config"
+    fi
+
+    if [ -z "$XDG_CACHE_HOME" ]; then
+        export XDG_CACHE_HOME="$HOME/.cache"
     fi
 
     if [ -z "$ROOT_PASSWORD" ]; then
@@ -77,6 +82,10 @@ function custom_manager::_clean_build() {
 function custom_manager::prepare() {
     if [ ! -e "${XDG_CONFIG_HOME}" ]; then
         cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    fi
+
+    if [ ! -e "${XDG_CACHE_HOME}" ]; then
+        cmd::run_cmd_with_history mkdir -p "${XDG_CACHE_HOME}" || return "${SHELL_FALSE}"
     fi
 
     return "$SHELL_TRUE"

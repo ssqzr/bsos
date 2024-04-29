@@ -119,13 +119,16 @@ source /usr/share/doc/pkgfile/command-not-found.zsh
 # zsh-autosuggestions 配置
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-# pywal 的配置 
-if [ -e "$HOME/.cache/wal/sequences" ];then
-    (cat "$HOME/.cache/wal/sequences" &)
-fi
-if [ -e "$HOME/.cache/wal/colors-tty.sh" ];then
-    source "$HOME/.cache/wal/colors-tty.sh"
-fi
+# wallust 的配置
+# 使用随机的主题颜色
+wallust theme -q -u random
+# 如果想使用根据壁纸生成的颜色主题，就替换成下面的
+# if [ -e "$HOME/.cache/wallust/sequences" ];then
+#     cat "$HOME/.cache/wallust/sequences"
+# else
+#     wallust theme -q -u random
+# fi
+
 
 # zsh-syntax-highlighting 配置
 # NOTE: 这个必须是最后一行，https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file

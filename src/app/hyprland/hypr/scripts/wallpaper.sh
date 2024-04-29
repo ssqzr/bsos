@@ -132,6 +132,7 @@ function hyprland::wallpaper::main() {
     local monitors
     local monitor_count
     local index
+    local name
 
     hyprland::wallpaper::set_log_file || return "$SHELL_FALSE"
 
@@ -144,10 +145,8 @@ function hyprland::wallpaper::main() {
     monitor_count=$(echo "$monitors" | yq 'length')
 
     for ((index = 0; index < monitor_count; index++)); do
-        local name
         name="$(echo "$monitors" | yq ".[${index}].name")" || return "$SHELL_FALSE"
 
-        local filepath
         filepath="$(hyprland::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
 
         if [ ! -f "$filepath" ]; then
@@ -164,9 +163,12 @@ function hyprland::wallpaper::main() {
     done
 
     cmd::run_cmd_with_history hyprctl hyprpaper unload unused || return "$SHELL_FALSE"
-    # NOTE: 对于 terminator 等VTE终端，wal 需要指定 --vte 参数才可以。
-    # wal -l 是亮色主题
-    cmd::run_cmd_with_history wal -l -i "$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
+
+    # 获取第一个显示器的名称
+    name="$(echo "$monitors" | yq ".[0].name")" || return "$SHELL_FALSE"
+    filepath="$(hyprland::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history wallust -q "${filepath}"
+
     return "$SHELL_TRUE"
 }
 

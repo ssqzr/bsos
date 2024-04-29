@@ -3,7 +3,7 @@
     font-size: ${font_size}px;
 }
 
-@import "$HOME/.cache/wal/colors-wlogout.css";
+@import "$HOME/.cache/colors/wlogout.css";
 
 
 window {

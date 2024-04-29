@@ -335,8 +335,8 @@ function hyprland::trait::features() {
     # 状态栏
     apps+=("custom:anyrun" "custom:ags")
 
-    # pywal 根据图片生成颜色主题
-    apps+=("custom:pywal")
+    # wallust 根据图片生成颜色主题
+    apps+=("custom:wallust")
     # 壁纸
     # bing 壁纸需要解析json字符串
     apps+=("default:wget" "default:go-yq" "default:hyprpaper")

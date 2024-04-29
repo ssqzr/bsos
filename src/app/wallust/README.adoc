@@ -1,0 +1,20 @@
+# wallust 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://codeberg.org/explosion-mental/wallust[官方文档]
+
+## 问题记录
+
+### 终端的颜色
+
+https://codeberg.org/explosion-mental/wallust/src/tag/2.10.0#terminal-colors[terminal-colors]
+
+[#wallust-3.0]
+### wallust 3.0 版本
+
+IMPORTANT: 后面升级3.0版本后需要再处理一次配置文件。
+
+wallust 下一个正式版本是 3.0 ，和 2.10.0 的版本有一些兼容的问题。
+
+到时候一起处理 https://codeberg.org/explosion-mental/wallust-templates/src/branch/master/hyprland.conf[hyprland.conf]

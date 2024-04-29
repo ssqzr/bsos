@@ -342,9 +342,11 @@ grep -- -v file
 * [ ] xref:src/app/wlogout/README.adoc#reboot-confirm[重启提醒用户还有未关闭应用]
 * [*] xref:src/app/hyprland/README.adoc#use-plugin[hyprland 插件的处理]
 * [ ] cavasik 需要修改为Hyprland的layer层运行
-* [ ] pywal xref:src/app/pywal/README.adoc#repeat-color[生成的颜色重复]
+* [*] [.line-through]#pywal xref:src/app/pywal/README.adoc#repeat-color[生成的颜色重复]# 改用 wallust 。
 * [*] `manager::app::do_command_recursion` 等递归调用时重复执行的问题
 * [ ] 卸载某个应用时，需要检测其依赖是否可以被卸载。<<uninstall_relation>>
+* [ ] xref:src/app/wallust/README.adoc#wallust-3.0[wallust 3.0版本的处理]
+* [ ] 调试命令 `dev trait` 支持多个应用和多个子命令
 
 ## 引用
 

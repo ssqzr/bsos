@@ -1,5 +1,5 @@
 // 需要确保 "~/.cache/wal/colors-rofi-light.rasi" 存在
-@import "~/.cache/wal/colors-rofi-light"
+@import "~/.cache/colors/rofi"
 
 configuration {
 /*	modes: "window,drun,run,ssh";*/

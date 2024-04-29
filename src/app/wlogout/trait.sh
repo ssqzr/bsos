@@ -107,7 +107,7 @@ function wlogout::trait::dependencies() {
     # custom:vim   自定义，也就是通过本脚本进行安装
     local apps=()
     # 动态颜色主题
-    apps+=("custom:pywal" "default:go-yq")
+    apps+=("custom:wallust" "default:go-yq")
     array::print apps
     return "${SHELL_TRUE}"
 }

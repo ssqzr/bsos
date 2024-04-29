@@ -103,8 +103,8 @@ function rofi::trait::dependencies() {
     # pamac:vim
     # custom:vim   自定义，也就是通过本脚本进行安装
     local apps=("custom:fonts")
-    # pywal 动态主题
-    apps+=("custom:pywal")
+    # wallust 动态主题
+    apps+=("custom:wallust")
     array::print apps
     return "${SHELL_TRUE}"
 }
