@@ -1,0 +1,33 @@
+# swaync 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/ErikReider/SwayNotificationCenter[官方文档]
+
+
+
+
+
+## 问题
+
+### 取消“不再显示”
+
+例如 fcitx5 弹出消息后，点击了“不再显示”。这样以后都不会显示这个通知了。
+
+但是我现在想取消“不再显示”，让它继续通知。
+
+“不再显示”的功能并不是 swaync 或者其他通知服务所实现的。而是软件自身实现的。
+
+通知服务只是提供一个按钮，当你点击“不再显示”时通知相应的软件去处理“不再显示”的请求。
+
+fcitx5 相应记录的配置文件是： `~/.config/fcitx5/conf/notifications.conf`
+
+[source,ini]
+----
+
+[HiddenNotifications]
+0=wayland-diagnose-other
+
+----
+
+删除掉相应的配置就又可以通知了。

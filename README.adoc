@@ -1,0 +1,355 @@
+
+# 文档
+include::doc/base.adoc[]
+
+## 背景说明
+
+我一直使用的是 https://manjaro.org/[Manjaro] 发行版和 https://kde.org/[KDE] 的窗口管理器。
+
+我的显示器是 `27寸` 的，全屏显示一个应用有点多余，显示两个应用分别占据屏幕的一半又显得小。
+
+使用 `KDE` 内置的平铺窗口有点吃力，也试过了 `KDE` 的平铺窗口的插件，大多都没有维护了。
+
+于是我发现了 `Hyprland` 这个平铺窗口管理器。
+
+是的，我又重装了系统。
+
+接下来我就遇到了所有人重装系统都会遇到的问题：需要重新安装所有软件以及配置所有软件。
+
+这花费了我很多时间。
+
+于是，这个脚本就一步一步的孵化出来了。
+
+
+## 关键需求点
+
+### 开发语言
+
+使用 `Bash` 进行开发。
+
+刚开始安装完操作系统后，基本上全部的发行版都会默认安装 `Bash` ，如果使用其他的开发语言，还需要先部署相应的语言开发环境。
+
+并且我们部署应用的时候，最常用的最方便的还是直接使用命令行的方式。
+
+因此 `Bash` 成为了我唯一的选择。
+
+
+### 无人值守
+
+由于安装过程耗时，如果全程需要人员陪同，盯着显示器查看安装进度，那么安装体验将会非常差，这个和我直接敲命令进行安装又有什么区别呢？
+
+所以安装过程无人值守是必须要满足的需求。
+
+无人值守主要有如下几个难点：
+
+* 使用包管理器安装软件过程中需要输入密码
+* 使用包管理器安装软件过程中需要回答一切确认的问题
+* 软件的不固定的配置
+
+#### 提权
+
+pacman 需要使用 root 权限， pamac 、 flatpak 、 yay 都不应该直接使用 root 权限，而是使用普通用户权限，然后权限管理模块进行校验身份。
+
+为了更符合平时的手动操作习惯，采用使用普通用户权限运行部署脚本，但是安装过程中肯定会遇到操作系统文件的场景，也就会遇到权限的问题。
+
+如果每次遇到权限的问题都需要输入密码校验，那么整个安装过程需要全程值守，这个体验会非常差。
+
+sudo 的 "-S, --stdin" 选项支持从标准输入读取密码。
+
+sudo 的配置文件还支持配置用户或者用户组的无密码模式。
+
+.在 /etc/sudoers.d 目录下新建配置文件，例如：10-xx
+[source]
+----
+%wheel ALL=(ALL) NOPASSWD: ALL <1>
+wheel ALL=(ALL) NOPASSWD: ALL <2>
+----
+
+<1> wheel 组下用户都可以无密码使用sudo
+<2> wheel用户可以无密码使用sudo
+
+使用sudo的权限问题采用无密码的方式解决，因此 pacman 的权限问题以及操作系统文件的权限问题可以解决了。
+
+pamac的权限问题需要先了解 https://wiki.archlinux.org/title/Polkit[Polkit组件] 。因为这些包管理器使用的身份认证组件都是 Polkit 。
+
+Polkit 也支持配置文件来定义认证规则，我们可以配置规则来绕过密码认证。
+
+
+.在 /etc/polkit-1/rules.d 目录下新建配置文件: 10-test.rules
+[%linenums,text,highlight=2..3]
+----
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.manjaro.pamac.commit" && subject.isInGroup("usergroup")) {
+        return polkit.Result.YES;
+    }
+});
+----
+
+[sidebar]
+.说明
+--
+* 当认证的应用是 org.manjaro.pamac.commit 时，并且用户是属于 usergroup 组时，直接认证成功。
+* 通过 cli 调用 pamac 安装应用进行认证时会打印 action.id 
+* 将 usergroup 替换为当前用户所属的组
+--
+
+
+
+
+#### 包管理器安装中的提问
+
+很幸运，几乎所有的包管理器都支持无提问的命令行参数。
+
+* pacman "--noconfirm" 选项
+* pamac "--no-confirm" 选项
+* yay "--noconfirm" 选项
+* flatpak "-y, --assumeyes" 选项
+
+#### 软件不固定的应用配置
+
+软件的部署除了安装到系统，最重要的还是软件的配置。大部分的软件的大部分配置都是通用固定的，在安装前就可以确定下来。
+
+但是一部分配置是不确定，可能需要根据用户、系统环境、软件依赖等因素来动态生成。
+
+[example]
+====
+* git 配置里的 username 和 email 等配置
+* Hyprlan 的显示器配置，需要根据具体的显示器来配置
+* 字体的配置
+* 本地化的配置
+* 等等
+====
+
+
+
+这些配置大部分都是因人而异的，所以需要和用户交互询问他们应该怎么配置。
+
+为了满足无人值守，我们需要将所有的交互尽可能提前，交互结束后就不再需要用户干预了。
+
+我们增加了一个“安装向导”的流程来处理交互的问题。
+
+每个应用都定义了“安装向导”的接口，如果没有需要交互的，保持默认实现就可以了。
+
+安装流程会在准备工作结束后运行所有应用的“安装向导”接口来和用户交互。交互过程中得到的答复会保存到配置文件中，后面安装应用的时候再解析进行相应的操作。
+
+
+### 依赖
+
+大部分的软件通过包管理器进行安装时都自动安装其依赖的软件包，这些依赖的软件包一般都是其运行或者安装所必需的。但是有部分场景，一些依赖的软件并不会自动安装。
+
+* 可选依赖，通过CLI安装时，可选依赖并不会自动安装
+* 通过源码安装的包，并不会自动安装其依赖
+* 少数软件包并不会定义依赖的包，包管理器自然也不会自动安装其依赖
+* 软件的一些特性功能需要使用其他软件，但是这些软件并没定义在软件的依赖列表里
+
+因此除了软件自己定义的依赖关系，我们可能还需要手动增加其依赖。依赖主要包括：
+
+* 安装依赖
+* 运行时依赖
+* 特性依赖
+
+每一个自定义的应用都需要实现 dependencies 和 features 两个接口：
+
+* dependencies 定义安装依赖、运行时依赖，这里面定义的软件会在安装当前软件前进行安装
+* features 定义特性依赖，这里面定义的软件会在安装当前软件后进行安装
+
+软件之间的依赖并不是强依赖，是“使用上”的依赖。
+
+[example]
+====
+`zsh` 的 `features` 里有 `pkgfile` ，用于提供 `command not found` 的功能。
+
+但是 `pkgfile` 并不依赖 `zsh` 。 `pkgfile` 是一个相对独立的应用。
+====
+
+
+### 调试功能
+
+除了应用常规的日志记录调试功能，还需要提供日常开发需要的调试功能。
+
+整个安装过程是非常耗时的，单个应用的部署是相对独立的，可以单独运行安装和卸载。因此日常开发修改BUG、添加部署的应用时，为了快速验证修改的正确性，我们需要提供 CLI 命令来提升开发效率。
+
+## 设计
+
+### 框架图
+
+[excalidraw]
+....
+include::doc/assets/bsos_architecture.excalidraw[]
+....
+
+### 模块
+
+* `CLI` 用于解析命令行
+* `Flow` 安装流、卸载流等
+* `app manager` 用于处理单个应用的安装等功能实现
+* `custom manager` 自定义应用的安装卸载管理层
+* `app trait` 自定义应用的接口实现层
+* `package manager` 包管理器的抽象层，用于统一使用 `pacman` 、 `pamac` 、 `yay` 、 `flatpak` 等抽象的 `API` 。
+* `utils` 工具包
+* `dev` 方便调试的 `CLI` 实现
+
+### 调试
+
+NOTE: 还没处理
+
+## 问题记录
+
+### 为什么不选择 https://nixos.org/[NixOS]
+
+这里就不过多介绍 `NixOS` 了，直接看官方的介绍就可以了。
+
+* https://nixos.org/[NixOS官方]
+* https://nixos-cn.org/[NixOS中文网站]
+
+然后我查阅了以下优缺点：
+
+* https://nixos-and-flakes.thiscute.world/zh/introduction/advantages-and-disadvantages#disadvantages[NixOS 的优缺点]
+* https://thiscute.world/posts/my-experience-of-nixos/[OS as Code - 我的 NixOS 使用体会]
+* https://rqdmap.top/posts/nixos/[NixOS: 选择与放弃]
+
+
+* `NixOS` 基于 `Ubuntu` ，我以前是 `Ubuntu` 的粉丝，不过现在不是了，是 `Archlinux` 的粉丝。
+** `Ubuntu` 对 `snap` 的处理我不是很认同，甚至将 `snap` 作为默认的软件包管理。
+** `Archlinux` 的滚动更新。我期望一直用的是最新的版本，我认为往往新版本解决了更多的问题和支持更多的特性。
+* https://nixos-cn.org/tutorials/concept/HowToMakePath-dependentProgramsWork.html[如何让路径依赖的程序正常工作]， `NixOS` 安装和运行程序的方式和其他发行版有差异，因此程序使用上会有学习成本，并且出现问题时可能搜索不到解决方案。
+** `NixOS` 放弃了 `FHS` 了
+** `NixOS` 会通过以下方式确保有路径依赖的软件正常运行
+*** 包装脚本
+*** 构建过程中的路径替换
+*** 符号链接
+* `NixOS` 对程序配置的处理，不单单需要了解程序本身的配置，还需要学习 `NixOS` 的配置。
+
+其实我没有使用过 `NixOS` ，都是从网上了解的，这一些理解是很片面的，甚至是错误的。
+
+主要还是对程序的安装和运行的处理方式和其他所有发行版不一样，遇到的问题将会比其他发行版本更多，所以我暂时不使用 `NixOS` 。
+
+但是我是非常看好 `NixOS` 的，期望后面可以使用它。
+
+### pamac安装卡住
+
+执行安装脚本，间歇性卡住。
+
+每次卡住都是通过pamac安装应用时卡住。
+
+卡住的子进程都是 `pkttyagent` 。这个进程是客户端向服务端 `polkitd` 获取权限。
+
+后面排查发现是 pamac 获取锁失败。
+
+```bash
+sudo rm /var/lib/pacman/db.lck
+
+```
+
+当存在那个锁文件时，执行如下的脚本 `test.sh` 会有相同的现象。
+当没有那个锁文件时，执行如下的脚本 `test.sh` 不会有问题。
+```
+#!/bin/bash
+# test.sh
+
+source ./lib/utils/all.sh
+
+cmd::run_cmd_with_history pamac install --no-confirm pot-translation-bin || exit 1
+cmd::run_cmd_with_history pamac install --no-confirm hyprpicker || exit 2
+
+echo "all success"
+```
+
+查看有问题情况时执行的命令列表，使用 `pamac` 安装的应用只有 `pot-translation-bin` 和 `hyprpicker` ， `pot-translation-bin` 安装成功， `hyprpicker` 安装失败。
+
+为什么执行 `test.sh` 又没有问题呢？？那么锁文件残留是谁残留的呢？？
+
+目前还不确定，只能采用规避的手段。每次执行 `pacman` 和 `pamac` 时清理锁文件。
+
+后面又遇到 `pamac` 安装应用的时候，卡在下载某个包了，看日志记录的 `pamac` 的安装输出，最后一条信息是下载某个包成功。
+不知道接下来是下载其他的包卡住了还是执行什么操作。 `ps` 查看也只是输出 `restart_syscall` 。
+
+后面使用yay安装就没有问题了。
+
+[#uninstall_relation]
+### 卸载的问题
+
+卸载应用时需要卸载其依赖的应用，也就是 dependencies 和 features 里定义的应用列表。但是其依赖的应用可能也被其他应用依赖着。
+
+因此卸载一个应用时不能直接递归卸载其依赖的应用，需要检测其是否可以被卸载。
+
+首先我们需要根据卸载的应用和其依赖关系列出全部的应用，如果某个依赖的应用的被依赖的应用列表全部在卸载列表里，那么这个应用是可以卸载的。如果存在某个被依赖的应用不再整个卸载列表里，那么说明卸载这个依赖可能导致其他应用有问题，因此不能卸载。
+
+[.red]#目前的卸载功能使用以及测试都比较少，所以没有花费太多的时间在卸载上。现在卸载一个应用还是会递归卸载其依赖，这个是为了方便测试全新安装。#
+
+IMPORTANT: 后面需要提供更安全的卸载流程。
+
+
+
+### 音频可视化应用的选择
+
+https://www.reddit.com/r/linux4noobs/comments/dk68v7/a_good_audio_visualizer_tool_for_linux/[有哪些音频可视化]
+
+* https://github.com/dpayne/cli-visualizer[cli-visualizer] 支持颜色主题，可以配合 pywal 一起使用实现多变的颜色主题。[.red]#2018-10-8后就没有发布新版本了#。
+* https://github.com/karlstav/cava?tab=readme-ov-file#configuration[cava] star数更多。截至目前（2024-4-17）发布频繁。
+* https://github.com/jarcode-foss/glava[glava] X11的，没有试过wayland是否可以。
+* https://github.com/TheWisker/Cavasik[Cavasik]
+* https://github.com/NickvisionApps/Cavalier[Cavalier]
+
+我目前选择的是 https://github.com/TheWisker/Cavasik[Cavasik] 。
+
+* cli-visualizer 不知道怎么配置
+* cava文档太简单了，都不知道配置项有哪些
+* Cavasik 有图形化界面配置，我们可以在界面配置保存配置文件。
+* Cavalier 是C#的，可以通过faltpak安装，有图形化界面配置，界面和Cavasik差不多。但是我看特性没有Cavasik的多，先用Cavasik看看吧。
+
+
+### 命令行中“--”的含义
+
+在使用zsh的bindkey的时候发现有使用"bindkey --"的代码，查看 https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Zle-Builtins[bindkey]的文档，也没有查到其含义。
+
+其实以前也在其他命令看到过类似的用法，只是没特别在意而已。
+
+https://unix.stackexchange.com/questions/11376/what-does-double-dash-mean[What does "--" (double-dash) mean?]
+
+看上面这个解答就可以了。
+
+大多数 Bash 内置命令和许多其他命令中使用双破折号 ( -- ) 来表示命令选项的结束，之后仅接受位置参数。
+
+使用示例：假设您要在文件中查找字符串 -v 。通常 -v 将被视为反转匹配含义的选项（仅显示不匹配的行），但使用 -- 您可以 grep 查找字符串 -v 像这样：
+
+[source,console]
+----
+grep -- -v file
+----
+
+## TODO
+
+* [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
+* [*] pywal 的使用
+* [*] hypridle 的使用
+* [*] hyprlock 的使用
+* [ ] hyprcursor 的使用
+* [*] wlogout 的使用
+* [ ] ags 的使用
+* [*] grub 主题美化
+* [*] https://github.com/TheWisker/Cavasik[Cavasik] 的使用
+* [*] 修改默认的应用程序
+* [ ] swaync 的样式没处理，字体也没处理
+* [*] 处理 vtty 的字体和shell的美化问题
+* [ ] 音频配置文件的处理
+* [ ] xref:src/app/fcitx5/README.adoc#fcitx5-vscode-input-repeat[VSCode终端输入中文重复的问题]
+* [ ] xref:src/app/hyprland/README.adoc#hyprland-pywal[Hyprland使用pywal的问题]
+* [ ] xref:src/app/rofi/README.adoc#rofi-focus[rofi 使用问题]
+* [*] xref:src/app/open_vm_tools/README.adoc[虚拟机需要安装性能优化工具]
+* [ ] hyprlock 在 vmware 虚拟机上红屏
+* [*] 注销用户，会将ssh登录的也给注销。
+* [ ] xref:src/app/wlogout/README.adoc#reboot-confirm[重启提醒用户还有未关闭应用]
+* [*] xref:src/app/hyprland/README.adoc#use-plugin[hyprland 插件的处理]
+* [ ] cavasik 需要修改为Hyprland的layer层运行
+* [ ] pywal xref:src/app/pywal/README.adoc#repeat-color[生成的颜色重复]
+* [*] `manager::app::do_command_recursion` 等递归调用时重复执行的问题
+* [ ] 卸载某个应用时，需要检测其依赖是否可以被卸载。<<uninstall_relation>>
+
+## 引用
+
+https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html[Bash 文档]
+
+https://www.gnu.org/software/bash/manual/bash.html[Bash Reference Manual]
+
+https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/#links[asciidoc 文档]

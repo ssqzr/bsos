@@ -32,7 +32,7 @@ function develop::update_readme() {
     local app_name="$1"
     local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
 
-    sed -i "s/app_name/$app_name/" "${app_dir}/README.asciidoc"
+    sed -i "s/app_name/$app_name/" "${app_dir}/README.adoc"
 }
 
 function develop::create_app() {
@@ -56,7 +56,7 @@ function develop::create_app() {
 
     println_info "add app: $app_name"
 
-    cp -r "${SCRIPT_DIR_d6dc03c7}/app_template" "${app_dir}"
+    cp -r "${SCRIPT_DIR_d6dc03c7}/template/app_name" "${app_dir}"
 
     develop::update_trait_script "$app_name" || return "$SHELL_FALSE"
 
@@ -75,7 +75,7 @@ function develop::update_template() {
 
         linfo "update app($app_name) template"
         # 复制新的文件
-        cp -r --update=none "${SCRIPT_DIR_d6dc03c7}/app_template"/* "${app_dir}"
+        cp -r --update=none "${SCRIPT_DIR_d6dc03c7}/template/app_name"/* "${app_dir}"
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "copy template file to app($app_name) failed"
             return "$SHELL_FALSE"

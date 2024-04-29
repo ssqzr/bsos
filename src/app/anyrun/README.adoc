@@ -1,0 +1,7 @@
+# anyrun 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://github.com/anyrun-org/anyrun[官方文档]
+
+[.red]#目前还没处理，后续部署#
+

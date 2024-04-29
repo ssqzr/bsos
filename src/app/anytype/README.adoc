@@ -1,0 +1,5 @@
+# anytype 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://anytype.io/[官方文档]
+

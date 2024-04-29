@@ -1,0 +1,31 @@
+# rofi 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://github.com/davatorium/rofi[官方文档]
+
+
+## 问题记录
+
+### 原生wayland的支持
+
+目前有一个仓库支持wayland的： https://aur.archlinux.org/packages/rofi-lbonn-wayland-git[rofi-lbonn-wayland-git]
+
+[#rofi-focus]
+### rofi 使用问题
+
+使用的包是： https://archlinux.org/packages/extra/x86_64/rofi/[rofi]
+
+启动 `rofi` 总是没有焦点，不能直接输入或者选中，需要鼠标移动到它上面才可以
+
+有时候启动 `rofi` 后，输入后界面会跑到另一个显示器上。
+
+有时候启动 `rofi` 后程序的宽度不一样，并且不能输入，鼠标移动上去没反应，也不能点击。
+
+尝试修改Hyprland的窗口规则也不能解决问题：
+
+[source]
+----
+windowrulev2 = center 1,class:^(Rofi)$
+windowrulev2 = stayfocused,class:^(Rofi)$
+windowrulev2 = forceinput,class:^(Rofi)$
+----

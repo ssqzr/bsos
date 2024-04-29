@@ -1,0 +1,18 @@
+# zsh 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://www.zsh.org[官方文档]
+
+
+## vtty 显示中文的问题
+
+- https://wiki.archlinux.org/title/Linux_console[Linux_console]
+- https://github.com/oldherl/syllazh[Linux TTY font for Chinese]
+- https://askubuntu.com/questions/25187/how-to-make-the-vt-display-chinese-characters[How to make the VT display chinese characters?]
+
+`vtty` 对字体的支持有限，网上没找到安装中文字体的完美方法。
+
+最后还是觉得直接显示英文比较好，不会有各种奇怪的问题。
+
+因此在 `zshrc` 文件中检测是否是 `vtty` ，如果是就设置 `LANG="C.UTF-8"` 。
+

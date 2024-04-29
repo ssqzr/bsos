@@ -1,0 +1,5 @@
+# amd_gpu 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://wiki.archlinux.org/title/AMDGPU[官方文档]
+

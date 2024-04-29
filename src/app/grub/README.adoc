@@ -1,0 +1,12 @@
+# grub 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://www.gnu.org/software/grub/manual/grub/html_node/index.html#SEC_Contents[官方文档]
+
+
+## 主题
+
+https://www.gnu.org/software/grub/manual/grub/html_node/Theme-file-format.html#Theme-file-format[主题文档]
+
+https://github.com/vinceliuice/grub2-themes[Modern Design theme for Grub2]
+

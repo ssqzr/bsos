@@ -1,4 +1,0 @@
-# locale 安装说明文档
-
-official_document_url[官方文档]
-

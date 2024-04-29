@@ -1,0 +1,41 @@
+# pywal 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/dylanaraps/pywal[官方文档]
+
+
+## 问题
+
+[#repeat-color]
+### 生成的颜色重复
+
+目前生成的颜色，color1-7和color9-15的颜色一样。
+
+[source,console]
+----
+❯ cat ~/.cache/wal/colors
+#fbf9f6
+#1E6695
+#6A718C
+#957A87
+#658CB9
+#A1909E
+#E6A590
+#222D26
+#8a8276
+#1E6695
+#6A718C
+#957A87
+#658CB9
+#A1909E
+#E6A590
+#222D26
+----
+
+类似的问题： https://github.com/dylanaraps/pywal/issues/493[pywal vs colorz: repeating color values]
+
+## 替代品
+
+https://codeberg.org/explosion-mental/wallust[wallust]
+

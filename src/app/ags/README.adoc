@@ -1,0 +1,7 @@
+# ags 安装说明文档
+include::../../../doc/base.adoc[]
+
+https://github.com/Aylur/ags[官方文档]
+
+[.red]#ags 的支持比较复杂，工作量巨大，暂时不处理。#
+

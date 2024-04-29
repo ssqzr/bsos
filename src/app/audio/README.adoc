@@ -1,0 +1,5 @@
+# audio 安装说明文档
+include::../../../doc/base.adoc[]
+
+official_document_url[官方文档]
+

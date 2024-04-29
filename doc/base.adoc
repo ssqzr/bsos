@@ -1,0 +1,7 @@
+:sectnums:
+:sectnumlevels: 5
+:toc: right
+:toc-title: {doctitle}
+:toclevels: 5
+:table-caption: {doctitle}.
+:icons: font

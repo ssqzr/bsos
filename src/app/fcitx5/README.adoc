@@ -1,0 +1,25 @@
+# fcitx5 安装说明文档
+include::../../../doc/base.adoc[]
+
+official_document_url[官方文档]
+
+## 问题记录
+
+### fcitx5 配置回写的问题
+
+拷贝配置文件前先结束掉 fcitx5 进程，不然当前运行的 fcitx5 会回写配置。
+
+如果是备份配置，那么可能导致备份的配置是脏数据。
+
+如果是恢复配置，那么可能导致恢复后的配置被覆盖，恢复的配置不符合预期。
+
+
+[#fcitx5-vscode-input-repeat]
+### vscode终端输入中文重复的问题
+
+* https://juejin.cn/post/7010651687039795214[关于fcitx5在vscode命令行中输入重复的问题]
+* https://bbs.archlinuxcn.org/viewtopic.php?id=11193[visual-studio-code-bin 终端只会重复第一次输入的中文]
+
+测试卸载了 `fcitx5-chinese-addons` 和安装 `fcitx5-rime` 。并且重启了，问题依旧。
+
+

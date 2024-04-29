@@ -1,0 +1,13 @@
+# obs 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://obsproject.com/[官方文档]
+
+## 问题记录
+
+### 添加 Spectralizer 的支持
+
+https://github.com/univrsal/spectralizer[Spectralizer]
+
+
