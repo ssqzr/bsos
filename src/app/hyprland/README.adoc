@@ -5,6 +5,15 @@ include::../../../doc/base.adoc[]
 https://wiki.hyprland.org/[官方文档]
 
 
+## 使用手册
+
+### 查看最新的日志文件
+
+[source,console]
+----
+cat /tmp/hypr/$(ls -t /tmp/hypr/ | head -n 1)/hyprland.log
+----
+
 ## 问题记录
 
 ### 显示器（ Monitor ）设置
