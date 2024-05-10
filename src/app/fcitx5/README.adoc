@@ -22,4 +22,8 @@ official_document_url[官方文档]
 
 测试卸载了 `fcitx5-chinese-addons` 和安装 `fcitx5-rime` 。并且重启了，问题依旧。
 
+后面发现让 `vscode` 以 `xwayland` 启动就没有这个问题。
+
+可以采用这个方法规避这个问题，但是并没有真正解决，所以不认为 `fix` 了，问题持续关注。
+
 
