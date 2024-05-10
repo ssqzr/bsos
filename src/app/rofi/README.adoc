@@ -10,8 +10,10 @@ https://github.com/davatorium/rofi[官方文档]
 
 目前有一个仓库支持wayland的： https://aur.archlinux.org/packages/rofi-lbonn-wayland-git[rofi-lbonn-wayland-git]
 
+对应的 `Archlinux` 的包是 `rofi-wayland` 。
+
 [#rofi-focus]
-### rofi 使用问题
+### rofi 焦点问题
 
 使用的包是： https://archlinux.org/packages/extra/x86_64/rofi/[rofi]
 
@@ -29,3 +31,7 @@ windowrulev2 = center 1,class:^(Rofi)$
 windowrulev2 = stayfocused,class:^(Rofi)$
 windowrulev2 = forceinput,class:^(Rofi)$
 ----
+
+使用 `rofi-wayland` 包后，焦点的问题解决了。应该是 `rofi` 在 `xwayland` 上有问题。
+
+还是期望官方可以早日支持 `wayland` 。

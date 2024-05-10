@@ -19,10 +19,7 @@ function rofi::trait::package_manager() {
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
 function rofi::trait::package_name() {
     # FIXME: rofi 是否已经原生支持wayland
-    # rofi-lbonn-wayland-git 运行 rofi -dump-config > ~/.config/rofi/config.rasi 报错：
-    # ABI version of plugin: 'calc.so' does not match
-    # rofi 使用xwayland好像也没什么问题，原版修复问题会快一些
-    echo "rofi"
+    echo "rofi-wayland"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
