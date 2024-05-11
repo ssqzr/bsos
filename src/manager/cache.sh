@@ -9,9 +9,13 @@ source "${SCRIPT_DIR_b121320e}/../lib/utils/all.sh" || exit 1
 source "${SCRIPT_DIR_b121320e}/app_manager.sh" || exit 1
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_b121320e}/base.sh" || exit 1
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_b121320e}/flags.sh" || exit 1
 
 # 生成安装列表
 function manager::cache::generate_top_apps() {
+    local flags="$1"
+    shift
     local pm_apps=("${@}")
 
     local pm_app
@@ -30,6 +34,17 @@ function manager::cache::generate_top_apps() {
     println_info "generate top install app list, it take a long time..."
     linfo "generate top install app list, it take a long time..."
 
+    if manager::flags::develop::is_exists "$flags"; then
+        linfo "is in develop mode, not add prior install apps to top app list, flags=${flags}"
+    else
+        # 先处理优先安装的app
+        temp_str="$(base::prior_install_apps::list)" || return "$SHELL_FALSE"
+        array::readarray priority_apps < <(echo "${temp_str}")
+        for pm_app in "${priority_apps[@]}"; do
+            config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
+        done
+    fi
+
     if [ 0 -ne "${#pm_apps[@]}" ]; then
         linfo "only add ${pm_apps[*]} to top app list"
         for pm_app in "${pm_apps[@]}"; do
@@ -37,13 +52,6 @@ function manager::cache::generate_top_apps() {
         done
         return "$SHELL_TRUE"
     fi
-
-    # 先处理优先安装的app
-    temp_str="$(base::prior_install_apps::list)" || return "$SHELL_FALSE"
-    array::readarray priority_apps < <(echo "${temp_str}")
-    for pm_app in "${priority_apps[@]}"; do
-        config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
-    done
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         local app_name
@@ -199,8 +207,8 @@ function manager::cache::do() {
     local flags="$1"
     local pm_apps=("${@:2}")
 
-    echo "${flags}" | grep -q "reuse_cache"
-    if [ $? -ne "$SHELL_TRUE" ]; then
+    if ! manager::flags::reuse_cache::is_exists "$flags"; then
+        linfo "no reuse cache, delete all cache, flags=${flags}"
         config::cache::delete || return "$SHELL_FALSE"
     fi
 
@@ -210,11 +218,11 @@ function manager::cache::do() {
 
     # 指定 pm_apps 参数时，必须重新生成 top app list
     if [ 0 -ne "${#pm_apps[@]}" ]; then
-        manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
+        manager::cache::generate_top_apps "${flags}" "${pm_apps[@]}" || return "$SHELL_FALSE"
     else
         if ! config::cache::top_apps::is_exists; then
             # 生成需要处理的应用列表
-            manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
+            manager::cache::generate_top_apps "${flags}" "${pm_apps[@]}" || return "$SHELL_FALSE"
         fi
     fi
 

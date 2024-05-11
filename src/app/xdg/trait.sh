@@ -47,7 +47,7 @@ function xdg::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function xdg::trait::post_install() {
     # https://wiki.archlinux.org/title/XDG_user_directories
-    cmd::run_cmd_with_history xdg-user-dirs-update
+    cmd::run_cmd_with_history xdg-user-dirs-update || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -20,6 +20,8 @@ source "${SCRIPT_DIR_8dac019e}/manager/uninstall_flow.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/cache.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_8dac019e}/manager/flags.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
 function main::ask() {
@@ -30,7 +32,7 @@ function main::ask() {
     if [ $code -eq 130 ]; then
         return "$SHELL_FALSE"
     elif [ $code -eq "$SHELL_TRUE" ]; then
-        flags+="|check_loop"
+        manager::flags::check_loop::add flags || return "$SHELL_FALSE"
     fi
 
     tui::builtin::confirm "reuse cache if exists ?" "y"
@@ -38,7 +40,7 @@ function main::ask() {
     if [ $code -eq 130 ]; then
         return "$SHELL_FALSE"
     elif [ $code -eq "$SHELL_TRUE" ]; then
-        flags+="|reuse_cache"
+        manager::flags::reuse_cache::add flags || return "$SHELL_FALSE"
     fi
     echo "$flags"
     return "$SHELL_TRUE"
@@ -88,8 +90,9 @@ function main::must_do() {
 function main::check() {
     local flags="$1"
 
-    echo "${flags}" | grep -q "check_loop"
-    if [ $? -eq "$SHELL_TRUE" ]; then
+    if ! manager::flags::check_loop::is_exists "$flags"; then
+        linfo "no need check loop dependencies, flags=${flags}"
+    else
         manager::app::check_loop_relationships
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "check_loop_dependencies failed"

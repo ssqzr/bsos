@@ -13,6 +13,8 @@ source "$SCRIPT_DIR_d6dc03c7/lib/utils/all.sh"
 source "$SCRIPT_DIR_d6dc03c7/manager/base.sh"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR_d6dc03c7/manager/app_manager.sh"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR_d6dc03c7/manager/flags.sh"
 
 function develop::gen_uuid() {
     uuidgen | awk -F '-' '{print $1}'
@@ -84,7 +86,7 @@ function develop::update_template() {
     done
 }
 
-function develop::call_trait() {
+function develop::command::call_trait() {
     local app_names="$1"
     local sub_commands="$2"
     local temp_str
@@ -126,9 +128,39 @@ function develop::call_trait() {
     return "$SHELL_TRUE"
 }
 
+function develop::command::install() {
+    local flags="$1"
+    local app_names="$2"
+    local temp_str
+    local pm_apps=()
+    local pm_app
+
+    if [ -z "$app_names" ]; then
+        lerror "call install failed, param app_names is empty"
+        println_error "call install failed, param app_names is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ -n "${app_names}" ]; then
+        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
+        array::readarray pm_apps < <(echo "${temp_str}")
+    fi
+
+    manager::flags::reuse_cache::add flags || return "$SHELL_FALSE"
+
+    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+
+    install_flow::main_flow || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
 function develop::command() {
     local sum_command="$1"
     local command_params=("${@:2}")
+    local flags
+    manager::flags::develop::add flags || return "$SHELL_FALSE"
+
     case "${sum_command}" in
 
     "create")
@@ -143,8 +175,13 @@ function develop::command() {
         manager::app::check_loop_relationships || return "$SHELL_FALSE"
         ;;
 
+    "install")
+        # 这个安装不会安装全局需要安装的包，可以快速安装一个应用
+        develop::command::install "$flags" "${command_params[@]}" || return "$SHELL_FALSE"
+        ;;
+
     "trait")
-        develop::call_trait "${command_params[@]}" || return "$SHELL_FALSE"
+        develop::command::call_trait "${command_params[@]}" || return "$SHELL_FALSE"
         ;;
 
     *)
