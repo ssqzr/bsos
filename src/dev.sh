@@ -85,22 +85,43 @@ function develop::update_template() {
 }
 
 function develop::call_trait() {
-    local app_name="$1"
-    local sub_command="$2"
+    local app_names="$1"
+    local sub_commands="$2"
+    local temp_str
+    local pm_apps=()
+    local commands=()
+    local pm_app
+    local command
 
-    if [ -z "$app_name" ]; then
-        lerror "call trait failed, param app_name is empty"
-        println_error "call trait failed, param app_name is empty"
+    if [ -z "$app_names" ]; then
+        lerror "call trait failed, param app_names is empty"
+        println_error "call trait failed, param app_names is empty"
         return "$SHELL_FALSE"
     fi
 
-    if [ -z "$sub_command" ]; then
-        lerror "call trait failed, param sub_command is empty"
-        println_error "call trait failed, param sub_command is empty"
+    if [ -z "$sub_commands" ]; then
+        lerror "call trait failed, param sub_commands is empty"
+        println_error "call trait failed, param sub_commands is empty"
         return "$SHELL_FALSE"
     fi
 
-    manager::app::run_custom_manager "custom:${app_name}" "${sub_command}" || return "$SHELL_FALSE"
+    if [ -n "${app_names}" ]; then
+        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
+        array::readarray pm_apps < <(echo "${temp_str}")
+    fi
+
+    if [ -n "${sub_commands}" ]; then
+        temp_str=$(echo "$sub_commands" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print $i }')
+        array::readarray commands < <(echo "${temp_str}")
+    fi
+
+    for pm_app in "${pm_apps[@]}"; do
+        for command in "${commands[@]}"; do
+            println_info "call app($pm_app) trait ${command}..."
+            manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
+            println_success "call app($pm_app) trait ${command} success."
+        done
+    done
 
     return "$SHELL_TRUE"
 }
