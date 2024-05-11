@@ -1,5 +1,6 @@
 local wezterm = require 'wezterm'
 local theme = require('config.theme')
+local tab = require('config.tab')
 local mux = wezterm.mux
 local act = wezterm.action
 
@@ -12,8 +13,8 @@ config.enable_wayland = false
 config.default_cursor_style = 'BlinkingBlock'
 config.hide_mouse_cursor_when_typing = true
 
-theme.colors(config)
-theme.window_background_gradient(config)
+theme.config(config)
+tab.config(config)
 
 -- 字体
 -- wezterm 捆绑了 JetBrains Mono
@@ -24,8 +25,7 @@ config.default_prog = { '/usr/bin/zsh' }
 -- 背景透明度
 config.window_background_opacity = 1
 config.text_background_opacity = 1.0
--- 标签页在底部
-config.tab_bar_at_bottom = true
+
 -- 不活动窗体的样式
 config.inactive_pane_hsb = {
     -- 色调

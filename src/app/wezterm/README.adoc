@@ -70,3 +70,8 @@ ____
 ____
 
 `force_reverse_video_cursor` 的配置是将终端的背景色用作光标的前景色，将终端的前景色用作光标的背景色。这个配置会覆盖 `cursor_bg` 、 `cursor_border` 、 `cursor_fg` 这三个配置。
+
+
+## 参考
+
+* https://github.com/wez/wezterm/discussions/628[Show your wezterms]
