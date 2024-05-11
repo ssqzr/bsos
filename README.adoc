@@ -334,7 +334,7 @@ grep -- -v file
 * [*] 处理 vtty 的字体和shell的美化问题
 * [ ] 音频配置文件的处理
 * [ ] xref:src/app/fcitx5/README.adoc#fcitx5-vscode-input-repeat[VSCode终端输入中文重复的问题]
-* [ ] xref:src/app/hyprland/README.adoc#hyprland-pywal[Hyprland使用pywal的问题]
+* [*] xref:src/app/hyprland/README.adoc#hyprland-pywal[Hyprland使用pywal的问题]
 * [*] xref:src/app/rofi/README.adoc#rofi-focus[rofi 焦点问题]
 * [*] xref:src/app/open_vm_tools/README.adoc[虚拟机需要安装性能优化工具]
 * [ ] hyprlock 在 vmware 虚拟机上红屏
@@ -346,7 +346,7 @@ grep -- -v file
 * [*] `manager::app::do_command_recursion` 等递归调用时重复执行的问题
 * [ ] 卸载某个应用时，需要检测其依赖是否可以被卸载。<<uninstall_relation>>
 * [ ] xref:src/app/wallust/README.adoc#wallust-3.0[wallust 3.0版本的处理]
-* [ ] 调试命令 `dev trait` 支持多个应用和多个子命令
+* [*] 调试命令 `dev trait` 支持多个应用和多个子命令
 
 ## 引用
 
