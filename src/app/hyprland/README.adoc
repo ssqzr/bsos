@@ -11,7 +11,7 @@ https://wiki.hyprland.org/[官方文档]
 
 [source,console]
 ----
-cat /tmp/hypr/$(ls -t /tmp/hypr/ | head -n 1)/hyprland.log
+cat $XDG_RUNTIME_DIR/hypr/$(ls -t $XDG_RUNTIME_DIR/hypr/ | head -n 1)/hyprland.log
 ----
 
 ## 问题记录

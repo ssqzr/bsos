@@ -167,7 +167,7 @@ function hyprland::wallpaper::main() {
     # 获取第一个显示器的名称
     name="$(echo "$monitors" | yq ".[0].name")" || return "$SHELL_FALSE"
     filepath="$(hyprland::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history wallust -q "${filepath}"
+    cmd::run_cmd_with_history wallust -a 80 -q "${filepath}"
 
     return "$SHELL_TRUE"
 }

@@ -109,3 +109,13 @@ new_engine = true
 template = "template/rofi.rasi"
 target = "~/.cache/colors/rofi.rasi"
 new_engine = true
+
+[[entry]]
+template = "template/zsh.zsh"
+target = "~/.cache/colors/zsh.zsh"
+new_engine = true
+
+[[entry]]
+template = "template/wezterm_colors.lua"
+target = "~/.cache/colors/wezterm_colors.lua"
+new_engine = true

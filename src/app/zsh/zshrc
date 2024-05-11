@@ -75,6 +75,10 @@ bindkey "^[h" beginning-of-line
 bindkey "^H" backward-kill-word
 # Ctrl-Delete
 bindkey "^[[3;5~" kill-word
+# Ctrl-left
+bindkey "^[[1;5D" backward-word
+# Ctrl-right
+bindkey "^[[1;5C" forward-word
 
 # 去掉默认的LESS=-R
 unset LESS
@@ -116,20 +120,29 @@ fi
 # pkgfile 配置，command-not-found 的支持
 source /usr/share/doc/pkgfile/command-not-found.zsh
 
+# wallust 的配置
+if [ -e "$HOME/.cache/wallust/sequences" ];then
+    # 使用指定的壁纸生成的主题颜色
+    # 查看以下代码了解会设置终端的哪些颜色
+    # https://codeberg.org/explosion-mental/wallust/src/branch/master/src/sequences.rs
+    cat "$HOME/.cache/wallust/sequences"
+else
+    # 使用随机的主题颜色
+    wallust theme -q -u random
+fi
+if [ -e "${XDG_CACHE_HOME:-$HOME/.cache}/colors/zsh.zsh" ];then
+    source "${XDG_CACHE_HOME:-$HOME/.cache}/colors/zsh.zsh"
+fi
+
 # zsh-autosuggestions 配置
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# wallust 的配置
-# 使用随机的主题颜色
-wallust theme -q -u random
-# 如果想使用根据壁纸生成的颜色主题，就替换成下面的
-# if [ -e "$HOME/.cache/wallust/sequences" ];then
-#     cat "$HOME/.cache/wallust/sequences"
-# else
-#     wallust theme -q -u random
-# fi
-
+# https://github.com/zsh-users/zsh-autosuggestions#configuration
+ZSH_AUTOSUGGEST_STRATEGY=(history completion match_prev_cmd)
+# https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="standout"
 
 # zsh-syntax-highlighting 配置
 # NOTE: 这个必须是最后一行，https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/docs/highlighters.md
+ZSH_HIGHLIGHT_HIGHLIGHTERS+=(brackets pattern regexp cursor root line)

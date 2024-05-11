@@ -1,16 +1,25 @@
 local wezterm = require 'wezterm'
-local colors = require('colors.custom')
+local theme = require('config.theme')
 local mux = wezterm.mux
 local act = wezterm.action
 
 local config = wezterm.config_builder()
+
 -- FIXME: https://github.com/wez/wezterm/issues/5103
 config.enable_wayland = false
-config.color_scheme = 'Breeze'
-config.colors = colors
+
+-- 默认光标的样式
+config.default_cursor_style = 'BlinkingBlock'
+config.hide_mouse_cursor_when_typing = true
+
+theme.colors(config)
+theme.window_background_gradient(config)
+
+-- 字体
 -- wezterm 捆绑了 JetBrains Mono
 -- config.font = wezterm.font 'JetBrains Mono'
 config.font_size = 10;
+
 config.default_prog = { '/usr/bin/zsh' }
 -- 背景透明度
 config.window_background_opacity = 1

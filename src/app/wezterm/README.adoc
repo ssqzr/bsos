@@ -1,5 +1,72 @@
 # wezterm 安装说明文档
 include::../../../doc/base.adoc[]
 
-official_document_url[官方文档]
+https://wezfurlong.org/wezterm/index.html[官方文档]
 
+
+## 问题记录
+
+### wezterm 的故障排查
+
+https://wezfurlong.org/wezterm/troubleshooting.html[wezterm 的故障排查官方文档]
+
+日志目录： `$XDG_RUNTIME_DIR/wezterm`
+
+### 调试配置光标的颜色
+
+设置光标的配置项有如下：
+
+* https://wezfurlong.org/wezterm/config/lua/config/default_cursor_style.html?h=default_cursor_style[default_cursor_style] 光标的样式，方块、下划线、竖线等。
+* https://wezfurlong.org/wezterm/config/lua/config/force_reverse_video_cursor.html[force_reverse_video_cursor] 是否反转光标的前景色和背景色
+* `colors.cursor_bg` 背景色
+* `colors.cursor_border` 边框的颜色
+* `colors.cursor_fg` 前景色，
+
+调试光标颜色的效果的时候，最好将 wezterm 的配置设置如下，就很好理解这三个值的效果了：
+
+[source]
+----
+config.default_cursor_style = 'SteadyBar'
+config.colors.cursor_bg = "#ff0000"
+config.colors.cursor_border = "#00ff00"
+config.colors.cursor_fg = "#0000ff"
+----
+
+我的测试现象如下：
+
+.光标是方块
+[example]
+====
+* `cursor_bg` 是整个方块的背景色
+* `cursor_border` 当焦点在当前终端时，边框被背景色覆盖了，没有看到什么效果。将焦点移走，就可以看到边框的颜色了。
+* `cursor_fg` 是方块里字符的颜色
+====
+
+.光标是竖线
+[example]
+====
+* `cursor_bg` 是竖线的颜色
+* `cursor_border` 当焦点在当前终端时，，没有看到什么效果。将焦点移走，就可以看到边框的颜色了。
+* `cursor_fg` 没有效果
+====
+
+https://wezfurlong.org/wezterm/config/appearance.html?h=cursor_bg#defining-your-own-colors[Defining your own colors] 里说明了这三个配置
+[quote]
+____
+
+[source]
+----
+  -- Overrides the cell background color when the current cell is occupied by the
+  -- cursor and the cursor style is set to Block
+  cursor_bg = '#52ad70',
+  -- Overrides the text color when the current cell is occupied by the cursor
+  cursor_fg = 'black',
+  -- Specifies the border color of the cursor when the cursor style is set to Block,
+  -- or the color of the vertical or horizontal bar when the cursor style is set to
+  -- Bar or Underline.
+  cursor_border = '#52ad70',
+----
+
+____
+
+`force_reverse_video_cursor` 的配置是将终端的背景色用作光标的前景色，将终端的前景色用作光标的背景色。这个配置会覆盖 `cursor_bg` 、 `cursor_border` 、 `cursor_fg` 这三个配置。
