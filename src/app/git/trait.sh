@@ -33,22 +33,22 @@ function git::trait::install_guide() {
     email=$(tui::input_required "used to git config --global user.email" "config git email: " "${email}") || return "$SHELL_FALSE"
 
     local http_proxy
-    http_proxy=$(tui::input_optional "used to git config --global http.proxy" "config git http_proxy: ")
+    http_proxy=$(tui::input_optional "used to git config --global http.proxy" "config git http_proxy: ") || return "$SHELL_FALSE"
     if [ -z "${http_proxy}" ]; then
         lwarn "git config http_proxy will not be set"
     fi
 
     local https_proxy
-    https_proxy=$(tui::input_optional "used to git config --global https.proxy" "config git https_proxy: ")
+    https_proxy=$(tui::input_optional "used to git config --global https.proxy" "config git https_proxy: ") || return "$SHELL_FALSE"
     if [ -z "${https_proxy}" ]; then
         lwarn "git config https_proxy will not be set"
     fi
 
     # 写入配置文件
-    config::app::map::set "$PM_APP_NAME" "username" "${username}"
-    config::app::map::set "$PM_APP_NAME" "email" "${email}"
-    config::app::map::set "$PM_APP_NAME" "http_proxy" "${http_proxy}"
-    config::app::map::set "$PM_APP_NAME" "https_proxy" "${https_proxy}"
+    config::app::map::set "$PM_APP_NAME" "username" "${username}" || return "$SHELL_FALSE"
+    config::app::map::set "$PM_APP_NAME" "email" "${email}" || return "$SHELL_FALSE"
+    config::app::map::set "$PM_APP_NAME" "http_proxy" "${http_proxy}" || return "$SHELL_FALSE"
+    config::app::map::set "$PM_APP_NAME" "https_proxy" "${https_proxy}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

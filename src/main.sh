@@ -221,6 +221,13 @@ function main::_do_main() {
     return "$SHELL_TRUE"
 }
 
+function main::signal::handler_exit() {
+    local code="$1"
+    linfo "exit code: ${code}"
+    base::disable_no_password || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 function main::run() {
     local command="$1"
     local command_params=("${@:2}")
@@ -255,6 +262,7 @@ function main::run() {
     base::export_env || return "$SHELL_FALSE"
 
     base::enable_no_password || return "$SHELL_FALSE"
+    trap 'main::signal::handler_exit "$?"' EXIT
 
     case "${command}" in
     "dev")
@@ -267,8 +275,6 @@ function main::run() {
         code=$?
         ;;
     esac
-
-    base::disable_no_password || return "$SHELL_FALSE"
 
     return "${code}"
 }

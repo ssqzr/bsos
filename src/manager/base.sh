@@ -13,7 +13,8 @@ source "${SCRIPT_DIR_b5b83ba6}/../lib/utils/all.sh"
 # sudo 是为了用户安全
 # go-yq 是配置管理需要的，安装脚本也需要读写配置
 # gum 是安装脚本为了更好的终端交互需要安装的，运行安装向导等交互场景需要用到
-__CORE_APPS=("custom:systemd_resolved" "custom:pacman" "custom:sudo" "pacman:go-yq" "pacman:gum")
+# fzf 是安装脚本为了更好的终端交互需要安装的，当选项比较多时搜索比较方便
+__CORE_APPS=("custom:systemd_resolved" "custom:pacman" "custom:sudo" "pacman:go-yq" "pacman:gum" "pacman:fzf")
 # __PRE_INSTALL_APPS=()
 # __PRE_INSTALL_APPS+=("${__CORE_APPS[@]}")
 # __PRE_INSTALL_APPS+=("pacman:gum" "pacman:base-devel")

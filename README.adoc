@@ -347,6 +347,7 @@ grep -- -v file
 * [ ] 卸载某个应用时，需要检测其依赖是否可以被卸载。<<uninstall_relation>>
 * [ ] xref:src/app/wallust/README.adoc#wallust-3.0[wallust 3.0版本的处理]
 * [*] 调试命令 `dev trait` 支持多个应用和多个子命令
+* [ ] print.sh 支持 256 colors
 
 ## 引用
 

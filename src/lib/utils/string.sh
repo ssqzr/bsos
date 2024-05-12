@@ -87,3 +87,12 @@ function string::print_yes_no() {
     fi
     printf "no"
 }
+
+function string::is_num() {
+    local data="$1"
+    echo "$data" | grep -q -E "^[0-9]+$"
+    if [ $? -eq "$SHELL_TRUE" ]; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
+}

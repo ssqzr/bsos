@@ -97,7 +97,7 @@ function custom_manager::command::install_guide() {
         linfo "app(${PM_APP_NAME}) install guide has configed, not need to config again"
         return "$SHELL_TRUE"
     fi
-    "${app_name}::trait::install_guide"
+    "${app_name}::trait::install_guide" || return "$SHELL_FALSE"
     config::app::is_configed::set_true "$PM_APP_NAME" || return "$SHELL_FALSE"
     linfo "app(${PM_APP_NAME}) install guide config success"
 }

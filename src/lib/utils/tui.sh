@@ -9,9 +9,24 @@ source "${SCRIPT_DIR_825f52f6}/constant.sh"
 source "${SCRIPT_DIR_825f52f6}/print.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_825f52f6}/log.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_825f52f6}/string.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_825f52f6}/array.sh"
 
 __exit_code_ctrl_c=130
 
+# A function that prompts the user for confirmation with a customizable prompt and default value.
+#
+# Parameters:
+#   - $1: The prompt message to display to the user.
+#   - $2: The default value for the confirmation. Defaults to "y" if not provided.
+#
+# Returns:
+#   - If the user confirms, the function returns with the exit code "$SHELL_TRUE".
+#   - If the user denies, the function returns with the exit code "$SHELL_FALSE".
+#   - If the user does not provide a valid input, the function displays an error message and prompts again.
+#   - If the user interrupts the input by pressing Ctrl+C, the function returns with the exit code 130.
 function tui::builtin::confirm() {
     local prompt="$1"
     local default="$2"
@@ -52,6 +67,20 @@ function tui::builtin::confirm() {
     return "$SHELL_FALSE"
 }
 
+function tui::confirm() {
+    local title="$1"
+    gum confirm "$title"
+    local exit_code=$?
+    if [ $exit_code -eq "$SHELL_TRUE" ]; then
+        return "$SHELL_TRUE"
+    fi
+    if [ $exit_code -eq "$SHELL_FALSE" ]; then
+        return "$SHELL_FALSE"
+    fi
+    lerror "confirm exit, exit code: ${exit_code}"
+    exit $exit_code
+}
+
 function tui::input_optional() {
     local placeholder="$1"
     local prompt="$2"
@@ -64,10 +93,7 @@ function tui::input_optional() {
         return "$SHELL_TRUE"
     fi
     lerror "input exit, exit code: ${exit_code}"
-    if [ $exit_code -eq ${__exit_code_ctrl_c} ]; then
-        exit $exit_code
-    fi
-    return "$SHELL_FALSE"
+    return "${exit_code}"
 }
 
 # 必填项
@@ -88,23 +114,53 @@ function tui::input_required() {
             fi
         fi
         lerror "input exit, exit code: ${exit_code}"
-        if [ $exit_code -eq ${__exit_code_ctrl_c} ]; then
-            exit $exit_code
-        fi
+        return "${exit_code}"
     done
     echo "$value"
 }
 
-function tui::confirm() {
-    local title="$1"
-    gum confirm "$title"
-    local exit_code=$?
-    if [ $exit_code -eq "$SHELL_TRUE" ]; then
-        return "$SHELL_TRUE"
+function tui::search_select() {
+    local -n _14bd9c66_options="$1"
+    local -n _4c70be79_res="$2"
+    local multi="$3"
+    local title="$4"
+
+    local temp_str
+    local exit_code
+    local fzf_options=()
+    if [ "${multi}" = "multi" ]; then
+        fzf_options+=("--multi")
+    elif string::is_num "${multi}"; then
+        fzf_options+=("--multi=${multi}")
     fi
-    if [ $exit_code -eq "$SHELL_FALSE" ]; then
-        return "$SHELL_FALSE"
+    fzf_options+=("--prompt='${title}'")
+    fzf_options+=("--height 40%")
+    fzf_options+=("--cycle")
+    fzf_options+=('--pointer="->"')
+    fzf_options+=("--bind alt-i:up")
+    fzf_options+=("--bind alt-k:down")
+    fzf_options+=("--bind alt-j:backward-char")
+    fzf_options+=("--bind alt-l:forward-char")
+    fzf_options+=("--bind alt-h:beginning-of-line")
+    fzf_options+=("--bind alt-';':end-of-line")
+    fzf_options+=("--ansi")
+    fzf_options+=("--highlight-line")
+    temp_str=$(printf '%s\n' "${_14bd9c66_options[@]}" | FZF_DEFAULT_OPTS="${fzf_options[*]}" fzf)
+    # fzf 程序 Ctrl+C 或者 ESC 退出码是 130
+    exit_code=$?
+    if [ "$exit_code" -ne "${SHELL_TRUE}" ]; then
+        lerror "select exit, exit code: ${exit_code}"
+        return "${exit_code}"
     fi
-    lerror "confirm exit, exit code: ${exit_code}"
-    exit $exit_code
+    array::readarray _4c70be79_res < <(echo "${temp_str}")
+    return "$SHELL_TRUE"
+}
+
+function tui::search_select_one() {
+    local -n _ca9824e0_options="$1"
+    local title="$2"
+    local res=()
+    tui::search_select "${!_ca9824e0_options}" res "1" "$title" || return "$SHELL_FALSE"
+    echo "${res[0]}"
+    return "$SHELL_TRUE"
 }

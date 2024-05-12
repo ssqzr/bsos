@@ -100,6 +100,7 @@ function system_setting::trait::dependencies() {
     # custom:vim   自定义，也就是通过本脚本进行安装
     local apps=("custom:locale")
     apps+=("custom:ntp")
+    apps+=("custom:timezone")
     array::print apps
     return "${SHELL_TRUE}"
 }
