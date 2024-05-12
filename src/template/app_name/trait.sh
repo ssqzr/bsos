@@ -71,8 +71,6 @@ function template::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function template::trait::fixme() {
-    println_info "${PM_APP_NAME}: fixme: "
-
     return "${SHELL_TRUE}"
 }
 
@@ -80,8 +78,6 @@ function template::trait::fixme() {
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
 function template::trait::unfixme() {
-    println_info "${PM_APP_NAME}: start undo fixme..."
-
     return "${SHELL_TRUE}"
 }
 

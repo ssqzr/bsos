@@ -108,8 +108,6 @@ function open_vm_tools::trait::fixme() {
         println_info "${PM_APP_NAME}: os is vmware guest, not install this app."
         return "$SHELL_TRUE"
     fi
-    # println_info "${PM_APP_NAME}: TODO: "
-
     return "${SHELL_TRUE}"
 }
 
@@ -117,8 +115,6 @@ function open_vm_tools::trait::fixme() {
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
 function open_vm_tools::trait::unfixme() {
-    println_info "${PM_APP_NAME}: start undo fixme..."
-
     return "${SHELL_TRUE}"
 }
 
