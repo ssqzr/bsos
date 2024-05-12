@@ -221,7 +221,7 @@ function main::_do_main() {
     return "$SHELL_TRUE"
 }
 
-function main::main() {
+function main::run() {
     local command="$1"
     local command_params=("${@:2}")
     if [ -z "${command}" ]; then
@@ -273,4 +273,15 @@ function main::main() {
     return "${code}"
 }
 
-main::main "$@"
+function main::wrap_run() {
+    main::run "$@"
+    if [ $? -eq "$SHELL_TRUE" ]; then
+        println_success "all success."
+        return "$SHELL_TRUE"
+    else
+        println_error "something is wrong, please check log."
+        return "$SHELL_FALSE"
+    fi
+}
+
+main::wrap_run "$@"

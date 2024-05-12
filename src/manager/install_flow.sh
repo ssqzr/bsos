@@ -122,7 +122,6 @@ function install_flow::fixme_flow() {
 
     install_flow::do_fixme || return "$SHELL_FALSE"
 
-    println_success "all success."
     println_warn "you should reboot you system."
 
     return "$SHELL_TRUE"

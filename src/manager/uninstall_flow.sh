@@ -90,7 +90,6 @@ function uninstall_flow::unfixme_flow() {
 
     uninstall_flow::do_unfixme || return "$SHELL_FALSE"
 
-    println_success "all success."
     println_warn "you should reboot you system."
 
     return "$SHELL_TRUE"
