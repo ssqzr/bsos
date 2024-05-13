@@ -119,3 +119,8 @@ new_engine = true
 template = "template/wezterm_colors.lua"
 target = "~/.cache/colors/wezterm_colors.lua"
 new_engine = true
+
+[[entry]]
+template = "template/swaync.css"
+target = "~/.cache/colors/swaync.css"
+new_engine = true

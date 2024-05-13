@@ -31,3 +31,20 @@ fcitx5 相应记录的配置文件是： `~/.config/fcitx5/conf/notifications.co
 ----
 
 删除掉相应的配置就又可以通知了。
+
+
+### 命令行发送通知
+
+[source,console]
+----
+notify-send "Hello World"
+----
+
+### 调试 swaync 样式
+
+https://github.com/ErikReider/SwayNotificationCenter/tree/main?tab=readme-ov-file#configuring[configuring]
+
+[quote]
+____
+Tip: running swaync with GTK_DEBUG=interactive swaync will open a inspector window that'll allow you to see all of the CSS classes + other information.
+____
