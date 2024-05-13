@@ -20,7 +20,7 @@ function package_manager::pacman::install() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history sudo pacman -S --needed --noconfirm "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history sudo pacman -S --needed --noconfirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pacman::uninstall() {

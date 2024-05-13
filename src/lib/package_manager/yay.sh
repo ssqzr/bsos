@@ -22,7 +22,7 @@ function package_manager::yay::install() {
 
     local install_cmd="yay -S --needed --noconfirm"
 
-    cmd::run_cmd_with_history "$install_cmd" "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history "$install_cmd" "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::yay::uninstall() {
