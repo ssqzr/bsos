@@ -56,8 +56,9 @@ function log::set_log_file() {
 }
 
 function log::_log() {
-    local level="$1"
-    local message="$2"
+    local caller_level="$1"
+    local level="$2"
+    local message="$3"
     local pid="$$"
 
     local function_name
@@ -65,9 +66,9 @@ function log::_log() {
     local line_num
     local datetime
 
-    function_name=$(get_caller_function_name 2)
-    filename=$(get_caller_filename 2)
-    line_num=$(get_caller_file_line_num 2)
+    function_name=$(get_caller_function_name "${caller_level}")
+    filename=$(get_caller_filename "${caller_level}")
+    line_num=$(get_caller_file_line_num "${caller_level}")
     datetime="$(get_human_datetime)"
 
     printf "%s %s [%s] %s:%s [%s] %s\n" "${datetime}" "${level}" "${pid}" "${filename}" "${line_num}" "${function_name}" "${message}" >>"${__log_filepath}"
@@ -76,29 +77,35 @@ function log::_log() {
 function linfo() {
     local message="$1"
     local level="info"
-    log::_log $level "${message}"
+    log::_log 2 $level "${message}"
 }
 
 function ldebug() {
     local message="$1"
     local level="debug"
-    log::_log $level "${message}"
+    log::_log 2 $level "${message}"
 }
 
 function lwarn() {
     local message="$1"
     local level="warn"
-    log::_log $level "${message}"
+    log::_log 2 $level "${message}"
 }
 
 function lerror() {
     local message="$1"
     local level="error"
-    log::_log $level "${message}"
+    log::_log 2 $level "${message}"
 }
 
 function lwrite() {
     cat >>"${__log_filepath}"
+}
+
+function lexit() {
+    local exit_code="$1"
+    log::_log 2 "error" "script exit with code ${exit_code}"
+    exit "${exit_code}"
 }
 
 function log::_main() {

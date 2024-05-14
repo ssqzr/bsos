@@ -21,6 +21,7 @@ __default_package_manager="yay"
 # 也不是很想将 lsof 添加到全局前置安装包中，前置太臃肿也不好
 # 这里简单处理
 # pacman pamac yay都是使用同一个锁文件
+# flatpak 不需要处理，暂时没发现锁的问题
 function package_manager::_clean_lock() {
     local pacman_lock_file="/var/lib/pacman/db.lck"
 
@@ -51,25 +52,50 @@ function package_manager::_clean_lock() {
     return "$SHELL_TRUE"
 }
 
-function package_manager::is_installed() {
+function package_manager::_run_command() {
     local package_manager="$1"
-    local package="$2"
+    local command="$2"
+    shift 2
+    local params=("$@")
 
     if [ -z "$package_manager" ]; then
         lerror "param package_manager is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
-    if [ -z "$package" ]; then
-        lerror "param package is empty"
-        return "$SHELL_FALSE"
+
+    if [ -z "$command" ]; then
+        lerror "param command is empty"
+        lexit "$CODE_USAGE"
     fi
 
     if [ "$package_manager" == "default" ]; then
         package_manager="${__default_package_manager}"
     fi
 
-    local func_name="package_manager::${package_manager}::is_installed"
-    $func_name "$package" || return "$SHELL_FALSE"
+    package_manager::_clean_lock || return "$SHELL_FALSE"
+
+    ldebug "package_manager=${package_manager} command=${command} params=${params[*]}"
+    package_manager::"${package_manager}"::"${command}" "${params[@]}" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function package_manager::is_installed() {
+    local package_manager="$1"
+    local package="$2"
+
+    if [ -z "$package_manager" ]; then
+        lerror "param package_manager is empty"
+        lexit "$CODE_USAGE"
+    fi
+
+    if [ -z "$package" ]; then
+        lerror "param package is empty"
+        lexit "$CODE_USAGE"
+    fi
+
+    package_manager::_run_command "$package_manager" is_installed "$package" || return "$SHELL_FALSE"
+
     return "$SHELL_TRUE"
 }
 
@@ -79,24 +105,16 @@ function package_manager::install() {
 
     if [ -z "$package_manager" ]; then
         lerror "param package_manager is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
+
     if [ -z "$package" ]; then
         lerror "param package is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
 
-    if [ "$package_manager" == "default" ]; then
-        package_manager="${__default_package_manager}"
-    fi
+    package_manager::_run_command "$package_manager" install "$package" || return "$SHELL_FALSE"
 
-    if [ "$package_manager" != "flatpak" ] && ! package_manager::_clean_lock; then
-        lerror "clean lock file failed, can not install package($package)"
-        return "$SHELL_FALSE"
-    fi
-
-    local func_name="package_manager::${package_manager}::install"
-    $func_name "$package" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -106,24 +124,16 @@ function package_manager::uninstall() {
 
     if [ -z "$package_manager" ]; then
         lerror "param package_manager is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
+
     if [ -z "$package" ]; then
         lerror "param package is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
 
-    if [ "$package_manager" == "default" ]; then
-        package_manager="${__default_package_manager}"
-    fi
+    package_manager::_run_command "$package_manager" uninstall "$package" || return "$SHELL_FALSE"
 
-    if [ "$package_manager" != "flatpak" ] && ! package_manager::_clean_lock; then
-        lerror "clean lock file failed, can not uninstall package($package)"
-        return "$SHELL_FALSE"
-    fi
-
-    local func_name="package_manager::${package_manager}::uninstall"
-    $func_name "$package" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -133,19 +143,16 @@ function package_manager::package_description() {
 
     if [ -z "$package_manager" ]; then
         lerror "param package_manager is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
+
     if [ -z "$package" ]; then
         lerror "param package is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
 
-    if [ "$package_manager" == "default" ]; then
-        package_manager="${__default_package_manager}"
-    fi
+    package_manager::_run_command "$package_manager" package_description "$package" || return "$SHELL_FALSE"
 
-    local func_name="package_manager::${package_manager}::package_description"
-    $func_name "$package" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -154,18 +161,24 @@ function package_manager::upgrade() {
 
     if [ -z "$package_manager" ]; then
         lerror "param package_manager is empty"
-        return "$SHELL_FALSE"
+        lexit "$CODE_USAGE"
     fi
 
-    if [ "$package_manager" == "default" ]; then
-        package_manager="${__default_package_manager}"
+    package_manager::_run_command "$package_manager" upgrade || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+# 只是更新数据库
+function package_manager::update() {
+    local package_manager="$1"
+
+    if [ -z "$package_manager" ]; then
+        lerror "param package_manager is empty"
+        lexit "$CODE_USAGE"
     fi
 
-    if [ "$package_manager" != "flatpak" ] && ! package_manager::_clean_lock; then
-        lerror "clean lock file failed, can not upgrade package($package)"
-        return "$SHELL_FALSE"
-    fi
+    package_manager::_run_command "$package_manager" update || return "$SHELL_FALSE"
 
-    "package_manager::${package_manager}::upgrade" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }

@@ -8,12 +8,22 @@ source "${SCRIPT_DIR_28000550}/../utils/all.sh"
 
 function package_manager::flatpak::is_installed() {
     local package="$1"
+    if [ -z "$package" ]; then
+        lerror "param package is empty"
+        lexit "$CODE_USAGE"
+    fi
+
     flatpak info "$package" >/dev/null 2>&1 || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function package_manager::flatpak::install() {
     local package="$1"
+
+    if [ -z "$package" ]; then
+        lerror "param package is empty"
+        lexit "$CODE_USAGE"
+    fi
 
     if package_manager::flatpak::is_installed "$package"; then
         ldebug "package($package) is already installed."
@@ -25,6 +35,12 @@ function package_manager::flatpak::install() {
 
 function package_manager::flatpak::uninstall() {
     local package="$1"
+
+    if [ -z "$package" ]; then
+        lerror "param package is empty"
+        lexit "$CODE_USAGE"
+    fi
+
     if ! package_manager::flatpak::is_installed "$package"; then
         ldebug "package($package) is not installed."
         return "$SHELL_TRUE"
@@ -34,13 +50,25 @@ function package_manager::flatpak::uninstall() {
 }
 
 function package_manager::flatpak::package_description() {
-    local name="$1"
+    local package="$1"
+
+    if [ -z "$package" ]; then
+        lerror "param package is empty"
+        lexit "$CODE_USAGE"
+    fi
+
     local description
-    description=$(LANG=c flatpak remote-info flathub "$name" | sed -n '2p')
+    description=$(LANG=c flatpak remote-info flathub "$package" | sed -n '2p')
     string::trim "$description" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function package_manager::flatpak::upgrade() {
     cmd::run_cmd_with_history sudo flatpak update -y || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function package_manager::flatpak::update() {
+    # flatpak 不用处理
     return "$SHELL_TRUE"
 }

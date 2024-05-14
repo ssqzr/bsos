@@ -85,7 +85,7 @@ function uninstall_flow::main_flow() {
 function uninstall_flow::unfixme_flow() {
     # 先更新系统
     println_info "upgrade system first..."
-    package_manager::upgrade "pacman" || return "$SHELL_FALSE"
+    package_manager::upgrade "default" || return "$SHELL_FALSE"
     println_success "upgrade system success."
 
     uninstall_flow::do_unfixme || return "$SHELL_FALSE"
