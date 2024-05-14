@@ -116,7 +116,16 @@ if [ -e "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/fzfrc" ];then
 fi
 
 # pkgfile 配置，command-not-found 的支持
-source /usr/share/doc/pkgfile/command-not-found.zsh
+if [ -e "/usr/share/doc/pkgfile/command-not-found.zsh" ];then
+    source /usr/share/doc/pkgfile/command-not-found.zsh
+fi
+
+
+# 配置 nvm
+if [ -e "/usr/share/nvm/init-nvm.sh" ];then
+    source /usr/share/nvm/init-nvm.sh
+fi
+
 
 # wallust 的配置
 if [ -e "$HOME/.cache/wallust/sequences" ];then

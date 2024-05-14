@@ -120,6 +120,7 @@ function zsh::trait::features() {
     apps+=("custom:fonts")
     apps+=("custom:pkgfile" "default:zsh-completions" "default:zsh-autosuggestions")
     apps+=("custom:fzf" "custom:pywal" "default:zsh-theme-powerlevel10k-git")
+    apps+=("custom:nvm")
     # 如果有特殊处理，zsh-syntax-highlighting 的配置一定要放到最后
     # 虽然目前的依赖顺序没有影响，但是为了后续忘记这个限制，特意放到最后做标注
     # https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file
