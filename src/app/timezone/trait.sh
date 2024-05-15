@@ -40,7 +40,7 @@ function timezone::settings::do() {
 
 # 指定使用的包管理器
 function timezone::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -131,11 +131,10 @@ function timezone::trait::unfixme() {
 function timezone::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # default:vim 使用默认的包管理器，默认的包管理器代码里定义
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"

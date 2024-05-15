@@ -13,7 +13,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function zsh::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -118,13 +118,13 @@ function zsh::trait::dependencies() {
 function zsh::trait::features() {
     local apps=()
     apps+=("custom:fonts")
-    apps+=("custom:pkgfile" "default:zsh-completions" "default:zsh-autosuggestions")
-    apps+=("custom:fzf" "custom:pywal" "default:zsh-theme-powerlevel10k-git")
+    apps+=("custom:pkgfile" "pacman:zsh-completions" "pacman:zsh-autosuggestions")
+    apps+=("custom:fzf" "custom:pywal" "yay:zsh-theme-powerlevel10k-git")
     apps+=("custom:nvm")
     # 如果有特殊处理，zsh-syntax-highlighting 的配置一定要放到最后
     # 虽然目前的依赖顺序没有影响，但是为了后续忘记这个限制，特意放到最后做标注
     # https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file
-    apps+=("default:zsh-syntax-highlighting")
+    apps+=("pacman:zsh-syntax-highlighting")
     array::print apps
     return "${SHELL_TRUE}"
 }

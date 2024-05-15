@@ -13,7 +13,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function audio::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -95,10 +95,10 @@ function audio::trait::unfixme() {
 function audio::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"
@@ -110,8 +110,8 @@ function audio::trait::dependencies() {
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function audio::trait::features() {
     # NOTE: 不要通过flatpak安装carla，测试发现使用插件时打不开插件的自定义UI
-    local apps=("default:pipewire-alsa" "default:pipewire-jack" "default:pipewire-pulse" "default:carla")
-    apps+=("default:pavucontrol")
+    local apps=("pacman:pipewire-alsa" "pacman:pipewire-jack" "pacman:pipewire-pulse" "pacman:carla")
+    apps+=("pacman:pavucontrol")
     array::print apps
     return "${SHELL_TRUE}"
 }

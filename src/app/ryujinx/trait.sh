@@ -108,11 +108,11 @@ function ryujinx::trait::unfixme() {
 function ryujinx::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
-    local apps=("default:p7zip")
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
+    local apps=("pacman:p7zip")
     array::print apps
     return "${SHELL_TRUE}"
 }

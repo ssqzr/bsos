@@ -16,7 +16,7 @@ function package_manager::pamac::is_installed() {
         lexit "$CODE_USAGE"
     fi
 
-    pacman::is_installed "$package" || return "$SHELL_FALSE"
+    package_manager::pacman::is_installed "$package" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

@@ -13,7 +13,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function anytype::trait::package_manager() {
-    echo "default"
+    echo "yay"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -89,15 +89,15 @@ function anytype::trait::unfixme() {
 function anytype::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
     # NOTE: anytype 依赖 jack，当没有安装jack相关的包时，默认是安装jack2
     # 但是安装pipewire需要安装pipewire-jack，它和jack2冲突
     # 所以如果anytype先安装，会因为依赖关系安装jack2，然后再安装pipewire-jack时因为冲突而安装失败
     # 所以强制将anytype对jack的依赖安装pipewire-jack
-    local apps=("default:pipewire-jack")
+    local apps=("pacman:pipewire-jack")
     array::print apps
     return "${SHELL_TRUE}"
 }

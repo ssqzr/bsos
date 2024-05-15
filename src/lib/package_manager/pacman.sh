@@ -6,7 +6,7 @@ SCRIPT_DIR_f4b9a5da="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_f4b9a5da}/../utils/all.sh"
 
-function pacman::is_installed() {
+function package_manager::pacman::is_installed() {
     local package="$1"
 
     if [ -z "$package" ]; then
@@ -26,7 +26,7 @@ function package_manager::pacman::install() {
         lexit "$CODE_USAGE"
     fi
 
-    if pacman::is_installed "$package"; then
+    if package_manager::pacman::is_installed "$package"; then
         ldebug "package($package) is already installed."
         return "$SHELL_TRUE"
     fi
@@ -42,7 +42,7 @@ function package_manager::pacman::uninstall() {
         lexit "$CODE_USAGE"
     fi
 
-    if ! pacman::is_installed "$package"; then
+    if ! package_manager::pacman::is_installed "$package"; then
         ldebug "package($package) is not installed."
         return "$SHELL_TRUE"
     fi

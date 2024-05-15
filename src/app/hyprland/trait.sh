@@ -236,7 +236,7 @@ function hyprland::plugins::install() {
 
 # 指定使用的包管理器
 function hyprland::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -348,17 +348,17 @@ function hyprland::trait::unfixme() {
 function hyprland::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=("custom:fonts" "pacman:polkit-kde-agent")
 
     # xdg-desktop-portal
-    apps+=("default:xdg-desktop-portal-hyprland" "default:xdg-desktop-portal-gtk")
+    apps+=("pacman:xdg-desktop-portal-hyprland" "pacman:xdg-desktop-portal-gtk")
 
     # 插件hyprpm需要的
-    apps+=("default:cpio")
+    apps+=("pacman:cpio")
 
     array::print apps
     return "${SHELL_TRUE}"
@@ -390,34 +390,34 @@ function hyprland::trait::features() {
     apps+=("custom:wallust")
     # 壁纸
     # bing 壁纸需要解析json字符串
-    apps+=("default:wget" "default:go-yq" "default:hyprpaper")
+    apps+=("pacman:wget" "pacman:go-yq" "pacman:hyprpaper")
 
     # 锁屏
-    apps+=("default:hyprlock")
+    apps+=("pacman:hyprlock")
 
     # 截图需要的
-    apps+=("default:grim" "default:slurp" "flatpak:org.ksnip.ksnip")
+    apps+=("pacman:grim" "pacman:slurp" "flatpak:org.ksnip.ksnip")
 
     # 邮箱
-    apps+=("default:thunderbird" "default:thunderbird-i18n-zh-cn")
+    apps+=("pacman:thunderbird" "pacman:thunderbird-i18n-zh-cn")
 
     # 翻译软件
     apps+=("custom:pot")
 
     # 取色软件
-    apps+=("default:hyprpicker")
+    apps+=("yay:hyprpicker")
 
     # 终端软件
     apps+=("custom:wezterm")
     if os::is_vm; then
-        apps+=("default:terminator")
+        apps+=("pacman:terminator")
     fi
 
     # logout
     apps+=("custom:wlogout")
 
     # hypridle 会用到 brightnessctl
-    apps+=("default:brightnessctl" "default:hypridle")
+    apps+=("pacman:brightnessctl" "pacman:hypridle")
 
     # 音乐舞动程序
     apps+=("custom:cavasik")

@@ -16,7 +16,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function all_direct_pm::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -91,11 +91,11 @@ function all_direct_pm::trait::unfixme() {
 function all_direct_pm::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
-    local apps=("default:man-db" "default:man-pages" "default:man-pages-zh_cn")
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
+    local apps=("pacman:man-db" "pacman:man-pages" "pacman:man-pages-zh_cn")
     apps+=("flatpak:com.github.tchx84.Flatseal")
     apps+=("flatpak:org.torproject.torbrowser-launcher" "flatpak:com.valvesoftware.Steam")
     apps+=("flatpak:com.github.xournalpp.xournalpp" "flatpak:ch.openboard.OpenBoard")

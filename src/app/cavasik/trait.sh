@@ -96,11 +96,10 @@ function cavasik::trait::unfixme() {
 function cavasik::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # default:vim 使用默认的包管理器，默认的包管理器代码里定义
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"

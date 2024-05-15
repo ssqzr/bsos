@@ -13,7 +13,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function fcitx5::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -95,10 +95,10 @@ function fcitx5::trait::unfixme() {
 function fcitx5::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"
@@ -109,7 +109,7 @@ function fcitx5::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function fcitx5::trait::features() {
-    local apps=("default:fcitx5-material-color" "default:fcitx5-chinese-addons")
+    local apps=("pacman:fcitx5-material-color" "pacman:fcitx5-chinese-addons")
     array::print apps
     return "${SHELL_TRUE}"
 }

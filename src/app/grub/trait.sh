@@ -70,7 +70,7 @@ function grub::mkconfig() {
 
 # 指定使用的包管理器
 function grub::trait::package_manager() {
-    echo "default"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -158,11 +158,11 @@ function grub::trait::unfixme() {
 function grub::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
-    # pacman:vim
-    # yay:vim
-    # pamac:vim
-    # custom:vim   自定义，也就是通过本脚本进行安装
-    local apps=("default:os-prober")
+    # "pacman:vim"
+    # "yay:vim"
+    # "pamac:vim"
+    # "custom:vim"   自定义，也就是通过本脚本进行安装
+    local apps=("pacman:os-prober")
     array::print apps
     return "${SHELL_TRUE}"
 }
@@ -174,7 +174,7 @@ function grub::trait::dependencies() {
 function grub::trait::features() {
     local apps=()
     # 主题
-    apps+=("default:grub-theme-whitesur-whitesur-1080p-git")
+    apps+=("yay:grub-theme-whitesur-whitesur-1080p-git")
     array::print apps
     return "${SHELL_TRUE}"
 }

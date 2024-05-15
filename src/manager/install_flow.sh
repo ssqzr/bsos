@@ -100,7 +100,7 @@ function install_flow::do_fixme() {
 function install_flow::main_flow() {
     # 先更新系统
     println_info "upgrade system first..."
-    package_manager::upgrade "default" || return "$SHELL_FALSE"
+    package_manager::upgrade_all_pm || return "$SHELL_FALSE"
     println_success "upgrade system success."
 
     install_flow::pre_install || return "$SHELL_FALSE"
@@ -117,7 +117,7 @@ function install_flow::main_flow() {
 function install_flow::fixme_flow() {
     # 先更新系统
     println_info "upgrade system first..."
-    package_manager::upgrade "default" || return "$SHELL_FALSE"
+    package_manager::upgrade_all_pm || return "$SHELL_FALSE"
     println_success "upgrade system success."
 
     install_flow::do_fixme || return "$SHELL_FALSE"

@@ -14,8 +14,6 @@ source "${SCRIPT_DIR_1839760f}/flatpak.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_1839760f}/yay.sh"
 
-__default_package_manager="yay"
-
 # 有时候因为测试kill掉了包管理器，导致锁文件残留。每次都是运行失败查看日志才知道是锁文件残留了。
 # 本来想通过 `lsof 锁文件` 来判断是否被占用的，但是系统默认没有安装 lsof
 # 也不是很想将 lsof 添加到全局前置安装包中，前置太臃肿也不好
@@ -66,10 +64,6 @@ function package_manager::_run_command() {
     if [ -z "$command" ]; then
         lerror "param command is empty"
         lexit "$CODE_USAGE"
-    fi
-
-    if [ "$package_manager" == "default" ]; then
-        package_manager="${__default_package_manager}"
     fi
 
     package_manager::_clean_lock || return "$SHELL_FALSE"
@@ -165,6 +159,21 @@ function package_manager::upgrade() {
     fi
 
     package_manager::_run_command "$package_manager" upgrade || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function package_manager::upgrade_all_pm() {
+
+    if package_manager::is_installed "pacman" "yay"; then
+        package_manager::upgrade "yay" || return "$SHELL_FALSE"
+    else
+        package_manager::upgrade "pacman" || return "$SHELL_FALSE"
+    fi
+
+    if package_manager::is_installed "pacman" "flatpak"; then
+        package_manager::upgrade "flatpak" || return "$SHELL_FALSE"
+    fi
 
     return "$SHELL_TRUE"
 }
