@@ -680,5 +680,16 @@ function manager::app::_test_is_package_name_valid() {
     utest::assert_fail $?
 }
 
-string::is_true "$TEST" && manager::app::_test_is_package_name_valid
+function manager::app::_test_all() {
+    # source 进来的就不要测试了
+    local parent_function_name
+    parent_function_name=$(get_caller_function_name 1)
+    if [ "$parent_function_name" = "source" ]; then
+        return
+    fi
+
+    manager::app::_test_is_package_name_valid
+}
+
+string::is_true "$TEST" && manager::app::_test_all
 true

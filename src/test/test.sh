@@ -12,7 +12,7 @@ source "${SRC_DIR}/lib/utils/array.sh"
 function main() {
     local tests=()
 
-    readarray -t tests < <(grep "TEST" -rn "${SRC_DIR}" | grep -v "test.sh" | awk -F ':' '{print $1}')
+    readarray -t tests < <(grep "\$TEST" -rn "${SRC_DIR}" | grep -v "test.sh" | awk -F ':' '{print $1}')
 
     array::dedup tests
 

@@ -2,9 +2,14 @@
 
 # 日志库
 
+if [ -n "${SCRIPT_DIR_30e78b31}" ]; then
+    return
+fi
+
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_30e78b31="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
+# NOTE: 尽可能少的依赖其他脚本
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_30e78b31}/constant.sh" || exit 1
 # shellcheck source=/dev/null
@@ -66,6 +71,8 @@ function log::_log() {
     local line_num
     local datetime
 
+    ((caller_level += 1))
+
     function_name=$(get_caller_function_name "${caller_level}")
     filename=$(get_caller_filename "${caller_level}")
     line_num=$(get_caller_file_line_num "${caller_level}")
@@ -75,27 +82,111 @@ function log::_log() {
 }
 
 function linfo() {
-    local message="$1"
     local level="info"
-    log::_log 2 $level "${message}"
+    local message
+    local caller_level
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --caller-level=*)
+            caller_level="${param#*=}"
+            ;;
+        *)
+            if [ -z "$message" ]; then
+                message="$param"
+            else
+                lerror "unknown parameter $param"
+                return "$SHELL_FALSE"
+            fi
+            ;;
+        esac
+    done
+
+    caller_level=${caller_level:-0}
+    ((caller_level += 1))
+
+    log::_log "${caller_level}" $level "${message}"
 }
 
 function ldebug() {
-    local message="$1"
     local level="debug"
-    log::_log 2 $level "${message}"
+    local message
+    local caller_level
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --caller-level=*)
+            caller_level="${param#*=}"
+            ;;
+        *)
+            if [ -z "$message" ]; then
+                message="$param"
+            else
+                lerror "unknown parameter $param"
+                return "$SHELL_FALSE"
+            fi
+            ;;
+        esac
+    done
+
+    caller_level=${caller_level:-0}
+    ((caller_level += 1))
+
+    log::_log "${caller_level}" $level "${message}"
 }
 
 function lwarn() {
-    local message="$1"
     local level="warn"
-    log::_log 2 $level "${message}"
+    local message
+    local caller_level
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --caller-level=*)
+            caller_level="${param#*=}"
+            ;;
+        *)
+            if [ -z "$message" ]; then
+                message="$param"
+            else
+                lerror "unknown parameter $param"
+                return "$SHELL_FALSE"
+            fi
+            ;;
+        esac
+    done
+
+    caller_level=${caller_level:-0}
+    ((caller_level += 1))
+
+    log::_log "${caller_level}" $level "${message}"
 }
 
 function lerror() {
-    local message="$1"
     local level="error"
-    log::_log 2 $level "${message}"
+    local message
+    local caller_level
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --caller-level=*)
+            caller_level="${param#*=}"
+            ;;
+        *)
+            if [ -z "$message" ]; then
+                message="$param"
+            else
+                lerror "unknown parameter $param"
+                return "$SHELL_FALSE"
+            fi
+            ;;
+        esac
+    done
+
+    caller_level=${caller_level:-0}
+    ((caller_level += 1))
+
+    log::_log "${caller_level}" $level "${message}"
 }
 
 function lwrite() {
@@ -103,8 +194,31 @@ function lwrite() {
 }
 
 function lexit() {
-    local exit_code="$1"
-    log::_log 2 "error" "script exit with code ${exit_code}"
+    local level="error"
+    local exit_code
+    local caller_level
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --caller-level=*)
+            caller_level="${param#*=}"
+            ;;
+        *)
+            if [ -z "$exit_code" ]; then
+                exit_code="$param"
+            else
+                lerror "unknown parameter $param"
+                return "$SHELL_FALSE"
+            fi
+            ;;
+        esac
+    done
+
+    caller_level=${caller_level:-0}
+    ((caller_level += 1))
+
+    log::_log "${caller_level}" $level "script exit with code ${exit_code}"
+
     exit "${exit_code}"
 }
 

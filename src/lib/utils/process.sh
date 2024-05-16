@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -n "${SCRIPT_DIR_dcaf0b8c}" ]; then
+    return
+fi
+
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_dcaf0b8c="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 

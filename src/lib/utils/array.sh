@@ -208,7 +208,18 @@ function array::_test_array::dedup() {
     utest::assert_equal "${arr[*]}" "a b d e"
 }
 
-string::is_true "$TEST" && array::_test_array::reverse
-string::is_true "$TEST" && array::_test_array::reverse_new
-string::is_true "$TEST" && array::_test_array::dedup
+function array::_test_all() {
+    # source 进来的就不要测试了
+    local parent_function_name
+    parent_function_name=$(get_caller_function_name 1)
+    if [ "$parent_function_name" = "source" ]; then
+        return
+    fi
+
+    array::_test_array::reverse
+    array::_test_array::reverse_new
+    array::_test_array::dedup
+}
+
+string::is_true "$TEST" && array::_test_all
 true

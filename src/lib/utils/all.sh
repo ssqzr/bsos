@@ -14,6 +14,8 @@ source "${SCRIPT_DIR_cd871afe}/print.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/log.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/parameter.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/file.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/cmd.sh"

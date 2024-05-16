@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -n "${SCRIPT_DIR_e53d23f3}" ]; then
+    return
+fi
+
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_e53d23f3="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
@@ -16,7 +20,7 @@ source "${SCRIPT_DIR_e53d23f3}/string.sh"
 source "${SCRIPT_DIR_e53d23f3}/print.sh"
 
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_e53d23f3}/file.sh"
+source "${SCRIPT_DIR_e53d23f3}/parameter.sh"
 
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_e53d23f3}/utest.sh"
@@ -45,74 +49,94 @@ function cmd::_default_stderr_handler() {
 # 函数的返回结果是命令的执行结果
 # stdout_handler 和 stderr_handler 的返回结果并不影响函数的返回结果
 function cmd::run_cmd() {
-    local cmd=()
+    local cmds
+    local is_sudo="$SHELL_FALSE"
+    local password=""
     local stdout_handler
     local stdout_handler_params=()
     local stderr_handler
     local stderr_handler_params=()
-    local parse_step=0
+    local is_record_cmd="$SHELL_FALSE"
+    local is_parse_self="$SHELL_TRUE"
     local param
+    local temp_str
+
     for param in "$@"; do
-        case $parse_step in
-        0)
-            if [ "$param" = "none" ]; then
-                stdout_handler="cmd::_default_stdout_handler"
-                ((parse_step += 2))
-                continue
-            fi
-            stdout_handler="$param"
-            ((parse_step += 1))
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            cmds+=("$param")
             continue
+        fi
+        case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
             ;;
-        1)
-            if [ "$param" = "-" ]; then
-                ((parse_step += 1))
-                continue
-            fi
-            stdout_handler_params+=("$param")
-            continue
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool -- is_sudo "$param" || return "$SHELL_FALSE"
             ;;
-        2)
-            if [ "$param" = "none" ]; then
-                stderr_handler="cmd::_default_stderr_handler"
-                ((parse_step += 2))
-                continue
-            fi
-            stderr_handler="$param"
-            ((parse_step += 1))
-            continue
+        -p=* | --password=*)
+            parameter::parse_string -- password "$param" || return "$SHELL_FALSE"
             ;;
-        3)
-            if [ "$param" = "-" ]; then
-                ((parse_step += 1))
-                continue
-            fi
-            stderr_handler_params+=("$param")
-            continue
+        --stdout=*)
+            parameter::parse_string -- stdout_handler "$param" || return "$SHELL_FALSE"
+            ;;
+        --stdout-option=*)
+            temp_str=""
+            parameter::parse_string -- temp_str "$param" || return "$SHELL_FALSE"
+            stdout_handler_params+=("${temp_str}")
+            ;;
+        --stderr=*)
+            parameter::parse_string -- stderr_handler "$param" || return "$SHELL_FALSE"
+            ;;
+        --stderr-option=*)
+            temp_str=""
+            parameter::parse_string -- temp_str "$param" || return "$SHELL_FALSE"
+            stderr_handler_params+=("${temp_str}")
+            ;;
+        --record | --record=*)
+            parameter::parse_bool -- is_record_cmd "$param" || return "$SHELL_FALSE"
             ;;
         *)
-            cmd+=("$param")
-            continue
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
             ;;
         esac
     done
 
+    if [ -z "$stdout_handler" ]; then
+        stdout_handler=cmd::_default_stdout_handler
+    fi
+
+    if [ -z "$stderr_handler" ]; then
+        stderr_handler=cmd::_default_stdout_handler
+    fi
+
     # 参数参数合法性
-    if [ ${#cmd[@]} -eq 0 ]; then
-        lerror "cmd is empty"
+    if [ ${#cmds[@]} -eq 0 ]; then
+        lerror "cmds is empty"
         return "$SHELL_FALSE"
     fi
 
-    ldebug "start run cmd: ${cmd[*]}"
+    if [ "$is_sudo" -eq "$SHELL_TRUE" ]; then
+        if [ -z "$password" ]; then
+            cmds=("sudo" "${cmds[@]}")
+        else
+            cmds=("printf" "$password" "|" "sudo" "-S" "${cmds[@]}")
+        fi
+    fi
 
-    bash -c "${cmd[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}") 2> >(${stderr_handler} "${stderr_handler_params[@]}")
+    ldebug "start run cmd: ${cmds[*]}"
+    if [ "$is_record_cmd" -eq "$SHELL_TRUE" ]; then
+        echo "${cmds[*]}" >>"${__cmd_history_filepath}"
+    fi
+
+    bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}") 2> >(${stderr_handler} "${stderr_handler_params[@]}")
 
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "run cmd failed: ${cmd[*]}"
+        lerror "run cmd failed: ${cmds[*]}"
         return "$SHELL_FALSE"
     fi
 
-    ldebug "run cmd success: ${cmd[*]}"
+    ldebug "run cmd success: ${cmds[*]}"
     return "$SHELL_TRUE"
 }
 
@@ -124,7 +148,7 @@ function cmd::set_cmd_history_filepath() {
     fi
     local parent_dir
     parent_dir=$(dirname "$filepath")
-    file::create_dir_recursive "$parent_dir" || return "$SHELL_FALSE"
+    mkdir -p "$parent_dir" 1>/dev/null 2>&1 || return "$SHELL_FALSE"
 
     # FIXME: 是删掉重新记录还是追加的方式记录呢？？
     echo "--------------------------------" >>"$filepath"
@@ -134,19 +158,19 @@ function cmd::set_cmd_history_filepath() {
 }
 
 function cmd::run_cmd_with_history() {
-    echo "$*" >>"${__cmd_history_filepath}"
-    cmd::run_cmd lwrite - lwrite - "$@"
+    cmd::run_cmd --record --stdout=lwrite --stderr=lwrite -- "$@"
     return $?
 }
 
 #
 function cmd::run_cmd_retry() {
     local max_count=$1
+    shift
     local count=1
     while [ "$count" -le "$max_count" ]; do
-        "${@:2}"
+        "${@}"
         if [ $? -ne "$SHELL_TRUE" ]; then
-            lerror "run command(${*:2}) failed ${count} times, max retry count=${max_count}"
+            lerror "run command(${*}) failed ${count} times, max retry count=${max_count}"
             ((count += 1))
             continue
         fi
@@ -165,59 +189,59 @@ function cmd::run_cmd_retry_three() {
 function cmd::_test_simple_cmd() {
     local output
     local test_str="hello world"
-    output=$(cmd::run_cmd none none echo "$test_str")
+    output=$(cmd::run_cmd -- echo "$test_str")
     utest::assert_equal "$output" "$test_str"
 }
 
 function cmd::_test_simple_cmd_error() {
     local output
     local test_str="hello world"
-    output=$(cmd::run_cmd none none echo "$test_str" "|" grep "ssss")
+    output=$(cmd::run_cmd -- echo "$test_str" "|" grep "ssss")
     utest::assert_fail "$?"
     utest::assert_equal "$output" ""
 }
 
 function cmd::_test_pipe() {
     local output
-    output=$(cmd::run_cmd none none echo "hello world" "|" sed "s/hello/xxx/")
+    output=$(cmd::run_cmd -- echo "hello world" "|" sed "s/hello/xxx/")
     utest::assert_equal "$output" "xxx world"
 }
 
 function cmd::_test_multi_pipe() {
     local output
-    output=$(cmd::run_cmd none none echo "hello world" "|" sed "s/hello/xxx/" "|" sed "s/xxx/yyy/")
+    output=$(cmd::run_cmd -- echo "hello world" "|" sed "s/hello/xxx/" "|" sed "s/xxx/yyy/")
     utest::assert_equal "$output" "yyy world"
 }
 
 function cmd::_test_redirect() {
     local output
-    output=$(cmd::run_cmd none none echo "hello world" "1>/dev/null")
+    output=$(cmd::run_cmd -- echo "hello world" "1>/dev/null")
     utest::assert "$?"
     utest::assert_equal "$output" ""
 }
 
 function cmd::_test_stdout_handler() {
     local output
-    output=$(cmd::run_cmd sed "s/hello/xxx/" - none echo "hello world")
+    output=$(cmd::run_cmd --stdout=sed --stdout-option="s/hello/xxx/" -- echo "hello world")
     utest::assert_equal "$output" "xxx world"
 }
 
 function cmd::_test_stdout_handler_error() {
     local output
-    output=$(cmd::run_cmd grep "xxxx" - none echo "hello world")
+    output=$(cmd::run_cmd --stdout=grep --stdout-option="xxxx" -- echo "hello world")
     utest::assert "$?"
     utest::assert_equal "$output" ""
 }
 
 function cmd::_test_stderr_handler() {
     local output
-    output=$(cmd::run_cmd none sed "s/hello/xxx/" - echo "hello world" "1>&2")
+    output=$(cmd::run_cmd --stderr=sed --stderr-option="s/hello/xxx/" -- echo "hello world" "1>&2")
     utest::assert_equal "$output" "xxx world"
 }
 
 function cmd::_test_stderr_handler_error() {
     local output
-    output=$(cmd::run_cmd none grep "xxxx" - echo "hello world" "1>&2")
+    output=$(cmd::run_cmd --stderr=grep --stderr-option="xxxx" -- echo "hello world" "1>&2")
     utest::assert "$?"
     utest::assert_equal "$output" ""
 }
@@ -260,6 +284,17 @@ function cmd::_test_run_cmd() {
     return "$SHELL_TRUE"
 }
 
-string::is_true "$TEST" && cmd::_test_run_cmd
+function cmd::_test_all() {
+    # source 进来的就不要测试了
+    local parent_function_name
+    parent_function_name=$(get_caller_function_name 1)
+    if [ "$parent_function_name" = "source" ]; then
+        return
+    fi
+
+    cmd::_test_run_cmd
+}
+
+string::is_true "$TEST" && cmd::_test_all
 true
 cmd::_init_cmd_history_filepath

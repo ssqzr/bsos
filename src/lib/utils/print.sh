@@ -4,6 +4,10 @@
 
 # 用于交互输出时可以输出好看的文字
 
+if [ -n "${SCRIPT_DIR_3cad49c8}" ]; then
+    return
+fi
+
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_3cad49c8="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 

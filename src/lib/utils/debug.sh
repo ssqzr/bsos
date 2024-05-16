@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ -n "${SCRIPT_DIR_54c4d7cd}" ]; then
+    return
+fi
+
+# dirname 处理不了相对路径， dirname ../../xxx => ../..
+SCRIPT_DIR_54c4d7cd="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
+
 # https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#index-FUNCNAME
 # 获取调用层级 $level 的函数名
 # 针对当前函数当前级数是0，上级是1，上上级是2
