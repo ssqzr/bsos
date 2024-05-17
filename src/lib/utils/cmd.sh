@@ -71,29 +71,29 @@ function cmd::run_cmd() {
             is_parse_self="$SHELL_FALSE"
             ;;
         -s | -s=* | --sudo | --sudo=*)
-            parameter::parse_bool -- is_sudo "$param" || return "$SHELL_FALSE"
+            parameter::parse_bool --option="$param" is_sudo || return "$SHELL_FALSE"
             ;;
         -p=* | --password=*)
-            parameter::parse_string -- password "$param" || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
             ;;
         --stdout=*)
-            parameter::parse_string -- stdout_handler "$param" || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param" stdout_handler || return "$SHELL_FALSE"
             ;;
         --stdout-option=*)
             temp_str=""
-            parameter::parse_string -- temp_str "$param" || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param" temp_str || return "$SHELL_FALSE"
             stdout_handler_params+=("${temp_str}")
             ;;
         --stderr=*)
-            parameter::parse_string -- stderr_handler "$param" || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param" stderr_handler || return "$SHELL_FALSE"
             ;;
         --stderr-option=*)
             temp_str=""
-            parameter::parse_string -- temp_str "$param" || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param" temp_str || return "$SHELL_FALSE"
             stderr_handler_params+=("${temp_str}")
             ;;
         --record | --record=*)
-            parameter::parse_bool -- is_record_cmd "$param" || return "$SHELL_FALSE"
+            parameter::parse_bool --option="$param" is_record_cmd || return "$SHELL_FALSE"
             ;;
         *)
             lerror "unknown option $param"
@@ -102,11 +102,11 @@ function cmd::run_cmd() {
         esac
     done
 
-    if [ -z "$stdout_handler" ]; then
+    if [ ! -v stdout_handler ]; then
         stdout_handler=cmd::_default_stdout_handler
     fi
 
-    if [ -z "$stderr_handler" ]; then
+    if [ ! -v stderr_handler ]; then
         stderr_handler=cmd::_default_stdout_handler
     fi
 

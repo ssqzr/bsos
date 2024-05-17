@@ -18,6 +18,34 @@ source "${SCRIPT_DIR_c5f5ae0d}/debug.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_c5f5ae0d}/utest.sh"
 
+function string::random() {
+    echo "${RANDOM}"
+}
+
+function string::gen_random() {
+    local prefix="$1"
+    local random="$2"
+    local suffix="$2"
+    local now
+    local data
+
+    now="$(date '+%Y-%m-%d-%H-%M-%S.%N')"
+    if [ -z "${random}" ]; then
+        random="$(string::random)"
+    fi
+
+    if [ -n "${prefix}" ]; then
+        data+="${prefix}-"
+    fi
+
+    data+="${now}-${random}"
+
+    if [ -n "${suffix}" ]; then
+        data+="-${suffix}"
+    fi
+    echo "$data"
+}
+
 function string::is_empty() {
     local data="$1"
     if [ -z "$data" ]; then
@@ -97,6 +125,8 @@ function string::is_num() {
     fi
     return "$SHELL_FALSE"
 }
+
+######################################### 下面是单元测试代码 #########################################
 
 function string::_test_is_true_or_false() {
     string::is_true_or_false ""

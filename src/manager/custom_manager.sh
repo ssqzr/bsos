@@ -73,7 +73,7 @@ function custom_manager::_env() {
 
 function custom_manager::_clean_build() {
     linfo "clean app(${PM_APP_NAME}) build env..."
-    file::delete_dir_safe "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
+    file::safe_delete_file_dir "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
     file::create_dir_recursive "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
     linfo "clean app(${PM_APP_NAME}) build env success."
     return "${SHELL_TRUE}"

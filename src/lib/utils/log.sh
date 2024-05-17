@@ -92,12 +92,12 @@ function linfo() {
             caller_level="${param#*=}"
             ;;
         *)
-            if [ -z "$message" ]; then
+            if [ ! -v message ]; then
                 message="$param"
-            else
-                lerror "unknown parameter $param"
-                return "$SHELL_FALSE"
+                continue
             fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
             ;;
         esac
     done
@@ -119,12 +119,12 @@ function ldebug() {
             caller_level="${param#*=}"
             ;;
         *)
-            if [ -z "$message" ]; then
+            if [ ! -v message ]; then
                 message="$param"
-            else
-                lerror "unknown parameter $param"
-                return "$SHELL_FALSE"
+                continue
             fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
             ;;
         esac
     done
@@ -146,12 +146,12 @@ function lwarn() {
             caller_level="${param#*=}"
             ;;
         *)
-            if [ -z "$message" ]; then
+            if [ ! -v message ]; then
                 message="$param"
-            else
-                lerror "unknown parameter $param"
-                return "$SHELL_FALSE"
+                continue
             fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
             ;;
         esac
     done
@@ -173,12 +173,12 @@ function lerror() {
             caller_level="${param#*=}"
             ;;
         *)
-            if [ -z "$message" ]; then
+            if [ ! -v message ]; then
                 message="$param"
-            else
-                lerror "unknown parameter $param"
-                return "$SHELL_FALSE"
+                continue
             fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
             ;;
         esac
     done
@@ -204,12 +204,12 @@ function lexit() {
             caller_level="${param#*=}"
             ;;
         *)
-            if [ -z "$exit_code" ]; then
+            if [ ! -v exit_code ]; then
                 exit_code="$param"
-            else
-                lerror "unknown parameter $param"
-                return "$SHELL_FALSE"
+                continue
             fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
             ;;
         esac
     done
