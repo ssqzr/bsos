@@ -31,7 +31,7 @@ function package_manager::pacman::install() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history sudo pacman -S --needed --noconfirm "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- sudo pacman -S --needed --noconfirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pacman::uninstall() {
@@ -47,7 +47,7 @@ function package_manager::pacman::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history sudo pacman -Rc --noconfirm "$@" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo pacman -Rc --noconfirm "$@" || return "$SHELL_FALSE"
 }
 
 function package_manager::pacman::package_description() {
@@ -64,11 +64,11 @@ function package_manager::pacman::package_description() {
 }
 
 function package_manager::pacman::upgrade() {
-    cmd::run_cmd_with_history sudo pacman -Syu --noconfirm || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo pacman -Syu --noconfirm || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function package_manager::pacman::update() {
-    cmd::run_cmd_with_history sudo pacman -Sy --noconfirm || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo pacman -Sy --noconfirm || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }

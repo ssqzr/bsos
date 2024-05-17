@@ -12,7 +12,7 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function nvm::data::clean() {
-    cmd::run_cmd_with_history rm -rf "${HOME}/.nvm" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${HOME}/.nvm" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -51,8 +51,8 @@ function nvm::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function nvm::trait::post_install() {
-    cmd::run_cmd_with_history source /usr/share/nvm/init-nvm.sh "&&" nvm install --lts || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history source /usr/share/nvm/init-nvm.sh "&&" npm config -g set registry "http://registry.npmmirror.com" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- source /usr/share/nvm/init-nvm.sh "&&" nvm install --lts || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- source /usr/share/nvm/init-nvm.sh "&&" npm config -g set registry "http://registry.npmmirror.com" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

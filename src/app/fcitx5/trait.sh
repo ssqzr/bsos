@@ -47,9 +47,9 @@ function fcitx5::trait::do_install() {
 function fcitx5::trait::post_install() {
     # 拷贝配置文件前先结束掉 fcitx5 进程，不然当前运行的 fcitx5 会回写配置，一般开发环境会出现这个问题，导致配置不符合预期
     process::kill_by_name "fcitx5" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -66,7 +66,7 @@ function fcitx5::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function fcitx5::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

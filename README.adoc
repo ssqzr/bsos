@@ -249,8 +249,8 @@ sudo rm /var/lib/pacman/db.lck
 
 source ./lib/utils/all.sh
 
-cmd::run_cmd_with_history pamac install --no-confirm pot-translation-bin || exit 1
-cmd::run_cmd_with_history pamac install --no-confirm hyprpicker || exit 2
+cmd::run_cmd_with_history -- pamac install --no-confirm pot-translation-bin || exit 1
+cmd::run_cmd_with_history -- pamac install --no-confirm hyprpicker || exit 2
 
 echo "all success"
 ```

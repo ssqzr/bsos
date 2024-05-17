@@ -45,10 +45,10 @@ function swaync::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function swaync::trait::post_install() {
-    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
 
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/swaync" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history cp -rf "${SCRIPT_DIR_27026406}/swaync" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/swaync" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- cp -rf "${SCRIPT_DIR_27026406}/swaync" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -65,7 +65,7 @@ function swaync::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function swaync::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/swaync" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/swaync" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

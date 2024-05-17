@@ -33,7 +33,7 @@ function package_manager::yay::install() {
 
     local install_cmd="yay -S --needed --noconfirm"
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history "$install_cmd" "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- "$install_cmd" "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::yay::uninstall() {
@@ -51,7 +51,7 @@ function package_manager::yay::uninstall() {
 
     local remove_cmd="yay -Rc --unneeded --noconfirm"
 
-    cmd::run_cmd_with_history "$remove_cmd" "$@" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- "$remove_cmd" "$@" || return "$SHELL_FALSE"
 }
 
 function package_manager::yay::package_description() {
@@ -68,11 +68,11 @@ function package_manager::yay::package_description() {
 }
 
 function package_manager::yay::upgrade() {
-    cmd::run_cmd_with_history yay -Syu --noconfirm || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- yay -Syu --noconfirm || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function package_manager::yay::update() {
-    cmd::run_cmd_with_history yay -Sy --noconfirm || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- yay -Sy --noconfirm || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }

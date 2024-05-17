@@ -26,38 +26,38 @@ function hyprland::settings::modify_hyprland_config() {
 
     if [ ! -e "$config_filepath" ]; then
         # sed 不能操作空文件
-        cmd::run_cmd_with_history echo '>' "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- echo '>' "$config_filepath" || return "${SHELL_FALSE}"
     fi
 
     # 处理全部变量
     grep -q "variables.conf" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
         # 全局变量必须是第一个引入的
-        cmd::run_cmd_with_history sed -i "'1a\\source = conf.d/variables.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'1a\\source = conf.d/variables.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
 
     # 处理基础的设置
     grep -q "base.conf" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history sed -i "'/variables.conf/a\\source = conf.d/base.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'/variables.conf/a\\source = conf.d/base.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
 
     # 处理显示器的设置
     grep -q "monitor.conf" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history sed -i "'\$a\\source = conf.d/monitor.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/monitor.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
 
     # 处理工作空间的设置
     grep -q "workspace.conf" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history sed -i "'\$a\\source = conf.d/workspace.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/workspace.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
 
     # 处理最小化窗口功能的设置
     grep -q "minimized.conf" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history sed -i "'\$a\\source = conf.d/minimized.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/minimized.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
 
     return "${SHELL_TRUE}"
@@ -69,7 +69,7 @@ function hyprland::settings::cursors() {
     config_filepath="$(hyprland::settings::base_config_filepath)"
 
     if os::is_vm; then
-        cmd::run_cmd_with_history sed -i "'s/^# \(env = WLR_NO_HARDWARE_CURSORS, 1\)/\\1/g'" "$config_filepath"
+        cmd::run_cmd_with_history -- sed -i "'s/^# \(env = WLR_NO_HARDWARE_CURSORS, 1\)/\\1/g'" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             lerror "hyprland setting cursors failed"
             return "$SHELL_FALSE"
@@ -90,7 +90,7 @@ function hyprland::settings::terminal() {
         # 虚拟机里面不支持 wezterm
         terminal="wezterm"
     fi
-    cmd::run_cmd_with_history sed -i "'s/__terminal__/$terminal/g'" "$config_filepath"
+    cmd::run_cmd_with_history -- sed -i "'s/__terminal__/$terminal/g'" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
         lerror "hyprland setting terminal failed"
         return "$SHELL_FALSE"
@@ -110,7 +110,7 @@ function hyprland::settings::file_manager() {
         # 虚拟机里面不支持 wezterm
         file_manager="wezterm start -- yazi"
     fi
-    cmd::run_cmd_with_history sed -i "'s/__file_manager__/$file_manager/g'" "$config_filepath"
+    cmd::run_cmd_with_history -- sed -i "'s/__file_manager__/$file_manager/g'" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
         lerror "hyprland setting file manager failed"
         return "$SHELL_FALSE"
@@ -124,7 +124,7 @@ function hyprland::settings::monitor() {
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     if os::is_vm; then
         # 反复安装也不会有问题
-        cmd::run_cmd_with_history sed -i "'s%^\(source = conf.d/monitor.conf\)%# \\1%g'" "$config_filepath"
+        cmd::run_cmd_with_history -- sed -i "'s%^\(source = conf.d/monitor.conf\)%# \\1%g'" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             lerror "hyprland setting monitor failed"
             return "$SHELL_FALSE"
@@ -140,7 +140,7 @@ function hyprland::settings::workspace() {
     if os::is_vm; then
         # 反复安装也不会有问题
         # 还有一个直接的方式就是清空 monitor 设置文件内容
-        cmd::run_cmd_with_history sed -i "'s%^\(source = conf.d/workspace.conf\)%# \\1%g'" "$config_filepath"
+        cmd::run_cmd_with_history -- sed -i "'s%^\(source = conf.d/workspace.conf\)%# \\1%g'" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             lerror "hyprland setting workspace failed"
             return "$SHELL_FALSE"
@@ -156,7 +156,7 @@ function hyprland::settings::hypridle() {
     if os::is_vm; then
         # 反复安装也不会有问题
         # 还有一个直接的方式就是清空 monitor 设置文件内容
-        cmd::run_cmd_with_history sed -i "'s%^\(exec-once = hypridle\)%# \\1%g'" "$config_filepath"
+        cmd::run_cmd_with_history -- sed -i "'s%^\(exec-once = hypridle\)%# \\1%g'" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             lerror "hyprland setting hypridle failed"
             return "$SHELL_FALSE"
@@ -178,7 +178,7 @@ function hyprland::plugins::clean() {
     linfo "start clean hyprland plugins"
 
     # 修改配置文件
-    cmd::run_cmd_with_history sed -i "'s%^\(source = conf.d/hycov.conf\)%# \\1%g'" "$config_filepath" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- sed -i "'s%^\(source = conf.d/hycov.conf\)%# \\1%g'" "$config_filepath" || return "${SHELL_FALSE}"
 
     # 删除插件
     local repository
@@ -188,7 +188,7 @@ function hyprland::plugins::clean() {
     array::readarray repository < <(echo "${temp_str}")
 
     for item in "${repository[@]}"; do
-        cmd::run_cmd_with_history printf y '|' hyprpm -v remove "${item}" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- printf y '|' hyprpm -v remove "${item}" || return "${SHELL_FALSE}"
         linfo "hyprpm remove ${item} success"
     done
 
@@ -209,25 +209,25 @@ function hyprland::plugins::install() {
     hyprland::plugins::clean || return "${SHELL_FALSE}"
 
     local hyprpm_state="$HOME/.local/share/hyprpm/state.toml"
-    cmd::run_cmd_with_history rm -f "$hyprpm_state" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history echo -e '"[state]\ndont_warn_install = true"' '>' "$hyprpm_state" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -f "$hyprpm_state" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- echo -e '"[state]\ndont_warn_install = true"' '>' "$hyprpm_state" || return "${SHELL_FALSE}"
 
     # 先更新，安装 hyprland headers
-    cmd::run_cmd_with_history hyprpm update -v || return "${SHELL_FALSE}" || return "${SHELL_TRUE}"
+    cmd::run_cmd_with_history -- hyprpm update -v || return "${SHELL_FALSE}" || return "${SHELL_TRUE}"
     linfo "hyprpm update success"
 
     # 添加
-    cmd::run_cmd_with_history printf "y" '|' hyprpm -v add https://github.com/hyprwm/hyprland-plugins || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/hyprwm/hyprland-plugins || return "${SHELL_FALSE}"
     linfo "hyprpm add hyprland-plugins plugin success"
 
     # 添加 hycov
-    cmd::run_cmd_with_history printf "y" '|' hyprpm -v add https://github.com/DreamMaoMao/hycov || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/DreamMaoMao/hycov || return "${SHELL_FALSE}"
     linfo "hyprpm add hycov plugin success"
-    cmd::run_cmd_with_history hyprpm -v enable hycov || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- hyprpm -v enable hycov || return "${SHELL_FALSE}"
     # 处理hycov插件的设置
     grep -q "hycov.conf" "$config_filepath"
     if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history sed -i "'\$a\\source = conf.d/hycov.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/hycov.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
     linfo "hyprpm enable hycov plugin success"
 
@@ -271,20 +271,20 @@ function hyprland::trait::post_install() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
 
-    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
 
     # 先备份配置
-    cmd::run_cmd_with_history rm -rf "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
     if [ -e "${XDG_CONFIG_HOME}/hypr" ]; then
-        cmd::run_cmd_with_history cp -rf "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- cp -rf "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
     fi
 
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
 
     # 恢复主要的配置
     if [ -e "${BUILD_TEMP_DIR}/hypr/hyprland.conf" ]; then
-        cmd::run_cmd_with_history cp -f "${BUILD_TEMP_DIR}/hypr/hyprland.conf" "${config_filepath}" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- cp -f "${BUILD_TEMP_DIR}/hypr/hyprland.conf" "${config_filepath}" || return "${SHELL_FALSE}"
     fi
 
     hyprland::settings::modify_hyprland_config || return "${SHELL_FALSE}"
@@ -311,7 +311,7 @@ function hyprland::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hyprland::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -13,18 +13,18 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function google_chrome::undo_set_xdg_mime() {
     if [ -f "${XDG_CONFIG_HOME}/mimeapps.list" ]; then
-        cmd::run_cmd_with_history sed -i "'/google-chrome.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'/google-chrome.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
     fi
     return "$SHELL_TRUE"
 }
 
 function google_chrome::set_xdg_mime() {
     google_chrome::undo_set_xdg_mime || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "text/html" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/http" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/https" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/about" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history xdg-mime default "google-chrome.desktop" "x-scheme-handler/unknown" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- xdg-mime default "google-chrome.desktop" "text/html" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- xdg-mime default "google-chrome.desktop" "x-scheme-handler/http" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- xdg-mime default "google-chrome.desktop" "x-scheme-handler/https" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- xdg-mime default "google-chrome.desktop" "x-scheme-handler/about" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- xdg-mime default "google-chrome.desktop" "x-scheme-handler/unknown" || return "${SHELL_FALSE}"
     return "$SHELL_TRUE"
 }
 

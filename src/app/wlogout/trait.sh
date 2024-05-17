@@ -47,9 +47,9 @@ function wlogout::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function wlogout::trait::post_install() {
     local conf_filepath="$XDG_CONFIG_HOME/wlogout"
-    cmd::run_cmd_with_history mkdir -p "$XDG_CONFIG_HOME"
-    cmd::run_cmd_with_history rm -rf "$conf_filepath"
-    cmd::run_cmd_with_history cp -rf "$SCRIPT_DIR_37160405/wlogout" "$conf_filepath" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- mkdir -p "$XDG_CONFIG_HOME"
+    cmd::run_cmd_with_history -- rm -rf "$conf_filepath"
+    cmd::run_cmd_with_history -- cp -rf "$SCRIPT_DIR_37160405/wlogout" "$conf_filepath" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -67,7 +67,7 @@ function wlogout::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function wlogout::trait::post_uninstall() {
     local conf_filepath="$XDG_CONFIG_HOME/wlogout"
-    cmd::run_cmd_with_history rm -rf "$conf_filepath"
+    cmd::run_cmd_with_history -- rm -rf "$conf_filepath"
     return "${SHELL_TRUE}"
 }
 

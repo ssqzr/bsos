@@ -21,7 +21,7 @@ function sed::delete_between_line() {
     # https://stackoverflow.com/questions/6287755/using-sed-to-delete-all-lines-between-two-matching-patterns
     # https://stackoverflow.com/questions/5071901/removing-lines-between-two-patterns-not-inclusive-with-sed
     # sed "/${first_match}/,/${last_match}/{/.*/d}" "$filepath"
-    cmd::run_cmd_with_history sed -i "'/${first_match}/,/${last_match}/d'" "$filepath" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sed -i "'/${first_match}/,/${last_match}/d'" "$filepath" || return "$SHELL_FALSE"
 
     # 这个是不包含匹配的两行
     # sed "/${first_match}/,/${last_match}/{//!d}" "$filepath"

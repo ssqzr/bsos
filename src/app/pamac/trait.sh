@@ -37,13 +37,13 @@ function pamac::trait::_src_directory() {
 }
 
 function pamac::trait::pre_install() {
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history git clone --depth 1 https://aur.archlinux.org/pamac-aur.git "$(pamac::trait::_src_directory)" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- git clone --depth 1 https://aur.archlinux.org/pamac-aur.git "$(pamac::trait::_src_directory)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
 function pamac::trait::do_install() {
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history cd "$(pamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(pamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(pamac::trait::package_name) failed."
         return "$SHELL_FALSE"
@@ -59,9 +59,9 @@ function pamac::trait::post_install() {
     # 关于 sed 的 t 命令参考如下：
     # https://markrepo.github.io/commands/2018/06/26/sed/
     # shellcheck disable=SC2016
-    # cmd::run_cmd_with_history sudo sed -i -e 's/^#RemoveUnrequiredDeps/RemoveUnrequiredDeps/' -e 's/^#EnableAUR/EnableAUR/' -e 's/^#CheckAURUpdates/CheckAURUpdates/' -e 's/^#CheckAURVCSUpdates/CheckAURVCSUpdates/' -e '/^CheckFlatpakUpdates$/d; $a CheckFlatpakUpdates' -e '/^#EnableSnap$/d; $a #EnableSnap' -e '/^EnableFlatpak$/d; $a EnableFlatpak' "${pamac_config_filepath}" || return "$SHELL_FALSE"
+    # cmd::run_cmd_with_history -- sudo sed -i -e 's/^#RemoveUnrequiredDeps/RemoveUnrequiredDeps/' -e 's/^#EnableAUR/EnableAUR/' -e 's/^#CheckAURUpdates/CheckAURUpdates/' -e 's/^#CheckAURVCSUpdates/CheckAURVCSUpdates/' -e '/^CheckFlatpakUpdates$/d; $a CheckFlatpakUpdates' -e '/^#EnableSnap$/d; $a #EnableSnap' -e '/^EnableFlatpak$/d; $a EnableFlatpak' "${pamac_config_filepath}" || return "$SHELL_FALSE"
 
-    cmd::run_cmd_with_history sudo cp -f "${SCRIPT_DIR_9763b925}/pamac.conf" "${pamac_config_filepath}"
+    cmd::run_cmd_with_history -- sudo cp -f "${SCRIPT_DIR_9763b925}/pamac.conf" "${pamac_config_filepath}"
 
     return "${SHELL_TRUE}"
 }

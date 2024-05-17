@@ -46,7 +46,7 @@ function process::kill_by_name() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history pkill -x "$process_name" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- pkill -x "$process_name" || return "$SHELL_FALSE"
     linfo "kill process($process_name) success"
     return "$SHELL_TRUE"
 }

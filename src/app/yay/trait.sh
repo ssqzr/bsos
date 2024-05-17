@@ -40,13 +40,13 @@ function yay::trait::_src_directory() {
 
 # 安装的前置操作，比如下载源代码
 function yay::trait::pre_install() {
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history git clone --depth 1 https://aur.archlinux.org/yay.git "$(yay::trait::_src_directory)" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- git clone --depth 1 https://aur.archlinux.org/yay.git "$(yay::trait::_src_directory)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
 # 安装的操作
 function yay::trait::do_install() {
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history cd "$(yay::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(yay::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(yay::trait::package_name) failed."
         return "$SHELL_FALSE"

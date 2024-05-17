@@ -58,8 +58,8 @@ function open_vm_tools::trait::post_install() {
     if ! os::is_vmware; then
         return "$SHELL_TRUE"
     fi
-    cmd::run_cmd_with_history sudo sed -i '/vmhgfs-fuse/d' "/etc/fstab"
-    cmd::run_cmd_with_history echo "'vmhgfs-fuse /mnt/hgfs fuse defaults,allow_other 0 0'" "|" sudo tee -a "/etc/fstab" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- sudo sed -i '/vmhgfs-fuse/d' "/etc/fstab"
+    cmd::run_cmd_with_history -- echo "'vmhgfs-fuse /mnt/hgfs fuse defaults,allow_other 0 0'" "|" sudo tee -a "/etc/fstab" || return "${SHELL_FALSE}"
 
     local unit="vmtoolsd.service"
     systemctl::enable "$unit" || return "$SHELL_FALSE"
@@ -94,7 +94,7 @@ function open_vm_tools::trait::post_uninstall() {
     if ! os::is_vmware; then
         return "$SHELL_TRUE"
     fi
-    cmd::run_cmd_with_history sudo sed -i '/vmhgfs-fuse/d' "/etc/fstab"
+    cmd::run_cmd_with_history -- sudo sed -i '/vmhgfs-fuse/d' "/etc/fstab"
     return "${SHELL_TRUE}"
 }
 

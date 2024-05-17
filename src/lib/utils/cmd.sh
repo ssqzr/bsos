@@ -158,7 +158,33 @@ function cmd::set_cmd_history_filepath() {
 }
 
 function cmd::run_cmd_with_history() {
-    cmd::run_cmd --record --stdout=lwrite --stderr=lwrite -- "$@"
+    local cmds=()
+    local options=()
+    local is_parse_self="$SHELL_TRUE"
+    local param
+    local temp_str
+
+    for param in "$@"; do
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            cmds+=("$param")
+            continue
+        fi
+        case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
+            ;;
+        -*)
+            options+=("$param")
+            ;;
+        *)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    # --record 强制覆盖
+    cmd::run_cmd --stdout=lwrite --stderr=lwrite "${options[@]}" --record -- "${cmds[@]}"
     return $?
 }
 

@@ -42,13 +42,13 @@ function pacman::trait::pre_install() {
     # Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
     grep "mirrors.tuna.tsinghua.edu.cn" "/etc/pacman.d/mirrorlist" >/dev/null
     if [ "$?" == "$SHELL_FALSE" ]; then
-        cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c "\"sed -i '0,/^[# ]*Server/s@@Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/\\\$repo/os/\\\$arch\n&@' /etc/pacman.d/mirrorlist\"" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"sed -i '0,/^[# ]*Server/s@@Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/\\\$repo/os/\\\$arch\n&@' /etc/pacman.d/mirrorlist\"" || return "${SHELL_FALSE}"
     fi
 
     # 先升级系统
     linfo "start upgrade system..."
     println_info "start upgrade system..."
-    cmd::run_cmd_with_history printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Syu --noconfirm"\" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Syu --noconfirm"\" || return "${SHELL_FALSE}"
     linfo "upgrade system success."
     println_success "upgrade system success."
 

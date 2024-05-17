@@ -30,7 +30,7 @@ function package_manager::flatpak::install() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history sudo flatpak install -y "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- sudo flatpak install -y "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::flatpak::uninstall() {
@@ -46,7 +46,7 @@ function package_manager::flatpak::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history sudo flatpak uninstall -y "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo flatpak uninstall -y "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::flatpak::package_description() {
@@ -64,7 +64,7 @@ function package_manager::flatpak::package_description() {
 }
 
 function package_manager::flatpak::upgrade() {
-    cmd::run_cmd_with_history sudo flatpak update -y || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo flatpak update -y || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

@@ -46,7 +46,7 @@ function package_manager::_clean_lock() {
 
     lwarn "file($pacman_lock_file) is not in use, clean lock file"
 
-    cmd::run_cmd_with_history sudo rm -f "$pacman_lock_file" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo rm -f "$pacman_lock_file" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

@@ -46,10 +46,10 @@ function rust::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function rust::trait::post_install() {
-    cmd::run_cmd_with_history mkdir -p "${HOME}/.cargo" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history cp -f "${SCRIPT_DIR_fd47d50e}/config" "${HOME}/.cargo/config" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history rustup default stable || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history rustup update || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- mkdir -p "${HOME}/.cargo" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- cp -f "${SCRIPT_DIR_fd47d50e}/config" "${HOME}/.cargo/config" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rustup default stable || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rustup update || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -66,7 +66,7 @@ function rust::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function rust::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -rf "${HOME}/.cargo" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${HOME}/.cargo" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

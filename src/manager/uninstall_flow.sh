@@ -62,7 +62,7 @@ function uninstall_flow::do_uninstall() {
 function uninstall_flow::post_uninstall() {
     local lib_dir
     lib_dir=$(base::bash_lib_dir) || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history rm -rf "${lib_dir}" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- rm -rf "${lib_dir}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

@@ -45,9 +45,9 @@ function wezterm::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function wezterm::trait::post_install() {
-    cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/wezterm" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history cp -r "${SCRIPT_DIR_6007d639}/wezterm" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/wezterm" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_6007d639}/wezterm" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -64,7 +64,7 @@ function wezterm::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function wezterm::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -rf "${XDG_CONFIG_HOME}/wezterm" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/wezterm" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

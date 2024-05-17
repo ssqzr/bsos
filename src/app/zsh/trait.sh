@@ -46,17 +46,17 @@ function zsh::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function zsh::trait::post_install() {
 
-    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history cp -rf "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history cp -rf "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- cp -rf "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- cp -rf "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
 
     # 设置默认的shell为zsh
     # https://wiki.archlinux.org/title/zsh#Making_Zsh_your_default_shell
     local username
     username=$(id -un)
-    cmd::run_cmd_with_history sudo chsh -s /usr/bin/zsh "${username}"
+    cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/zsh "${username}"
 
     return "${SHELL_TRUE}"
 }
@@ -74,12 +74,12 @@ function zsh::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -f "$HOME/.zshrc" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- rm -f "$HOME/.zshrc" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
     username=$(id -un)
-    cmd::run_cmd_with_history sudo chsh -s /usr/bin/bash "${username}"
+    cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/bash "${username}"
     return "${SHELL_TRUE}"
 }
 

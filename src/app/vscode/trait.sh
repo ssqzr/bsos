@@ -13,14 +13,14 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function vscode::undo_set_xdg_mime() {
     if [ -f "${XDG_CONFIG_HOME}/mimeapps.list" ]; then
-        cmd::run_cmd_with_history sed -i "'/code.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- sed -i "'/code.desktop/d'" "${XDG_CONFIG_HOME}/mimeapps.list" || return "${SHELL_FALSE}"
     fi
     return "$SHELL_TRUE"
 }
 
 function vscode::set_xdg_mime() {
     vscode::undo_set_xdg_mime || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history xdg-mime default "code.desktop" "text/plain" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- xdg-mime default "code.desktop" "text/plain" || return "${SHELL_FALSE}"
 
     return "$SHELL_TRUE"
 }
@@ -61,7 +61,7 @@ function vscode::trait::do_install() {
 function vscode::trait::post_install() {
     # TODO:  gnome-keyring的配置
     local filepath="$XDG_CONFIG_HOME/code-flags.conf"
-    cmd::run_cmd_with_history cp -f "$SCRIPT_DIR_cbc6f008/code-flags.conf" "$filepath" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- cp -f "$SCRIPT_DIR_cbc6f008/code-flags.conf" "$filepath" || return "${SHELL_FALSE}"
     vscode::set_xdg_mime || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -79,7 +79,7 @@ function vscode::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function vscode::trait::post_uninstall() {
-    cmd::run_cmd_with_history rm -f "$XDG_CONFIG_HOME/code-flags.conf" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rm -f "$XDG_CONFIG_HOME/code-flags.conf" || return "${SHELL_FALSE}"
     vscode::undo_set_xdg_mime || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

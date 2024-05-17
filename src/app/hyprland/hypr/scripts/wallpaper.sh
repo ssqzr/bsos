@@ -73,10 +73,10 @@ function hyprland::wallpaper::bing_wallpaper_download() {
     url=$(hyprland::wallpaper::bing_wallpaper_url "$index") || return "$SHELL_FALSE"
 
     # 使用curl总是出现命令执行完，立即检测文件不存在的情况
-    # cmd::run_cmd_with_history curl -s -k -L -o "$filepath" "'$url'" || return "$SHELL_FALSE"
+    # cmd::run_cmd_with_history -- curl -s -k -L -o "$filepath" "'$url'" || return "$SHELL_FALSE"
     # wget 命令失败时可能会残留空文件，所以先保存到临时文件
-    cmd::run_cmd_with_history wget -q -O "$tmp_filepath" "'$url'" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history mv -f "'$tmp_filepath'" "'$filepath'" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- wget -q -O "$tmp_filepath" "'$url'" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- mv -f "'$tmp_filepath'" "'$filepath'" || return "$SHELL_FALSE"
 
     if [ ! -f "$filepath" ]; then
         # 刚开始在虚拟机测试，当 curl 执行完成后，检测下载的文件并不存在
@@ -95,12 +95,12 @@ function hyprland::wallpaper::clean_old_file() {
 
     wallpaper_dir="$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
     if [ ! -e "$wallpaper_dir" ]; then
-        cmd::run_cmd_with_history mkdir -p "$wallpaper_dir" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- mkdir -p "$wallpaper_dir" || return "${SHELL_FALSE}"
         return "$SHELL_TRUE"
     fi
 
     today="$(hyprland::wallpaper::today)" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history find "$wallpaper_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- find "$wallpaper_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
 
     return "$SHELL_TRUE"
 }
@@ -155,19 +155,19 @@ function hyprland::wallpaper::main() {
             linfo "wallpaper $filepath exist, skip download"
         fi
 
-        cmd::run_cmd_with_history hyprctl hyprpaper preload "${filepath}"
-        cmd::run_cmd_with_history hyprctl hyprpaper wallpaper "${name},${filepath}"
+        cmd::run_cmd_with_history -- hyprctl hyprpaper preload "${filepath}"
+        cmd::run_cmd_with_history -- hyprctl hyprpaper wallpaper "${name},${filepath}"
         # 应用所有显示器
-        # cmd::run_cmd_with_history hyprctl hyprpaper wallpaper "${filepath}"
+        # cmd::run_cmd_with_history -- hyprctl hyprpaper wallpaper "${filepath}"
 
     done
 
-    cmd::run_cmd_with_history hyprctl hyprpaper unload unused || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- hyprctl hyprpaper unload unused || return "$SHELL_FALSE"
 
     # 获取第一个显示器的名称
     name="$(echo "$monitors" | yq ".[0].name")" || return "$SHELL_FALSE"
     filepath="$(hyprland::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history wallust -a 80 -q "${filepath}"
+    cmd::run_cmd_with_history -- wallust -a 80 -q "${filepath}"
 
     return "$SHELL_TRUE"
 }

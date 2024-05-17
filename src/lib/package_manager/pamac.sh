@@ -33,7 +33,7 @@ function package_manager::pamac::install() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history pamac install --no-confirm "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- pamac install --no-confirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pamac::uninstall() {
@@ -49,7 +49,7 @@ function package_manager::pamac::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history pamac remove --cascade --no-confirm "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- pamac remove --cascade --no-confirm "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::pamac::package_description() {
@@ -66,12 +66,12 @@ function package_manager::pamac::package_description() {
 }
 
 function package_manager::pamac::upgrade() {
-    cmd::run_cmd_with_history pamac upgrade --no-confirm --aur || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- pamac upgrade --no-confirm --aur || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function package_manager::pamac::update() {
     # pamac 没有单独更新数据库的命令，pamac 的 update 和 upgrade 命令是一样的
-    # cmd::run_cmd_with_history pamac update --no-confirm --download-only || return "$SHELL_FALSE"
+    # cmd::run_cmd_with_history -- pamac update --no-confirm --download-only || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }

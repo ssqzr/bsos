@@ -81,11 +81,11 @@ function custom_manager::_clean_build() {
 
 function custom_manager::prepare() {
     if [ ! -e "${XDG_CONFIG_HOME}" ]; then
-        cmd::run_cmd_with_history mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     fi
 
     if [ ! -e "${XDG_CACHE_HOME}" ]; then
-        cmd::run_cmd_with_history mkdir -p "${XDG_CACHE_HOME}" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history -- mkdir -p "${XDG_CACHE_HOME}" || return "${SHELL_FALSE}"
     fi
 
     return "$SHELL_TRUE"
