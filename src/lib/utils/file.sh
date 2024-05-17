@@ -16,12 +16,77 @@ source "${SCRIPT_DIR_1d735f60}/cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_1d735f60}/string.sh"
 
+function file::read_dir() {
+    local -n _e8a51292_files
+    local is_sudo
+    local password
+    local directory
+    local param
+    local _f2dfb4d4_temp_str
+
+    ldebug "params=$*"
+
+    for param in "$@"; do
+        case "$param" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param" is_sudo || return "$SHELL_FALSE"
+            ;;
+        -p=* | --password=*)
+            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -R _e8a51292_files ]; then
+                _e8a51292_files="$param"
+                continue
+            fi
+            if [ ! -v directory ]; then
+                directory="$param"
+                continue
+            fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -R _e8a51292_files ]; then
+        lerror "read directory failed, param(files-ref) is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -v directory ]; then
+        lerror "read directory failed, param(directory) is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ -z "$directory" ]; then
+        lerror "read directory failed, param(directory) is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    _f2dfb4d4_temp_str=$(find "${directory}" -maxdepth 1 -mindepth 1 2>&1)
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "read directory failed, call find to list files failed,output=${_f2dfb4d4_temp_str}"
+        return "$SHELL_FALSE"
+    fi
+
+    readarray -t "${!_e8a51292_files}" < <(echo "$_f2dfb4d4_temp_str")
+
+    return "$SHELL_TRUE"
+}
+
 # 遍历创建目录，上层目录也会创建
 function file::create_dir_recursive() {
     local is_sudo
     local password
     local directory
     local param
+
+    ldebug "params=$*"
 
     for param in "$@"; do
         case "$param" in
@@ -71,6 +136,8 @@ function file::create_parent_dir_recursive() {
     local password
     local parent_dir
     local param
+
+    ldebug "params=$*"
 
     for param in "$@"; do
         case "$param" in
@@ -128,6 +195,8 @@ function file::safe_delete_file_dir() {
     local is_sudo
     local password
     local param
+
+    ldebug "params=$*"
 
     for param in "$@"; do
         case "$param" in
@@ -194,6 +263,8 @@ function file::backup_file_dir_in_same_dir() {
     local dst_filepath
 
     local param
+
+    ldebug "params=$*"
 
     for param in "$@"; do
         case "$param" in
@@ -267,6 +338,8 @@ function file::mv_file_dir() {
     local target_filepath
 
     local param
+
+    ldebug "params=$*"
 
     for param in "$@"; do
         case "$param" in
@@ -349,7 +422,7 @@ function file::mv_file_dir() {
     # 创建父级目录
     file::create_parent_dir_recursive --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "$target_filepath" || return "$SHELL_FALSE"
 
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv -rf "$path" "${target_filepath}" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv -f "$path" "${target_filepath}" || return "$SHELL_FALSE"
 
     if [ -R _548aad8f_target_filepath ] && [ -z "${_548aad8f_target_filepath}" ]; then
         _548aad8f_target_filepath="${target_filepath}"
@@ -367,13 +440,15 @@ function file::mv_file_dir() {
 function file::copy_file_dir() {
     local src
     local dst
-    local is_sudo
-    local password
+    local is_sudo="$SHELL_FALSE"
+    local password=""
     # 是否覆盖已经存在的文件
-    local is_force
+    local is_force="$SHELL_FALSE"
 
     local backup_filepath
     local param
+
+    ldebug "params=$*"
 
     for param in "$@"; do
         case "$param" in
@@ -405,12 +480,12 @@ function file::copy_file_dir() {
         esac
     done
 
-    if [ ! -v "$src" ]; then
+    if [ ! -v src ]; then
         lerror "copy file failed, param src is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ ! -v "$dst" ]; then
+    if [ ! -v dst ]; then
         lerror "copy file failed, param dst is not set"
         return "$SHELL_FALSE"
     fi
@@ -431,7 +506,7 @@ function file::copy_file_dir() {
     fi
 
     if [ -e "$dst" ]; then
-        if [ "$is_force" -eq "$SHELL_FALSE" ]; then
+        if [ "$is_force" -ne "$SHELL_TRUE" ]; then
             # 目标文件已经存在，并且选择不覆盖
             ldebug "copy file failed, dst file exists, param limit not overwrite destination file, src=$src, dst=$dst"
             return "$SHELL_FALSE"

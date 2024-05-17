@@ -11,6 +11,32 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
+# 处理 .config/zsh 目录下的配置文件
+function zsh::settings::zsh_dir() {
+    local filepath
+    local filename
+    local files
+
+    # 备份配置文件
+    file::copy_file_dir "$XDG_CONFIG_HOME/zsh" "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
+    file::safe_delete_file_dir "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+
+    # 拷贝全新的文件
+    file::copy_file_dir "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+
+    # 处理 zshrc.d 目录下的配置文件，赋值不属于 zsh 内置的脚本
+    file::read_dir files "$BUILD_TEMP_DIR/zsh/zshrc.d" || return "$SHELL_FALSE"
+    for filepath in "${files[@]}"; do
+        filename="$(basename "$filepath")"
+        if [ -e "$XDG_CONFIG_HOME/zsh/zshrc.d/$filename" ]; then
+            continue
+        fi
+        file::copy_file_dir "$filepath" "$XDG_CONFIG_HOME/zsh/zshrc.d/$filename" || return "$SHELL_FALSE"
+    done
+
+    return "${SHELL_TRUE}"
+}
+
 # 指定使用的包管理器
 function zsh::trait::package_manager() {
     echo "pacman"
@@ -46,11 +72,9 @@ function zsh::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function zsh::trait::post_install() {
 
-    cmd::run_cmd_with_history -- cp -f "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- cp -rf "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- cp -rf "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    file::copy_file_dir --force "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
+    file::copy_file_dir --force "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
+    zsh::settings::zsh_dir || return "$SHELL_FALSE"
 
     # 设置默认的shell为zsh
     # https://wiki.archlinux.org/title/zsh#Making_Zsh_your_default_shell
@@ -74,9 +98,9 @@ function zsh::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
-    cmd::run_cmd_with_history -- rm -f "$HOME/.zshrc" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- rm -rf "$HOME/.zkbd" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- rm -rf "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    file::safe_delete_file_dir "$HOME/.zshrc" || return "$SHELL_FALSE"
+    file::safe_delete_file_dir "$HOME/.zkbd" || return "$SHELL_FALSE"
+    file::safe_delete_file_dir "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
     username=$(id -un)
     cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/bash "${username}"

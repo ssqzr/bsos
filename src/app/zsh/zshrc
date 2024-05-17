@@ -141,6 +141,11 @@ if [ -e "${XDG_CACHE_HOME:-$HOME/.cache}/colors/zsh.zsh" ];then
     source "${XDG_CACHE_HOME:-$HOME/.cache}/colors/zsh.zsh"
 fi
 
+
+# source ~/.config/zsh/zshrc.d 目录下的所有 zsh 配置
+source "${XDG_CONFIG_HOME:-$HOME/.config}/zsh/zshrc.d/source.zsh"
+
+
 # zsh-autosuggestions 配置
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 # https://github.com/zsh-users/zsh-autosuggestions#configuration
