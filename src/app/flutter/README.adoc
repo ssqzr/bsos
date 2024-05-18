@@ -1,0 +1,161 @@
+# flutter 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://docs.flutter.dev/[官方文档]
+
+
+## 问题记录
+
+[#flutter-xdg-config-home]
+### 脚本运行 flutter config 设置后不生效
+
+在脚本 trait.sh 里运行 flutter config --android-sdk "/opt/android-sdk" ，并且查看日志确保命令正常执行，并且命令正常打印了信息。
+
+然后在终端运行 flutter config --list 查看配置发现配置并没有被修改。
+
+修改 flutter 的源码
+
+[source]
+----
+❯ git diff
+diff --git a/packages/flutter_tools/lib/src/base/config.dart b/packages/flutter_tools/lib/src/base/config.dart
+index 2352c862b7..1d41ccb9c6 100644
+--- a/packages/flutter_tools/lib/src/base/config.dart
++++ b/packages/flutter_tools/lib/src/base/config.dart
+@@ -182,6 +182,7 @@ class Config {
+   void _flushValues() {
+     String json = const JsonEncoder.withIndent('  ').convert(_values);
+     json = '$json\n';
++    _logger.printError('[test_log_xx] path=${_file.path}, fileSystem=${_file.fileSystem}');
+     _file.writeAsStringSync(json);
+   }
+
+----
+
+为了让修改生效，需要重新编译 flutter 命令行工具，最简单的方法是删除整个编译结果的 cache 目录：
+
+[source,bash]
+----
+# 删除使 flutter 下次重新编译
+❯ rm -rf flutter源代码目录/bin/cache
+
+# 手动测试设置
+❯ flutter config --android-sdk /opt/android-sdk
+[test_log_xx] path=/home/xxx/.config/flutter/settings, fileSystem=Instance of 'LocalFileSystem'
+Setting "android-sdk" value to "/opt/android-sdk".
+
+You may need to restart any open editors for them to read new settings.
+
+❯ flutter config --list
+All Settings:
+  enable-web: true
+  enable-linux-desktop: true
+  enable-macos-desktop: (Not set)
+  enable-windows-desktop: (Not set)
+  enable-android: true
+  enable-ios: (Not set)
+  enable-fuchsia: (Not set) (Unavailable)
+  enable-custom-devices: (Not set)
+  cli-animations: (Not set)
+  enable-native-assets: (Not set) (Unavailable)
+  enable-flutter-preview: (Not set) (Unavailable)
+  android-sdk: /opt/android-sdk
+
+# 没有问题
+----
+
+
+
+重新测试 trait 脚本：
+
+[source,bash]
+----
+# 清除配置
+flutter config --android-sdk ""
+# 重新测试
+./src/main.sh dev trait flutter post_install
+----
+
+[source]
+----
+# 查看日志，检查 flutter config 的输出：
+[test_log_xx] path=/home/xxx/.config/settings, fileSystem=Instance of 'LocalFileSystem'
+Setting "enable-android" value to "true".
+
+You may need to restart any open editors for them to read new settings.
+----
+
+发现配置的路径不对，终端运行输出的路径是： /home/xxx/.config/flutter/settings 。
+
+继续看源代码：
+
+.packages/flutter_tools/lib/src/base/config.dart
+[source,dart]
+----
+class Config {
+  ...
+
+  static String _configPath(
+      Platform platform, FileSystem fileSystem, String name) {
+    final String homeDirFile =
+        fileSystem.path.join(_userHomePath(platform), '.${kConfigDir}_$name');
+    if (platform.isLinux || platform.isMacOS) {
+      if (fileSystem.isFileSync(homeDirFile)) {
+        return homeDirFile;
+      }
+      final String configDir = platform.environment[kXdgConfigHome] ??
+          fileSystem.path.join(_userHomePath(platform), '.config', kConfigDir);
+      return fileSystem.path.join(configDir, name);
+    }
+    return homeDirFile;
+  }
+}
+----
+
+* 当环境变量 XDG_CONFIG_HOME 设置时， configDir 就是 XDG_CONFIG_HOME 的值，即使它的值为空
+* 当环境变量 XDG_CONFIG_HOME 没有设置时，  就是 $HOME/.config/flutter 。
+
+我认为这个是一个 BUG ，两者的路径应该是一样的才对。
+
+在 flutter 的 issue 搜到类似的问题：
+
+* https://github.com/flutter/flutter/issues/78702[create subdirectory within XDG_CONFIG_HOME]
+* https://github.com/flutter/flutter/issues/59430[Support XDG Base Directory Specfication]
+
+问题找到了，那就先规避处理下。我们在脚本里调用 flutter 可以先 unset XDG_CONFIG_HOME ，注意，设置为空值也不可以。例如：
+
+[source]
+----
+cmd::run_cmd_with_history -- "unset" "XDG_CONFIG_HOME" ";" "flutter命令的路径" channel stable
+----
+
+[source]
+----
+# 清除配置
+flutter config --android-sdk ""
+# 重新测试
+./src/main.sh dev trait flutter post_install
+
+# 查看日志
+[test_log_xx] path=/home/xxx/.config/flutter/settings, fileSystem=Instance of 'LocalFileSystem'
+Setting "enable-android" value to "true".
+
+You may need to restart any open editors for them to read new settings.
+
+flutter config --list
+❯ flutter config --list
+All Settings:
+  enable-web: true
+  enable-linux-desktop: true
+  enable-macos-desktop: (Not set)
+  enable-windows-desktop: (Not set)
+  enable-android: true
+  enable-ios: (Not set)
+  enable-fuchsia: (Not set) (Unavailable)
+  enable-custom-devices: (Not set)
+  cli-animations: (Not set)
+  enable-native-assets: (Not set) (Unavailable)
+  enable-flutter-preview: (Not set) (Unavailable)
+  android-sdk: /opt/android-sdk
+----

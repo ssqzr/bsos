@@ -242,6 +242,11 @@ function file::safe_delete_file_dir() {
         return "$SHELL_FALSE"
     fi
 
+    if [ ! -e "$path" ]; then
+        ldebug "delete file or directory($path) success, it does not exist"
+        return "$SHELL_TRUE"
+    fi
+
     cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- rm -rf "$path"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "delete file or directory($path) failed"
