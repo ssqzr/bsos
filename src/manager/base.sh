@@ -43,10 +43,6 @@ function base::prior_install_apps::list() {
     array::print __PRIOR_INSTALL_APPS
 }
 
-function base::bash_lib_dir() {
-    echo "$HOME/.bash_lib"
-}
-
 # NOTE: 不要打印日志，因为一般调用这个函数在日志初始化前
 function base::check_root_user() {
     if [ "$(id -u)" -eq 0 ]; then
