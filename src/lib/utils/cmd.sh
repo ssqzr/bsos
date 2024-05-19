@@ -17,6 +17,9 @@ source "${SCRIPT_DIR_e53d23f3}/log.sh"
 source "${SCRIPT_DIR_e53d23f3}/string.sh"
 
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_e53d23f3}/array.sh"
+
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_e53d23f3}/print.sh"
 
 # shellcheck source=/dev/null
@@ -110,8 +113,8 @@ function cmd::run_cmd() {
         stderr_handler=cmd::_default_stdout_handler
     fi
 
-    # 参数参数合法性
-    if [ ${#cmds[@]} -eq 0 ]; then
+    # 参数合法性
+    if [ "$(array::length cmds)" -eq 0 ]; then
         lerror "cmds is empty"
         return "$SHELL_FALSE"
     fi
@@ -222,6 +225,10 @@ function cmd::_test_simple_cmd() {
 function cmd::_test_simple_cmd_error() {
     local output
     local test_str="hello world"
+
+    cmd::run_cmd --
+    utest::assert_fail "$?"
+
     output=$(cmd::run_cmd -- echo "$test_str" "|" grep "ssss")
     utest::assert_fail "$?"
     utest::assert_equal "$output" ""

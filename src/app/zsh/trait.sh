@@ -18,6 +18,7 @@ function zsh::settings::zsh_dir() {
     local files
 
     # 备份配置文件
+    file::safe_delete_file_dir "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
     file::copy_file_dir "$XDG_CONFIG_HOME/zsh" "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
     file::safe_delete_file_dir "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
 

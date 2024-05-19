@@ -37,88 +37,195 @@ function develop::update_readme() {
     sed -i "s/app_name/$app_name/" "${app_dir}/README.adoc"
 }
 
-function develop::create_app() {
-    if [ $# -ne 1 ]; then
-        lerror "add app failed, param app_name is empty"
-    fi
+function develop::command::create() {
+    local app_names
+    local app_name
+    local param
 
-    if [ -z "$1" ]; then
-        lerror "add app failed, param app_name is empty"
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v app_names ]; then
+        lerror "add app failed, param(--app) is not set"
         return "$SHELL_FALSE"
     fi
 
-    local app_name="$1"
+    array::remove_empty app_names || return "$SHELL_FALSE"
+    array::dedup app_names || return "$SHELL_FALSE"
 
-    local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
-
-    if [ -e "${app_dir}" ]; then
-        println_warn "app already exists: $app_name"
+    if array::is_empty app_names; then
+        lerror "add app failed, param(--app) is empty"
         return "$SHELL_FALSE"
     fi
 
-    println_info "add app: $app_name"
-
-    cp -r "${SCRIPT_DIR_d6dc03c7}/template/app_name" "${app_dir}"
-
-    develop::update_trait_script "$app_name" || return "$SHELL_FALSE"
-
-    develop::update_readme "$app_name" || return "$SHELL_FALSE"
-}
-
-function develop::update_template() {
-    local app_dir
-    for app_dir in "${SCRIPT_DIR_d6dc03c7}/app"/*; do
-        local app_name
-        app_name="$(basename "$app_dir")"
-        if [ ! -d "$app_dir" ]; then
-            println_warn "$app_dir is not a directory"
+    for app_name in "${app_names[@]}"; do
+        if [ -z "$app_name" ]; then
             continue
         fi
 
-        linfo "update app($app_name) template"
+        local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
+
+        if [ -e "${app_dir}" ]; then
+            println_warn "app already exists: $app_name"
+            continue
+        fi
+
+        println_info "add app: $app_name"
+
+        cp -r "${SCRIPT_DIR_d6dc03c7}/template/app_name" "${app_dir}"
+
+        develop::update_trait_script "$app_name" || return "$SHELL_FALSE"
+        develop::update_readme "$app_name" || return "$SHELL_FALSE"
+    done
+
+    return "$SHELL_TRUE"
+}
+
+function develop::command::update() {
+    local app_names
+
+    local app_name
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v app_names ]; then
+        lwarn "param(--app) is not set app"
+        local files=()
+        file::read_dir files "${SCRIPT_DIR_d6dc03c7}/app" || return "$SHELL_FALSE"
+
+        for file in "${files[@]}"; do
+            if [ ! -d "$file" ]; then
+                println_warn "$file is not a directory"
+                continue
+            fi
+            app_names+=("$(basename "$file")")
+        done
+    fi
+
+    array::remove_empty app_names || return "$SHELL_FALSE"
+    array::dedup app_names || return "$SHELL_FALSE"
+
+    if array::is_empty app_names; then
+        lerror "update app failed, param(--app) is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    for app_name in "${app_names[@]}"; do
+        if [ -z "$app_name" ]; then
+            continue
+        fi
+        local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
+
+        if [ ! -e "$app_dir" ]; then
+            println_error "app($app_name) not exists"
+            return "$SHELL_FALSE"
+        fi
+
+        println_info "update app($app_name) template..."
         # 复制新的文件
         cp -r --update=none "${SCRIPT_DIR_d6dc03c7}/template/app_name"/* "${app_dir}"
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "copy template file to app($app_name) failed"
             return "$SHELL_FALSE"
         fi
-
     done
+
+    return "$SHELL_TRUE"
 }
 
-function develop::command::call_trait() {
-    local app_names="$1"
-    local sub_commands="$2"
-    local temp_str
-    local pm_apps=()
-    local commands=()
+function develop::command::check_loop() {
+    manager::app::check_loop_relationships || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function develop::command::trait() {
+
+    manager::flags::develop::add || return "$SHELL_FALSE"
+
+    local app_names
+    local traits
+
+    local app_name
     local pm_app
     local command
+    local param
 
-    if [ -z "$app_names" ]; then
-        lerror "call trait failed, param app_names is empty"
-        println_error "call trait failed, param app_names is empty"
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        --trait=*)
+            parameter::parse_array --separator="," --option="$param" traits || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v app_names ]; then
+        lerror "call app trait failed, param(--app) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ -z "$sub_commands" ]; then
-        lerror "call trait failed, param sub_commands is empty"
-        println_error "call trait failed, param sub_commands is empty"
+    array::remove_empty app_names || return "$SHELL_FALSE"
+    array::dedup app_names || return "$SHELL_FALSE"
+
+    if array::is_empty app_names; then
+        lerror "call app trait failed, param(--app) is empty"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "${app_names}" ]; then
-        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
-        array::readarray pm_apps < <(echo "${temp_str}")
+    if [ ! -v traits ]; then
+        lerror "call app trait failed, param(--trait) is not set"
+        return "$SHELL_FALSE"
     fi
 
-    if [ -n "${sub_commands}" ]; then
-        temp_str=$(echo "$sub_commands" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print $i }')
-        array::readarray commands < <(echo "${temp_str}")
+    array::remove_empty traits || return "$SHELL_FALSE"
+    array::dedup traits || return "$SHELL_FALSE"
+
+    if array::is_empty traits; then
+        lerror "call app trait failed, param(--trait) is empty"
+        return "$SHELL_FALSE"
     fi
 
-    for pm_app in "${pm_apps[@]}"; do
-        for command in "${commands[@]}"; do
+    for app_name in "${app_names[@]}"; do
+        pm_app="custom:$app_name"
+        for command in "${traits[@]}"; do
             println_info "call app($pm_app) trait ${command}..."
             manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
             println_success "call app($pm_app) trait ${command} success."
@@ -129,26 +236,49 @@ function develop::command::call_trait() {
 }
 
 function develop::command::install() {
-    local flags="$1"
-    local app_names="$2"
-    local temp_str
-    local pm_apps=()
-    local pm_app
+    manager::flags::develop::add || return "$SHELL_FALSE"
+    manager::flags::reuse_cache::add || return "$SHELL_FALSE"
 
-    if [ -z "$app_names" ]; then
-        lerror "call install failed, param app_names is empty"
-        println_error "call install failed, param app_names is empty"
+    local app_names
+
+    local app_name
+    local pm_apps=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v app_names ]; then
+        lerror "call app install failed, param(--app) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "${app_names}" ]; then
-        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
-        array::readarray pm_apps < <(echo "${temp_str}")
+    array::remove_empty app_names || return "$SHELL_FALSE"
+    array::dedup app_names || return "$SHELL_FALSE"
+
+    if array::is_empty app_names; then
+        lerror "call app install failed, param(--app) is empty"
+        return "$SHELL_FALSE"
     fi
 
-    manager::flags::reuse_cache::add flags || return "$SHELL_FALSE"
+    for app_name in "${app_names[@]}"; do
+        pm_apps+=("custom:$app_name")
+    done
 
-    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     install_flow::main_flow || return "$SHELL_FALSE"
 
@@ -156,36 +286,15 @@ function develop::command::install() {
 }
 
 function develop::command() {
-    local sum_command="$1"
+    local subcommand="$1"
     local command_params=("${@:2}")
-    local flags
-    manager::flags::develop::add flags || return "$SHELL_FALSE"
 
-    case "${sum_command}" in
-
-    "create")
-        develop::create_app "${command_params[@]}" || return "$SHELL_FALSE"
+    case "${subcommand}" in
+    "create" | "update" | "check_loop" | "install" | "trait")
+        "develop::command::${subcommand}" "${command_params[@]}" || return "$SHELL_FALSE"
         ;;
-
-    "update")
-        develop::update_template || return "$SHELL_FALSE"
-        ;;
-
-    "check_loop")
-        manager::app::check_loop_relationships || return "$SHELL_FALSE"
-        ;;
-
-    "install")
-        # 这个安装不会安装全局需要安装的包，可以快速安装一个应用
-        develop::command::install "$flags" "${command_params[@]}" || return "$SHELL_FALSE"
-        ;;
-
-    "trait")
-        develop::command::call_trait "${command_params[@]}" || return "$SHELL_FALSE"
-        ;;
-
     *)
-        lerror "unknown sub cmd(${sum_command})"
+        lerror "unknown command(${subcommand})"
         return "$SHELL_FALSE"
         ;;
     esac

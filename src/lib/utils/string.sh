@@ -55,6 +55,20 @@ function string::is_empty() {
     return "$SHELL_FALSE"
 }
 
+function string::length() {
+    local data="$1"
+    echo "${#data}"
+}
+
+function string::default() {
+    local -n _5c1d20cc_data="$1"
+    local default="$2"
+    if string::is_empty "$_5c1d20cc_data"; then
+        _5c1d20cc_data="$default"
+    fi
+    return "$SHELL_TRUE"
+}
+
 # 去掉字符串两边的空格
 function string::trim() {
     local str="$1"
@@ -126,7 +140,72 @@ function string::is_num() {
     return "$SHELL_FALSE"
 }
 
+function string::split_with() {
+    local -n _5c9e7642_array="$1"
+    local _30cb1cce_data="$2"
+    local _4f4c4f1d_separator="${3:- }"
+
+    local _586124e6_temp_str
+
+    if [ -z "${_30cb1cce_data}" ]; then
+        _5c9e7642_array=()
+        return "$SHELL_TRUE"
+    fi
+
+    # shellcheck disable=SC2001
+    _586124e6_temp_str=$(echo "$_30cb1cce_data" | sed -e "s/$_4f4c4f1d_separator/\n/g") || return "$SHELL_FALSE"
+    readarray -t "${!_5c9e7642_array}" < <(echo "$_586124e6_temp_str")
+
+    return "$SHELL_TRUE"
+}
+
 ######################################### 下面是单元测试代码 #########################################
+
+function string::_test_is_empty() {
+    string::is_empty
+    utest::assert $?
+
+    string::is_empty ""
+    utest::assert $?
+
+    string::is_empty " "
+    utest::assert_fail $?
+
+    string::is_empty "0"
+    utest::assert_fail $?
+
+    string::is_empty "1"
+    utest::assert_fail $?
+}
+
+function string::_test_length() {
+    utest::assert_equal "$(string::length "")" 0
+
+    utest::assert_equal "$(string::length " ")" 1
+
+    utest::assert_equal "$(string::length "abc")" 3
+
+}
+
+function string::_test_default() {
+    local str
+
+    string::default str
+    utest::assert_equal "$str" ""
+
+    str=""
+    string::default str "abc"
+    utest::assert_equal "$str" "abc"
+
+    str=" "
+    string::default str "abc"
+    utest::assert_equal "$str" " "
+
+    str="123"
+    string::default str "abc"
+    utest::assert_equal "$str" "123"
+
+}
 
 function string::_test_is_true_or_false() {
     string::is_true_or_false ""
@@ -403,6 +482,9 @@ function string::_test_all() {
     if [ "$parent_function_name" = "source" ]; then
         return
     fi
+    string::_test_is_empty
+    string::_test_length
+    string::_test_default
     string::_test_is_true_or_false
     string::_test_is_true
     string::_test_is_false

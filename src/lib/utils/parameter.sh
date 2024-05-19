@@ -16,6 +16,8 @@ source "${SCRIPT_DIR_6f82ee3f}/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_6f82ee3f}/string.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_6f82ee3f}/array.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_6f82ee3f}/utest.sh"
 
 # 解析 -x -x=aa --x --x=aa 的参数
@@ -143,13 +145,13 @@ function parameter::parse_string() {
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$min_length" ] && [ "${#_226eba81_temp_str}" -lt "$min_length" ]; then
-        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, value limit min length is $min_length, current value(${_226eba81_temp_str}) length is ${#_226eba81_temp_str}"
+    if [ -n "$min_length" ] && [ "$(string::length "${_226eba81_temp_str}")" -lt "$min_length" ]; then
+        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, value limit min length is $min_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$max_length" ] && [ "${#_226eba81_temp_str}" -gt "$max_length" ]; then
-        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, value limit max length is $max_length, current value(${_226eba81_temp_str}) length is ${#_226eba81_temp_str}"
+    if [ -n "$max_length" ] && [ "$(string::length "${_226eba81_temp_str}")" -gt "$max_length" ]; then
+        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, value limit max length is $max_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
         return "$SHELL_FALSE"
     fi
 
@@ -339,6 +341,64 @@ function parameter::parse_num() {
     fi
 
     _875b0d67_result="$_84cda4a4_temp_str"
+
+    return "$SHELL_TRUE"
+}
+
+function parameter::parse_array() {
+    # 关键字参数
+    local _139533c8_option
+    local -n _46d69f2e_result
+    local separator
+    local _ab5146fe_temp_str
+    local _74d16f3d_temp_array
+
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --separator=*)
+            separator="${param#*=}"
+            ;;
+        --option=*)
+            _139533c8_option="${param#*=}"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -R _46d69f2e_result ]; then
+                _46d69f2e_result="$param"
+                continue
+            fi
+            lerror --caller-level="1" "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -R _46d69f2e_result ]; then
+        lerror --caller-level="1" "param(result-ref) is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -v _139533c8_option ]; then
+        lerror --caller-level="1" "param(--option) is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    string::default separator "," || return "$SHELL_FALSE"
+
+    parameter::parse_value _ab5146fe_temp_str "${_139533c8_option}" || return "$SHELL_FALSE"
+
+    if [ -z "$_ab5146fe_temp_str" ]; then
+        ldebug "param(${_139533c8_option}) value is empty"
+        return "$SHELL_TRUE"
+    fi
+
+    string::split_with _74d16f3d_temp_array "$_ab5146fe_temp_str" "$separator" || return "$SHELL_FALSE"
+
+    array::extend "${!_46d69f2e_result}" _74d16f3d_temp_array || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -552,6 +612,31 @@ function parameter::_test_parse_num() {
     utest::assert_equal "$value" ""
 }
 
+function parameter::test_parse_array() {
+    local arr
+
+    parameter::parse_array arr --option=""
+    utest::assert_fail $?
+
+    parameter::parse_array arr --option="-x="
+    utest::assert $?
+    array::is_empty arr
+    utest::assert $?
+
+    parameter::parse_array arr --option="-x=a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a"
+
+    parameter::parse_array arr --option="-x=b"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a b"
+
+    parameter::parse_array arr --option="-x=1,2"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a b 1 2"
+
+}
+
 function parameter::_test_all() {
     # source 进来的就不要测试了
     local parent_function_name
@@ -563,6 +648,7 @@ function parameter::_test_all() {
     parameter::_test_parse_bool
     parameter::_test_parse_string
     parameter::_test_parse_num
+    parameter::test_parse_array
 }
 
 string::is_true "$TEST" && parameter::_test_all

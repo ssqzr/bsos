@@ -25,24 +25,26 @@ source "${SCRIPT_DIR_8dac019e}/manager/flags.sh"
 source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
 function main::ask() {
-    local flags=""
     local code
-    tui::builtin::confirm "check apps loop dependencies ?" "y"
-    code=$?
-    if [ $code -eq 130 ]; then
-        return "$SHELL_FALSE"
-    elif [ $code -eq "$SHELL_TRUE" ]; then
-        manager::flags::check_loop::add flags || return "$SHELL_FALSE"
+    if ! manager::flags::check_loop::is_exists; then
+        tui::builtin::confirm "check apps loop dependencies ?" "y"
+        code=$?
+        if [ $code -eq 130 ]; then
+            return "$SHELL_FALSE"
+        elif [ $code -eq "$SHELL_TRUE" ]; then
+            manager::flags::check_loop::add || return "$SHELL_FALSE"
+        fi
     fi
 
-    tui::builtin::confirm "reuse cache if exists ?" "y"
-    code=$?
-    if [ $code -eq 130 ]; then
-        return "$SHELL_FALSE"
-    elif [ $code -eq "$SHELL_TRUE" ]; then
-        manager::flags::reuse_cache::add flags || return "$SHELL_FALSE"
+    if ! manager::flags::reuse_cache::is_exists; then
+        tui::builtin::confirm "reuse cache if exists ?" "y"
+        code=$?
+        if [ $code -eq 130 ]; then
+            return "$SHELL_FALSE"
+        elif [ $code -eq "$SHELL_TRUE" ]; then
+            manager::flags::reuse_cache::add || return "$SHELL_FALSE"
+        fi
     fi
-    echo "$flags"
     return "$SHELL_TRUE"
 }
 
@@ -88,10 +90,9 @@ function main::must_do() {
 }
 
 function main::check() {
-    local flags="$1"
 
-    if ! manager::flags::check_loop::is_exists "$flags"; then
-        linfo "no need check loop dependencies, flags=${flags}"
+    if ! manager::flags::check_loop::is_exists; then
+        linfo "no need check loop dependencies"
     else
         manager::app::check_loop_relationships
         if [ $? -ne "$SHELL_TRUE" ]; then
@@ -106,18 +107,37 @@ function main::check() {
 }
 
 function main::command::install() {
-    local flags="$1"
-    local app_names="$2"
+    local app_names
     local temp_str
-
     local pm_apps=()
+    local param
 
-    if [ -n "${app_names}" ]; then
-        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
-        array::readarray pm_apps < <(echo "${temp_str}")
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ -v app_names ]; then
+        array::remove_empty app_names || return "$SHELL_FALSE"
+        array::dedup app_names || return "$SHELL_FALSE"
     fi
 
-    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    for temp_str in "${app_names[@]}"; do
+        pm_apps+=("custom:$temp_str")
+    done
+
+    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     install_flow::main_flow || return "$SHELL_FALSE"
 
@@ -125,18 +145,37 @@ function main::command::install() {
 }
 
 function main::command::uninstall() {
-    local flags="$1"
-    local app_names="$2"
+    local app_names
     local temp_str
-
     local pm_apps=()
+    local param
 
-    if [ -n "${app_names}" ]; then
-        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
-        array::readarray pm_apps < <(echo "${temp_str}")
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ -v app_names ]; then
+        array::remove_empty app_names || return "$SHELL_FALSE"
+        array::dedup app_names || return "$SHELL_FALSE"
     fi
 
-    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    for temp_str in "${app_names[@]}"; do
+        pm_apps+=("custom:$temp_str")
+    done
+
+    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     uninstall_flow::main_flow || return "$SHELL_FALSE"
 
@@ -144,18 +183,37 @@ function main::command::uninstall() {
 }
 
 function main::command::fixme() {
-    local flags="$1"
-    local app_names="$2"
+    local app_names
     local temp_str
-
     local pm_apps=()
+    local param
 
-    if [ -n "${app_names}" ]; then
-        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
-        array::readarray pm_apps < <(echo "${temp_str}")
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ -v app_names ]; then
+        array::remove_empty app_names || return "$SHELL_FALSE"
+        array::dedup app_names || return "$SHELL_FALSE"
     fi
 
-    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    for temp_str in "${app_names[@]}"; do
+        pm_apps+=("custom:$temp_str")
+    done
+
+    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     install_flow::fixme_flow || return "$SHELL_FALSE"
 
@@ -163,18 +221,37 @@ function main::command::fixme() {
 }
 
 function main::command::unfixme() {
-    local flags="$1"
-    local app_names="$2"
+    local app_names
     local temp_str
-
     local pm_apps=()
+    local param
 
-    if [ -n "${app_names}" ]; then
-        temp_str=$(echo "$app_names" | awk -F ',' -v OFS="\n" '{ for (i = 1; i <= NF; i++) print "custom:"$i }')
-        array::readarray pm_apps < <(echo "${temp_str}")
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ -v app_names ]; then
+        array::remove_empty app_names || return "$SHELL_FALSE"
+        array::dedup app_names || return "$SHELL_FALSE"
     fi
 
-    manager::cache::do "$flags" "${pm_apps[@]}" || return "$SHELL_FALSE"
+    for temp_str in "${app_names[@]}"; do
+        pm_apps+=("custom:$temp_str")
+    done
+
+    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
 
     uninstall_flow::unfixme_flow || return "$SHELL_FALSE"
 
@@ -184,37 +261,20 @@ function main::command::unfixme() {
 function main::_do_main() {
     local command="$1"
     local command_params=("${@:2}")
-    if [ -z "${command}" ]; then
-        command="install"
-    fi
 
-    local flags=""
-    flags=$(main::ask) || return "$SHELL_FALSE"
+    main::ask || return "$SHELL_FALSE"
 
     main::must_do || return "$SHELL_FALSE"
     # NOTE: 在执行 main::must_do 之后才可以使用 yq 操作配置文件
 
-    main::check "${flags}" || return "$SHELL_FALSE"
+    main::check || return "$SHELL_FALSE"
 
     case "${command}" in
-    "install")
-        main::command::install "$flags" "${command_params[@]}" || return "$SHELL_FALSE"
+    "install" | "uninstall" | "fixme" | "unfixme")
+        "main::command::${command}" "${command_params[@]}" || return "$SHELL_FALSE"
         ;;
-
-    "uninstall")
-        main::command::uninstall "$flags" "${command_params[@]}" || return "$SHELL_FALSE"
-        ;;
-
-    "fixme")
-        main::command::fixme "$flags" "${command_params[@]}" || return "$SHELL_FALSE"
-        ;;
-
-    "unfixme")
-        main::command::unfixme "$flags" "${command_params[@]}" || return "$SHELL_FALSE"
-        ;;
-
     *)
-        lerror "unknown cmd(${command})"
+        lerror "unknown command(${command})"
         return "$SHELL_FALSE"
         ;;
     esac
@@ -229,15 +289,36 @@ function main::signal::handler_exit() {
 }
 
 function main::run() {
-    local command="$1"
-    local command_params=("${@:2}")
-    if [ -z "${command}" ]; then
-        command="install"
-    fi
+    local command
     local log_filepath
     local cmd_history_filepath
     local config_filepath
     local code
+    local remain_params=()
+    local flags=()
+    local param
+    local temp_str
+
+    # 先解析全局的参数
+    for param in "$@"; do
+        case "$param" in
+        --flag=*)
+            parameter::parse_array --separator="," --option="$param" flags || return "$SHELL_FALSE"
+            ;;
+        *)
+            remain_params+=("$param")
+            ;;
+        esac
+    done
+
+    for temp_str in "${flags[@]}"; do
+        manager::flags::append "${temp_str}" || return "$SHELL_FALSE"
+    done
+
+    if array::is_empty remain_params; then
+        # 默认是 install 命令
+        remain_params=("install")
+    fi
 
     # 第一步就是检查用户，不然可能会污染环境
     base::check_root_user || return "$SHELL_FALSE"
@@ -264,14 +345,15 @@ function main::run() {
     base::enable_no_password || return "$SHELL_FALSE"
     trap 'main::signal::handler_exit "$?"' EXIT
 
+    array::lpop remain_params command || return "$SHELL_FALSE"
     case "${command}" in
     "dev")
-        develop::command "${command_params[@]}"
+        develop::command "${remain_params[@]}"
         code=$?
         ;;
 
     *)
-        main::_do_main "${command}" "${command_params[@]}"
+        main::_do_main "${command}" "${remain_params[@]}"
         code=$?
         ;;
     esac

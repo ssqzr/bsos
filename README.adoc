@@ -189,6 +189,37 @@ include::doc/assets/bsos_architecture.excalidraw[]
 * `utils` 工具包
 * `dev` 方便调试的 `CLI` 实现
 
+#### utils 里模块的层级划分
+
+下级层级可以引用上级。同级之间不能引用，不然容易循环引用。
+
+
+* 第一层级
+    * constant.sh
+* 第二层级
+    * debug.sh
+    * print.sh
+* 第三层级
+    * log.sh
+    * utest.sh
+* 第四层级
+    * array.sh
+    * string.sh
+* 第五层级
+    * parameter.sh
+* 第六层级
+    * cmd.sh
+    * tui.sh
+* 第七层级
+    * file.sh
+    * gsettings.sh
+    * systemctl.sh
+    * sed.sh
+    * os.sh
+    * hyprctl.sh
+    * process.sh
+
+
 ### 调试
 
 NOTE: 还没处理
@@ -348,6 +379,7 @@ grep -- -v file
 * [ ] xref:src/app/wallust/README.adoc#wallust-3.0[wallust 3.0版本的处理]
 * [*] 调试命令 `dev trait` 支持多个应用和多个子命令
 * [ ] print.sh 支持 256 colors
+* [ ] 日志支持多个 handler，并且支持从命令行参数指定
 
 ## 引用
 

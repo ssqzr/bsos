@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -n "${SCRIPT_DIR_3cd455df}" ]; then
+    return
+fi
+
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 SCRIPT_DIR_3cd455df="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
@@ -7,6 +11,8 @@ SCRIPT_DIR_3cd455df="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "${SCRIPT_DIR_3cd455df}/constant.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_3cd455df}/string.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_3cd455df}/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_3cd455df}/print.sh"
 # shellcheck source=/dev/null
@@ -20,6 +26,22 @@ function array::print() {
         echo "$item"
     done
     return "$SHELL_TRUE"
+}
+
+function array::length() {
+    local -n _ref_array_4bd6518c=$1
+
+    echo "${#_ref_array_4bd6518c[@]}"
+}
+
+function array::is_empty() {
+    local -n _ref_array_6d0f7b0e=$1
+
+    if [ "$(array::length "${!_ref_array_6d0f7b0e}")" -eq "0" ]; then
+        return "$SHELL_TRUE"
+    fi
+
+    return "$SHELL_FALSE"
 }
 
 function array::is_contain() {
@@ -106,7 +128,62 @@ function array::rpush_unique() {
 function array::rpop() {
     # shellcheck disable=SC2178
     local -n _ref_array_18f43693=$1
-    _ref_array_18f43693=("${_ref_array_18f43693[@]:1}")
+    local -n _ref_result_be0584d1
+    if [ "${#@}" -gt 1 ]; then
+        _ref_result_be0584d1=$2
+    fi
+    if array::is_empty "${!_ref_array_18f43693}"; then
+        lerror "array(${!_ref_array_18f43693}) is empty, can not rpop"
+        return "$SHELL_FALSE"
+    fi
+    if [ -R _ref_result_be0584d1 ]; then
+        _ref_result_be0584d1="${_ref_array_18f43693[-1]}"
+    fi
+    unset "_ref_array_18f43693[-1]"
+    return "$SHELL_TRUE"
+}
+
+function array::lpush() {
+    # shellcheck disable=SC2178
+    local -n _ref_array_af246e16=$1
+    local item=$2
+
+    _ref_array_af246e16=("$item" "${_ref_array_af246e16[@]}")
+    return "$SHELL_TRUE"
+}
+
+# 数组里没有这个元素时才添加
+function array::lpush_unique() {
+    # shellcheck disable=SC2178
+    local -n _ref_array_15434693=$1
+    local item=$2
+
+    if ! array::is_contain _ref_array_15434693 "$item"; then
+        array::lpush "${!_ref_array_15434693}" "$item" || return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+function array::lpop() {
+    # shellcheck disable=SC2178
+    local -n _ref_array_fd6d55c0=$1
+    local -n _ref_result_2c967585
+    if [ "${#@}" -gt 1 ]; then
+        _ref_result_2c967585=$2
+    fi
+
+    if array::is_empty "${!_ref_array_fd6d55c0}"; then
+        lerror "array(${!_ref_array_fd6d55c0}) is empty, can not lpop"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ -R _ref_result_2c967585 ]; then
+        _ref_result_2c967585="${_ref_array_fd6d55c0[0]}"
+    fi
+    # 不能使用 unset "_ref_array_fd6d55c0[0]"
+    # 测试发现第一次 lpop ("1" "2" "3") 正常，返回 1，剩余元素为 (2 3)。继续 lpop 不符合预期，返回空，剩余元素仍为 (2 3)。
+    _ref_array_fd6d55c0=("${_ref_array_fd6d55c0[@]:1}")
+    return "$SHELL_TRUE"
 }
 
 function array::extend() {
@@ -121,7 +198,8 @@ function array::reverse_new() {
     # shellcheck disable=SC2178
     local -n _ref_array_c0b35efa=$1 # 用于保存反转后的数组
     local -n _ref_array_86c99128=$2 # 需要反转的数组
-    local length=${#_ref_array_86c99128[@]}
+    local length
+    length="$(array::length "${!_ref_array_86c99128}")"
     while [ "$length" -gt 0 ]; do
         length=$((length - 1))
         _ref_array_c0b35efa+=("${_ref_array_86c99128[$length]}")
@@ -132,7 +210,8 @@ function array::reverse_new() {
 function array::reverse() {
     # shellcheck disable=SC2178
     local -n _ref_array_f46f59e5=$1 # 用于保存反转后的数组
-    local length=${#_ref_array_f46f59e5[@]}
+    local length
+    length="$(array::length "${!_ref_array_f46f59e5}")"
     local left=$((length / 2))
 
     while [ "$left" -gt 0 ]; do
@@ -144,6 +223,40 @@ function array::reverse() {
 
         left=$((left - 1))
     done
+}
+
+###################################### 下面是测试代码 ######################################
+
+function array::_test_array::length() {
+    local arr
+    utest::assert_equal "$(array::length arr)" 0
+
+    array::lpush arr 1
+    utest::assert_equal "$(array::length arr)" 1
+
+    array::lpush arr 2
+    utest::assert_equal "$(array::length arr)" 2
+
+    array::lpush arr 3
+    utest::assert_equal "$(array::length arr)" 3
+}
+
+function array::_test_array::is_empty() {
+    local arr
+    array::is_empty arr
+    utest::assert $?
+
+    arr=()
+    array::is_empty arr
+    utest::assert $?
+
+    array::lpush arr 1
+    array::is_empty arr
+    utest::assert_fail $?
+
+    array::lpush arr 2
+    array::is_empty arr
+    utest::assert_fail $?
 }
 
 function array::_test_array::reverse_new() {
@@ -208,6 +321,143 @@ function array::_test_array::dedup() {
     utest::assert_equal "${arr[*]}" "a b d e"
 }
 
+function array::_test_array::rpush() {
+    local arr=()
+    array::rpush arr 1
+    utest::assert_equal "${arr[*]}" "1"
+    array::rpush arr 2
+    utest::assert_equal "${arr[*]}" "1 2"
+    array::rpush arr 3
+    utest::assert_equal "${arr[*]}" "1 2 3"
+}
+
+function array::_test_array::rpush_unique() {
+    local arr=()
+    array::rpush_unique arr 1
+    utest::assert_equal "${arr[*]}" "1"
+    array::rpush_unique arr 2
+    utest::assert_equal "${arr[*]}" "1 2"
+    array::rpush_unique arr 3
+    utest::assert_equal "${arr[*]}" "1 2 3"
+
+    array::rpush_unique arr 1
+    utest::assert_equal "${arr[*]}" "1 2 3"
+
+    array::rpush_unique arr 3
+    utest::assert_equal "${arr[*]}" "1 2 3"
+}
+
+function array::_test_array::rpop() {
+    local arr
+    local item
+    array::rpop arr
+    utest::assert_fail $?
+
+    arr=()
+    array::rpop arr
+    utest::assert_fail $?
+
+    array::rpush arr 1
+    array::rpop arr item
+    utest::assert_equal "$item" "1"
+    utest::assert_equal "${arr[*]}" ""
+
+    arr=()
+    array::rpush arr 1
+    array::rpush arr 2
+    array::rpush arr 3
+    array::rpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "3"
+    utest::assert_equal "${arr[*]}" "1 2"
+
+    array::rpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "2"
+    utest::assert_equal "${arr[*]}" "1"
+
+    array::rpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "1"
+    utest::assert_equal "${arr[*]}" ""
+
+    arr=()
+    array::rpush arr 1
+    array::rpush arr 2
+    array::rpush arr 3
+    array::rpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "3"
+    utest::assert_equal "${arr[*]}" "1 2"
+    array::rpush arr 3
+    array::rpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "3"
+    utest::assert_equal "${arr[*]}" "1 2"
+}
+
+function array::_test_array::lpush() {
+    local arr=()
+    array::lpush arr 1
+    utest::assert_equal "${arr[*]}" "1"
+    array::lpush arr 2
+    utest::assert_equal "${arr[*]}" "2 1"
+    array::lpush arr 3
+    utest::assert_equal "${arr[*]}" "3 2 1"
+}
+
+function array::_test_array::lpush_unique() {
+    local arr=()
+    array::lpush_unique arr 1
+    utest::assert_equal "${arr[*]}" "1"
+    array::lpush_unique arr 2
+    utest::assert_equal "${arr[*]}" "2 1"
+    array::lpush_unique arr 3
+    utest::assert_equal "${arr[*]}" "3 2 1"
+
+    array::lpush_unique arr 1
+    utest::assert_equal "${arr[*]}" "3 2 1"
+
+    array::lpush_unique arr 3
+    utest::assert_equal "${arr[*]}" "3 2 1"
+}
+
+function array::_test_array::lpop() {
+    local arr
+    local item
+    array::lpop arr
+    utest::assert_fail $?
+
+    arr=()
+    array::lpop arr
+    utest::assert_fail $?
+
+    array::lpush arr 1
+    array::lpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "1"
+    utest::assert_equal "${arr[*]}" ""
+
+    arr=()
+    array::rpush arr 1
+    array::rpush arr 2
+    array::rpush arr 3
+    array::lpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "1"
+    utest::assert_equal "${arr[*]}" "2 3"
+
+    array::lpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "2"
+    utest::assert_equal "${arr[*]}" "3"
+
+    array::lpop arr item
+    utest::assert $?
+    utest::assert_equal "$item" "3"
+    utest::assert_equal "${arr[*]}" ""
+}
+
 function array::_test_all() {
     # source 进来的就不要测试了
     local parent_function_name
@@ -215,10 +465,20 @@ function array::_test_all() {
     if [ "$parent_function_name" = "source" ]; then
         return
     fi
+    array::_test_array::length
+    array::_test_array::is_empty
 
     array::_test_array::reverse
     array::_test_array::reverse_new
     array::_test_array::dedup
+
+    array::_test_array::rpush
+    array::_test_array::rpush_unique
+    array::_test_array::rpop
+
+    array::_test_array::lpush
+    array::_test_array::lpush_unique
+    array::_test_array::lpop
 }
 
 string::is_true "$TEST" && array::_test_all
