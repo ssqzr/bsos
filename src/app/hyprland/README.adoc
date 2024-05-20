@@ -500,6 +500,12 @@ https://github.com/hyprwm/Hyprland/issues/2674[How to move any window to bottom 
 
 https://www.reddit.com/r/hyprland/comments/15qithj/setting_layer_of_a_window/[Setting layer of a window]
 
+[#per-workspace-layer]
+### 每个工作空间应用不同的布局
+
+* https://www.reddit.com/r/hyprland/comments/12vpt88/is_it_possible_to_set_a_perworkspace_layout/[Is it possible to set a per-workspace layout?]
+* https://github.com/hyprwm/Hyprland/discussions/3477[per workspace layout?]
+* https://github.com/zakk4223/hyprWorkspaceLayouts[hyprWorkspaceLayouts]
 
 [#use-plugin]
 ## 插件的处理
