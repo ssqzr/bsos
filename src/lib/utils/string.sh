@@ -12,8 +12,6 @@ SCRIPT_DIR_c5f5ae0d="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_c5f5ae0d}/constant.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_c5f5ae0d}/log.sh"
-# shellcheck source=/dev/null
 source "${SCRIPT_DIR_c5f5ae0d}/debug.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_c5f5ae0d}/utest.sh"
@@ -55,6 +53,12 @@ function string::is_empty() {
     return "$SHELL_FALSE"
 }
 
+function string::is_not_empty() {
+    local data="$1"
+    string::is_empty "$data" && return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 function string::length() {
     local data="$1"
     echo "${#data}"
@@ -75,14 +79,14 @@ function string::trim() {
     echo "$str" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
 }
 
-function string::is_true_or_false() {
+function string::is_bool() {
     local data="$1"
 
     data=$(string::trim "$data")
 
     # 空字符串认为是 false
     if string::is_empty "$data"; then
-        return "$SHELL_TRUE"
+        return "$SHELL_FALSE"
     fi
 
     echo "$data" | grep -q -i -E "^[01yn]$|^yes$|^no$|^true$|^false$"
@@ -92,13 +96,14 @@ function string::is_true_or_false() {
     return "$SHELL_FALSE"
 }
 
+function string::is_not_bool() {
+    string::is_bool "$1" && return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+# 这个函数只能判断字符串是否是 true ，反向不能判断是否为 false
 function string::is_true() {
     local data="$1"
-
-    if ! string::is_true_or_false "$data"; then
-        lerror "string $data is not true or false"
-        lexit "$CODE_USAGE"
-    fi
 
     data=$(string::trim "$data")
 
@@ -110,9 +115,17 @@ function string::is_true() {
     return "$SHELL_FALSE"
 }
 
+# 这个函数只能判断字符串是否是 false ，反向不能判断是否为 true
 function string::is_false() {
     local data="$1"
-    string::is_true "$data" || return "$SHELL_TRUE"
+
+    data=$(string::trim "$data")
+
+    echo "$data" | grep -q -i -E "^[0n]$|^no$|^false$"
+    if [ $? -eq "$SHELL_TRUE" ]; then
+        return "$SHELL_TRUE"
+    fi
+
     return "$SHELL_FALSE"
 }
 
@@ -178,6 +191,23 @@ function TEST::string::is_empty() {
     utest::assert_fail $?
 }
 
+function TEST::string::is_not_empty() {
+    string::is_not_empty
+    utest::assert_fail $?
+
+    string::is_not_empty ""
+    utest::assert_fail $?
+
+    string::is_not_empty " "
+    utest::assert $?
+
+    string::is_not_empty "0"
+    utest::assert $?
+
+    string::is_not_empty "1"
+    utest::assert $?
+}
+
 function TEST::string::length() {
     utest::assert_equal "$(string::length "")" 0
 
@@ -207,154 +237,168 @@ function TEST::string::default() {
 
 }
 
-function TEST::string::is_true_or_false() {
-    string::is_true_or_false ""
-    utest::assert $?
-
-    string::is_true_or_false "0"
-    utest::assert $?
-
-    string::is_true_or_false "1"
-    utest::assert $?
-
-    string::is_true_or_false "y"
-    utest::assert $?
-
-    string::is_true_or_false "Y"
-    utest::assert $?
-
-    string::is_true_or_false "N"
-    utest::assert $?
-
-    string::is_true_or_false "y"
-    utest::assert $?
-
-    string::is_true_or_false "yes"
-    utest::assert $?
-
-    string::is_true_or_false "yEs"
-    utest::assert $?
-
-    string::is_true_or_false "YEs"
-    utest::assert $?
-
-    string::is_true_or_false "YES"
-    utest::assert $?
-
-    string::is_true_or_false "no"
-    utest::assert $?
-
-    string::is_true_or_false "No"
-    utest::assert $?
-
-    string::is_true_or_false "nO"
-    utest::assert $?
-
-    string::is_true_or_false "NO"
-    utest::assert $?
-
-    string::is_true_or_false "true"
-    utest::assert $?
-
-    string::is_true_or_false "True"
-    utest::assert $?
-
-    string::is_true_or_false "tRue"
-    utest::assert $?
-
-    string::is_true_or_false "truE"
-    utest::assert $?
-
-    string::is_true_or_false "tRUe"
-    utest::assert $?
-
-    string::is_true_or_false "TRuE"
-    utest::assert $?
-
-    string::is_true_or_false "TRUE"
-    utest::assert $?
-
-    string::is_true_or_false "false"
-    utest::assert $?
-
-    string::is_true_or_false "False"
-    utest::assert $?
-
-    string::is_true_or_false "fAlse"
-    utest::assert $?
-
-    string::is_true_or_false "falsE"
-    utest::assert $?
-
-    string::is_true_or_false "FAlse"
-    utest::assert $?
-
-    string::is_true_or_false "faLSe"
-    utest::assert $?
-
-    string::is_true_or_false "fAlsE"
-    utest::assert $?
-
-    string::is_true_or_false "FALse"
-    utest::assert $?
-
-    string::is_true_or_false "fALSe"
-    utest::assert $?
-
-    string::is_true_or_false "fALsE"
-    utest::assert $?
-
-    string::is_true_or_false "FALSe"
-    utest::assert $?
-
-    string::is_true_or_false "fALSE"
-    utest::assert $?
-
-    string::is_true_or_false "FALSE"
-    utest::assert $?
-
-    string::is_true_or_false "00"
+function TEST::string::is_bool() {
+    string::is_bool ""
     utest::assert_fail $?
 
-    string::is_true_or_false "11"
+    string::is_bool "0"
+    utest::assert $?
+
+    string::is_bool "1"
+    utest::assert $?
+
+    string::is_bool "y"
+    utest::assert $?
+
+    string::is_bool "Y"
+    utest::assert $?
+
+    string::is_bool "N"
+    utest::assert $?
+
+    string::is_bool "y"
+    utest::assert $?
+
+    string::is_bool "yes"
+    utest::assert $?
+
+    string::is_bool "yEs"
+    utest::assert $?
+
+    string::is_bool "YEs"
+    utest::assert $?
+
+    string::is_bool "YES"
+    utest::assert $?
+
+    string::is_bool "no"
+    utest::assert $?
+
+    string::is_bool "No"
+    utest::assert $?
+
+    string::is_bool "nO"
+    utest::assert $?
+
+    string::is_bool "NO"
+    utest::assert $?
+
+    string::is_bool "true"
+    utest::assert $?
+
+    string::is_bool "True"
+    utest::assert $?
+
+    string::is_bool "tRue"
+    utest::assert $?
+
+    string::is_bool "truE"
+    utest::assert $?
+
+    string::is_bool "tRUe"
+    utest::assert $?
+
+    string::is_bool "TRuE"
+    utest::assert $?
+
+    string::is_bool "TRUE"
+    utest::assert $?
+
+    string::is_bool "false"
+    utest::assert $?
+
+    string::is_bool "False"
+    utest::assert $?
+
+    string::is_bool "fAlse"
+    utest::assert $?
+
+    string::is_bool "falsE"
+    utest::assert $?
+
+    string::is_bool "FAlse"
+    utest::assert $?
+
+    string::is_bool "faLSe"
+    utest::assert $?
+
+    string::is_bool "fAlsE"
+    utest::assert $?
+
+    string::is_bool "FALse"
+    utest::assert $?
+
+    string::is_bool "fALSe"
+    utest::assert $?
+
+    string::is_bool "fALsE"
+    utest::assert $?
+
+    string::is_bool "FALSe"
+    utest::assert $?
+
+    string::is_bool "fALSE"
+    utest::assert $?
+
+    string::is_bool "FALSE"
+    utest::assert $?
+
+    string::is_bool "00"
     utest::assert_fail $?
 
-    string::is_true_or_false "01"
+    string::is_bool "11"
     utest::assert_fail $?
 
-    string::is_true_or_false "yy"
+    string::is_bool "01"
     utest::assert_fail $?
 
-    string::is_true_or_false "nn"
+    string::is_bool "yy"
     utest::assert_fail $?
 
-    string::is_true_or_false "yn"
+    string::is_bool "nn"
     utest::assert_fail $?
 
-    string::is_true_or_false "ye"
+    string::is_bool "yn"
     utest::assert_fail $?
 
-    string::is_true_or_false "yess"
+    string::is_bool "ye"
     utest::assert_fail $?
 
-    string::is_true_or_false "noo"
+    string::is_bool "yess"
     utest::assert_fail $?
 
-    string::is_true_or_false "tru"
+    string::is_bool "noo"
     utest::assert_fail $?
 
-    string::is_true_or_false "truee"
+    string::is_bool "tru"
     utest::assert_fail $?
 
-    string::is_true_or_false "fals"
+    string::is_bool "truee"
     utest::assert_fail $?
 
-    string::is_true_or_false "ffalse"
+    string::is_bool "fals"
     utest::assert_fail $?
 
-    string::is_true_or_false "xxxxx"
+    string::is_bool "ffalse"
     utest::assert_fail $?
 
+    string::is_bool "xxxxx"
+    utest::assert_fail $?
+
+}
+
+function TEST::string::is_not_bool() {
+    string::is_not_bool ""
+    utest::assert $?
+
+    string::is_not_bool "0"
+    utest::assert_fail $?
+
+    string::is_not_bool "1"
+    utest::assert_fail $?
+
+    string::is_not_bool "xxxx"
+    utest::assert $?
 }
 
 function TEST::string::is_true() {
@@ -418,7 +462,7 @@ function TEST::string::is_true() {
 
 function TEST::string::is_false() {
     string::is_false ""
-    utest::assert $?
+    utest::assert_fail $?
 
     string::is_false "0"
     utest::assert $?
@@ -483,9 +527,11 @@ function TEST::string::all() {
         return
     fi
     TEST::string::is_empty || return "$SHELL_FALSE"
+    TEST::string::is_not_empty || return "$SHELL_FALSE"
     TEST::string::length || return "$SHELL_FALSE"
     TEST::string::default || return "$SHELL_FALSE"
-    TEST::string::is_true_or_false || return "$SHELL_FALSE"
+    TEST::string::is_bool || return "$SHELL_FALSE"
+    TEST::string::is_not_bool || return "$SHELL_FALSE"
     TEST::string::is_true || return "$SHELL_FALSE"
     TEST::string::is_false || return "$SHELL_FALSE"
 }

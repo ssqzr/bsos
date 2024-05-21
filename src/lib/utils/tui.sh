@@ -60,7 +60,7 @@ function tui::builtin::confirm() {
             result="$default"
             break
         fi
-        if string::is_true_or_false "$result"; then
+        if string::is_bool "$result"; then
             break
         fi
         println_error "input invalid, please input y or n."

@@ -10,10 +10,6 @@ SCRIPT_DIR_3cd455df="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_3cd455df}/constant.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_3cd455df}/string.sh"
-# shellcheck source=/dev/null
-source "${SCRIPT_DIR_3cd455df}/log.sh"
-# shellcheck source=/dev/null
 source "${SCRIPT_DIR_3cd455df}/print.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_3cd455df}/utest.sh"
@@ -133,7 +129,7 @@ function array::rpop() {
         result_18f43693=$2
     fi
     if array::is_empty "${!array_18f43693}"; then
-        lerror "array(${!array_18f43693}) is empty, can not rpop"
+        println_error --stream="stderr" "array(${!array_18f43693}) is empty, can not rpop"
         return "$SHELL_FALSE"
     fi
     if [ -R result_18f43693 ]; then
@@ -173,7 +169,7 @@ function array::lpop() {
     fi
 
     if array::is_empty "${!array_fd6d55c0}"; then
-        lerror "array(${!array_fd6d55c0}) is empty, can not lpop"
+        println_error --stream="stderr" "array(${!array_fd6d55c0}) is empty, can not lpop"
         return "$SHELL_FALSE"
     fi
 
@@ -353,11 +349,11 @@ function TEST::array::rpush_unique() {
 function TEST::array::rpop() {
     local arr
     local item
-    array::rpop arr
+    array::rpop arr 2>/dev/null
     utest::assert_fail $?
 
     arr=()
-    array::rpop arr
+    array::rpop arr 2>/dev/null
     utest::assert_fail $?
 
     array::rpush arr 1
@@ -428,11 +424,11 @@ function TEST::array::lpush_unique() {
 function TEST::array::lpop() {
     local arr
     local item
-    array::lpop arr
+    array::lpop arr 2>/dev/null
     utest::assert_fail $?
 
     arr=()
-    array::lpop arr
+    array::lpop arr 2>/dev/null
     utest::assert_fail $?
 
     array::lpush arr 1
@@ -484,5 +480,7 @@ function TEST::array::all() {
     TEST::array::lpop || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && TEST::array::all
+if [ "$TEST" == "true" ] || [ "$TEST" == "1" ]; then
+    TEST::array::all || return "$SHELL_FALSE"
+fi
 true

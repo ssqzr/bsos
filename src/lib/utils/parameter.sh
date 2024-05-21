@@ -68,7 +68,7 @@ function parameter::parse_string() {
         case "$param_b7f786d2" in
         --no-empty | --no-empty=*)
             parameter::parse_value is_no_empty_b7f786d2 "$param_b7f786d2" || return "$SHELL_FALSE"
-            if ! string::is_true_or_false "$is_no_empty_b7f786d2"; then
+            if string::is_not_empty "$is_no_empty_b7f786d2" && string::is_not_bool "$is_no_empty_b7f786d2"; then
                 lerror --caller-frame="1" "option(--no-empty) value($is_no_empty_b7f786d2) format is invalid"
                 return "$SHELL_FALSE"
             fi
@@ -181,7 +181,7 @@ function parameter::parse_bool() {
         case "$param_7aab068b" in
         --default=*)
             default_7aab068b="${param_7aab068b#*=}"
-            if ! string::is_true_or_false "$default_7aab068b"; then
+            if string::is_not_bool "$default_7aab068b"; then
                 lerror --caller-frame="1" "option(--default) value($default_7aab068b) format is invalid"
                 return "$SHELL_FALSE"
             fi
@@ -230,7 +230,7 @@ function parameter::parse_bool() {
         return "$SHELL_TRUE"
     fi
 
-    if ! string::is_true_or_false "$temp_str_7aab068b"; then
+    if string::is_not_bool "$temp_str_7aab068b"; then
         # 构造成父级函数打印的现象
         lerror --caller-frame="1" "check option($option_7aab068b) boolean type failed, value($temp_str_7aab068b) format is invalid"
         return "$SHELL_FALSE"
