@@ -352,6 +352,7 @@ function parameter::parse_array() {
     local option_46d69f2e
     local separator_46d69f2e
     local temp_str_46d69f2e
+    # shellcheck disable=SC2034
     local temp_array_46d69f2e
 
     local param_46d69f2e

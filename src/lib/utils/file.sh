@@ -18,7 +18,10 @@ source "${SCRIPT_DIR_1d735f60}/string.sh"
 
 function file::read_dir() {
     local -n files_e8a51292
+    # FIXME: 没有实现sudo的逻辑，处理完去掉 shellcheck 的注释
+    # shellcheck disable=SC2034
     local is_sudo_e8a51292
+    # shellcheck disable=SC2034
     local password_e8a51292
     local directory_e8a51292
     local param_e8a51292

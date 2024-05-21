@@ -38,8 +38,14 @@
 # lsuccess、linfo、ldebug、lwarn、lerror
 #     关键字参数列表：
 #           --caller-frame=FRAME 函数调用层级
-#           --handler=HANDLER 日志处理器，支持指定多个，使用 "," 隔开。支持指定多个 --handler=HANDLER 参数。
-#           --formatter=FORMATTER 日志格式
+#           --handler=HANDLER[,HANDLER] 日志处理器，支持重复指定。
+#               - HANDLER 的写法如下：
+#                   - "handler_name" 指定为 handler_name 的日志处理器
+#                   - "+handler_name" 添加为 handler_name 的日志处理器
+#                   - "handler_name" 移除为 handler_name 的日志处理器
+#               - 多个 HANDLER 规则使用 "," 隔开。
+#               - 支持指定多个 --handler=HANDLER 参数。
+#           --formatter=FORMATTER 日志格式。如果指定了，所有 handler 默认使用此格式。
 #           --stream-handler-formatter=FORMATTER stream_handler 日志格式
 #           --stream-handler-stream=STREAM stream_handler 的 STREAM，取值范围是：stdout、stderr、tty、文件路径。
 #           --file-handler-formatter=FORMATTER file_handler 日志格式
@@ -53,7 +59,7 @@
 # lexit 程序退出时的日志
 #     关键字参数列表：
 #           --caller-frame=FRAME 函数调用层级
-#           --handler=HANDLER 日志处理器，支持指定多个，使用 "," 隔开。支持指定多个 --handler=HANDLER 参数。
+#           --handler=HANDLER 日志处理器。参考 lsuccess 等函数的参数说明
 #           --formatter=FORMATTER 日志格式
 #           --stream-handler-formatter=FORMATTER stream_handler 日志格式
 #           --file-handler-formatter=FORMATTER file_handler 日志格式
@@ -82,6 +88,42 @@ source "${SCRIPT_DIR_30e78b31}/utest.sh" || exit 1
 declare LOG_HANDLER_STREAM="stream_handler"
 declare LOG_HANDLER_FILE="file_handler"
 declare __valid_log_handlers=("$LOG_HANDLER_STREAM" "$LOG_HANDLER_FILE")
+
+function log::_array::is_contain() {
+    # shellcheck disable=SC2178
+    local -n array_ee025de6=$1
+    local element_ee025de6=$2
+    local item_ee025de6
+    for item_ee025de6 in "${array_ee025de6[@]}"; do
+        if [ "$item_ee025de6" = "$element_ee025de6" ]; then
+            return "$SHELL_TRUE"
+        fi
+    done
+    return "$SHELL_FALSE"
+}
+
+function log::_array::remove() {
+    local -n array_4e512db1=$1
+    local remove_item_4e512db1="$2"
+
+    local new_array_4e512db1=()
+    local item_4e512db1
+    for item_4e512db1 in "${array_4e512db1[@]}"; do
+        if [ "$item_4e512db1" != "$remove_item_4e512db1" ]; then
+            new_array_4e512db1+=("$item_4e512db1")
+        fi
+    done
+    array_4e512db1=("${new_array_4e512db1[@]}")
+}
+
+function log::_array::rpush_unique() {
+    # shellcheck disable=SC2178
+    local -n array_d5665545=$1
+    local item_d5665545=$2
+    if ! log::_array::is_contain "${!array_d5665545}" "$item_d5665545"; then
+        array_d5665545+=("${item_d5665545}")
+    fi
+}
 
 function log::_create_dir_recursive() {
     local dir="$1"
@@ -416,7 +458,13 @@ function log::_log() {
                 if [ -z "$handler" ]; then
                     continue
                 fi
-                handlers+=("$handler")
+                if [ "${handler:0:1}" == "+" ]; then
+                    log::_array::rpush_unique handlers "${handler:1}"
+                elif [ "${handler:0:1}" == "-" ]; then
+                    log::_array::remove handlers "${handler:1}"
+                else
+                    handlers=("$handler")
+                fi
             done
             ;;
         --formatter=*)
@@ -635,7 +683,82 @@ function lwrite() {
 
 # ==================================== 下面是测试代码 ====================================
 
-function log::_test::_check_log_handler() {
+function TEST::log::_array::is_contain() {
+    local arr
+
+    log::_array::is_contain arr ""
+    utest::assert_fail $?
+
+    log::_array::is_contain arr "a"
+    utest::assert_fail $?
+
+    arr=()
+    log::_array::is_contain arr ""
+    utest::assert_fail $?
+    log::_array::is_contain arr "a"
+    utest::assert_fail $?
+
+    arr=("abc")
+    log::_array::is_contain arr "abc"
+    utest::assert $?
+    log::_array::is_contain arr "ab"
+    utest::assert_fail $?
+    log::_array::is_contain arr "def"
+    utest::assert_fail $?
+
+    # shellcheck disable=SC2034
+    arr=("abc" "123")
+    log::_array::is_contain arr "abc"
+    utest::assert $?
+    log::_array::is_contain arr "ab"
+    utest::assert_fail $?
+    log::_array::is_contain arr "def"
+    utest::assert_fail $?
+}
+
+function TEST::log::_array::remove() {
+    local arr
+    log::_array::remove arr "a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" ""
+
+    arr=("a" "b")
+    log::_array::remove arr "a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "b"
+    log::_array::remove arr "b"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" ""
+    log::_array::remove arr "a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" ""
+
+    arr=("a" "b" "a")
+    log::_array::remove arr "a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "b"
+    log::_array::remove arr "b"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" ""
+}
+
+function TEST::log::_array::rpush_unique() {
+    local arr
+    log::_array::rpush_unique arr "a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a"
+    log::_array::rpush_unique arr "a"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a"
+    log::_array::rpush_unique arr "b"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a b"
+    log::_array::rpush_unique arr "b"
+    utest::assert $?
+    utest::assert_equal "${arr[*]}" "a b"
+}
+
+function TEST::log::handler::_check_handler_name() {
     log::handler::_check_handler_name ""
     utest::assert_fail $?
 
@@ -651,7 +774,7 @@ function log::_test::_check_log_handler() {
     return "$SHELL_TRUE"
 }
 
-function log::_test::add_handler() {
+function TEST::log::handler::_add() {
     log::handler::_add ""
     utest::assert_fail $?
 
@@ -675,7 +798,7 @@ function log::_test::add_handler() {
     return "$SHELL_TRUE"
 }
 
-function log::_test::remove_handler() {
+function TEST::log::handler::_remove() {
     log::handler::_remove ""
     utest::assert_fail $?
 
@@ -726,9 +849,12 @@ function log::_test::all() {
         return "$SHELL_TRUE"
     fi
 
-    log::_test::_check_log_handler || return "$SHELL_FALSE"
-    log::_test::add_handler || return "$SHELL_FALSE"
-    log::_test::remove_handler || return "$SHELL_FALSE"
+    TEST::log::_array::is_contain || return "$SHELL_FALSE"
+    TEST::log::_array::remove || return "$SHELL_FALSE"
+    TEST::log::_array::rpush_unique || return "$SHELL_FALSE"
+    TEST::log::handler::_check_handler_name || return "$SHELL_FALSE"
+    TEST::log::handler::_add || return "$SHELL_FALSE"
+    TEST::log::handler::_remove || return "$SHELL_FALSE"
 
 }
 
