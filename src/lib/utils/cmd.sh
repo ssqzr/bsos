@@ -215,14 +215,14 @@ function cmd::run_cmd_retry_three() {
 
 ################################################ 以下是测试代码 #########################################＃
 
-function cmd::_test_simple_cmd() {
+function TEST::cmd::run_cmd::simple() {
     local output
     local test_str="hello world"
     output=$(cmd::run_cmd -- echo "$test_str")
     utest::assert_equal "$output" "$test_str"
 }
 
-function cmd::_test_simple_cmd_error() {
+function TEST::cmd::run_cmd::simple_and_error() {
     local output
     local test_str="hello world"
 
@@ -234,45 +234,45 @@ function cmd::_test_simple_cmd_error() {
     utest::assert_equal "$output" ""
 }
 
-function cmd::_test_pipe() {
+function TEST::cmd::run_cmd::pipe() {
     local output
     output=$(cmd::run_cmd -- echo "hello world" "|" sed "s/hello/xxx/")
     utest::assert_equal "$output" "xxx world"
 }
 
-function cmd::_test_multi_pipe() {
+function TEST::cmd::run_cmd::multi_pipe() {
     local output
     output=$(cmd::run_cmd -- echo "hello world" "|" sed "s/hello/xxx/" "|" sed "s/xxx/yyy/")
     utest::assert_equal "$output" "yyy world"
 }
 
-function cmd::_test_redirect() {
+function TEST::cmd::run_cmd::redirect() {
     local output
     output=$(cmd::run_cmd -- echo "hello world" "1>/dev/null")
     utest::assert "$?"
     utest::assert_equal "$output" ""
 }
 
-function cmd::_test_stdout_handler() {
+function TEST::cmd::run_cmd::stdout_handler() {
     local output
     output=$(cmd::run_cmd --stdout=sed --stdout-option="s/hello/xxx/" -- echo "hello world")
     utest::assert_equal "$output" "xxx world"
 }
 
-function cmd::_test_stdout_handler_error() {
+function TEST::cmd::run_cmd::stdout_handler_and_error() {
     local output
     output=$(cmd::run_cmd --stdout=grep --stdout-option="xxxx" -- echo "hello world")
     utest::assert "$?"
     utest::assert_equal "$output" ""
 }
 
-function cmd::_test_stderr_handler() {
+function TEST::cmd::run_cmd::stderr_handler() {
     local output
     output=$(cmd::run_cmd --stderr=sed --stderr-option="s/hello/xxx/" -- echo "hello world" "1>&2")
     utest::assert_equal "$output" "xxx world"
 }
 
-function cmd::_test_stderr_handler_error() {
+function TEST::cmd::run_cmd::stderr_handler_and_error() {
     local output
     output=$(cmd::run_cmd --stderr=grep --stderr-option="xxxx" -- echo "hello world" "1>&2")
     utest::assert "$?"
@@ -280,12 +280,12 @@ function cmd::_test_stderr_handler_error() {
 }
 
 # cmd::run_cmd 的测试案例
-function cmd::_test_run_cmd() {
+function TEST::cmd::run_cmd::all() {
     # 测试普通的命令
-    cmd::_test_simple_cmd || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::simple || return "$SHELL_FALSE"
 
     # 测试错误的命令
-    cmd::_test_simple_cmd_error || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::simple_and_error || return "$SHELL_FALSE"
 
     # 测试带参数的命令
 
@@ -294,30 +294,30 @@ function cmd::_test_run_cmd() {
     # 测试单引号
 
     # 测试管道符
-    cmd::_test_pipe || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::pipe || return "$SHELL_FALSE"
 
     # 测试多个管道符
-    cmd::_test_multi_pipe || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::multi_pipe || return "$SHELL_FALSE"
 
     # 测试重定向
-    cmd::_test_redirect || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::redirect || return "$SHELL_FALSE"
 
     # 测试标准输出处理函数
-    cmd::_test_stdout_handler || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::stdout_handler || return "$SHELL_FALSE"
 
     # 测试标准输出处理函数返回失败
-    cmd::_test_stdout_handler_error || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::stdout_handler_and_error || return "$SHELL_FALSE"
 
     # 测试标准错误输出处理函数
-    cmd::_test_stderr_handler || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::stderr_handler || return "$SHELL_FALSE"
 
     # 测试标准错误输出处理函数返回失败
-    cmd::_test_stderr_handler_error || return "$SHELL_FALSE"
+    TEST::cmd::run_cmd::stderr_handler_and_error || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
 
-function cmd::_test_all() {
+function TEST::cmd::all() {
     # source 进来的就不要测试了
     local parent_function_name
     parent_function_name=$(get_caller_function_name 1)
@@ -325,9 +325,9 @@ function cmd::_test_all() {
         return
     fi
 
-    cmd::_test_run_cmd
+    TEST::cmd::run_cmd::all || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && cmd::_test_all
+string::is_true "$TEST" && TEST::cmd::all
 true
 cmd::_init_cmd_history_filepath

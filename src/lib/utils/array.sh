@@ -230,7 +230,7 @@ function array::reverse() {
 
 ###################################### 下面是测试代码 ######################################
 
-function array::_test_array::length() {
+function TEST::array::length() {
     local arr
     utest::assert_equal "$(array::length arr)" 0
 
@@ -244,7 +244,7 @@ function array::_test_array::length() {
     utest::assert_equal "$(array::length arr)" 3
 }
 
-function array::_test_array::is_empty() {
+function TEST::array::is_empty() {
     local arr
     array::is_empty arr
     utest::assert $?
@@ -262,7 +262,7 @@ function array::_test_array::is_empty() {
     utest::assert_fail $?
 }
 
-function array::_test_array::reverse_new() {
+function TEST::array::reverse_new() {
     local arr=(1 2 3 4 5)
     local res=()
 
@@ -281,7 +281,7 @@ function array::_test_array::reverse_new() {
     utest::assert_equal "${res[*]}" "4 3 2 1"
 }
 
-function array::_test_array::reverse() {
+function TEST::array::reverse() {
     local arr=(1 2 3 4 5)
 
     array::reverse arr
@@ -297,7 +297,7 @@ function array::_test_array::reverse() {
     utest::assert_equal "${arr[*]}" "4 3 2 1"
 }
 
-function array::_test_array::dedup() {
+function TEST::array::dedup() {
     local arr=(1 2 3 4 5)
 
     array::dedup arr
@@ -324,7 +324,7 @@ function array::_test_array::dedup() {
     utest::assert_equal "${arr[*]}" "a b d e"
 }
 
-function array::_test_array::rpush() {
+function TEST::array::rpush() {
     local arr=()
     array::rpush arr 1
     utest::assert_equal "${arr[*]}" "1"
@@ -334,7 +334,7 @@ function array::_test_array::rpush() {
     utest::assert_equal "${arr[*]}" "1 2 3"
 }
 
-function array::_test_array::rpush_unique() {
+function TEST::array::rpush_unique() {
     local arr=()
     array::rpush_unique arr 1
     utest::assert_equal "${arr[*]}" "1"
@@ -350,7 +350,7 @@ function array::_test_array::rpush_unique() {
     utest::assert_equal "${arr[*]}" "1 2 3"
 }
 
-function array::_test_array::rpop() {
+function TEST::array::rpop() {
     local arr
     local item
     array::rpop arr
@@ -399,7 +399,7 @@ function array::_test_array::rpop() {
     utest::assert_equal "${arr[*]}" "1 2"
 }
 
-function array::_test_array::lpush() {
+function TEST::array::lpush() {
     local arr=()
     array::lpush arr 1
     utest::assert_equal "${arr[*]}" "1"
@@ -409,7 +409,7 @@ function array::_test_array::lpush() {
     utest::assert_equal "${arr[*]}" "3 2 1"
 }
 
-function array::_test_array::lpush_unique() {
+function TEST::array::lpush_unique() {
     local arr=()
     array::lpush_unique arr 1
     utest::assert_equal "${arr[*]}" "1"
@@ -425,7 +425,7 @@ function array::_test_array::lpush_unique() {
     utest::assert_equal "${arr[*]}" "3 2 1"
 }
 
-function array::_test_array::lpop() {
+function TEST::array::lpop() {
     local arr
     local item
     array::lpop arr
@@ -461,28 +461,28 @@ function array::_test_array::lpop() {
     utest::assert_equal "${arr[*]}" ""
 }
 
-function array::_test_all() {
+function TEST::array::all() {
     # source 进来的就不要测试了
     local parent_function_name
     parent_function_name=$(get_caller_function_name 1)
     if [ "$parent_function_name" = "source" ]; then
         return
     fi
-    array::_test_array::length
-    array::_test_array::is_empty
+    TEST::array::length || return "$SHELL_FALSE"
+    TEST::array::is_empty || return "$SHELL_FALSE"
 
-    array::_test_array::reverse
-    array::_test_array::reverse_new
-    array::_test_array::dedup
+    TEST::array::reverse || return "$SHELL_FALSE"
+    TEST::array::reverse_new || return "$SHELL_FALSE"
+    TEST::array::dedup || return "$SHELL_FALSE"
 
-    array::_test_array::rpush
-    array::_test_array::rpush_unique
-    array::_test_array::rpop
+    TEST::array::rpush || return "$SHELL_FALSE"
+    TEST::array::rpush_unique || return "$SHELL_FALSE"
+    TEST::array::rpop || return "$SHELL_FALSE"
 
-    array::_test_array::lpush
-    array::_test_array::lpush_unique
-    array::_test_array::lpop
+    TEST::array::lpush || return "$SHELL_FALSE"
+    TEST::array::lpush_unique || return "$SHELL_FALSE"
+    TEST::array::lpop || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && array::_test_all
+string::is_true "$TEST" && TEST::array::all
 true

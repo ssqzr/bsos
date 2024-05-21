@@ -841,7 +841,7 @@ function TEST::log::handler::_remove() {
     utest::assert_equal "${__log_handler}" "${LOG_HANDLER_FILE}"
 }
 
-function log::_test::all() {
+function TEST::log::all() {
     # source 进来的就不要测试了
     local parent_function_name
     parent_function_name=$(get_caller_function_name 2)
@@ -863,7 +863,7 @@ function log::_main() {
     log::handler::_init || exit "$CODE_ERROR"
 
     if [ "$TEST" == "true" ] || [ "$TEST" == "1" ]; then
-        log::_test::all || return "$SHELL_FALSE"
+        TEST::log::all || return "$SHELL_FALSE"
     fi
 }
 

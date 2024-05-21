@@ -405,7 +405,9 @@ function parameter::parse_array() {
     return "$SHELL_TRUE"
 }
 
-function parameter::_test_parse_value() {
+# ==================================== 下面是测试代码 ====================================
+
+function TEST::parameter::parse_value() {
     local value
 
     parameter::parse_value value
@@ -446,7 +448,7 @@ function parameter::_test_parse_value() {
 
 }
 
-function parameter::_test_parse_string() {
+function TEST::parameter::parse_string() {
     local value
 
     value=""
@@ -490,7 +492,7 @@ function parameter::_test_parse_string() {
     utest::assert_equal "$value" "123"
 }
 
-function parameter::_test_parse_bool() {
+function TEST::parameter::parse_bool() {
     local value
 
     value=""
@@ -565,7 +567,7 @@ function parameter::_test_parse_bool() {
 
 }
 
-function parameter::_test_parse_num() {
+function TEST::parameter::parse_num() {
 
     local value
     value=""
@@ -614,7 +616,7 @@ function parameter::_test_parse_num() {
     utest::assert_equal "$value" ""
 }
 
-function parameter::test_parse_array() {
+function TEST::parameter::parse_array() {
     local arr
 
     parameter::parse_array arr --option=""
@@ -639,19 +641,19 @@ function parameter::test_parse_array() {
 
 }
 
-function parameter::_test_all() {
+function TEST::parameter::all() {
     # source 进来的就不要测试了
     local parent_function_name
     parent_function_name=$(get_caller_function_name 1)
     if [ "$parent_function_name" = "source" ]; then
         return
     fi
-    parameter::_test_parse_value
-    parameter::_test_parse_bool
-    parameter::_test_parse_string
-    parameter::_test_parse_num
-    parameter::test_parse_array
+    TEST::parameter::parse_value || return "$SHELL_FALSE"
+    TEST::parameter::parse_bool || return "$SHELL_FALSE"
+    TEST::parameter::parse_string || return "$SHELL_FALSE"
+    TEST::parameter::parse_num || return "$SHELL_FALSE"
+    TEST::parameter::parse_array || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && parameter::_test_all
+string::is_true "$TEST" && TEST::parameter::all
 true

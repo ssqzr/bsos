@@ -627,7 +627,7 @@ function manager::app::do_uninstall() {
 }
 
 ########################### 下面是测试代码 ###########################
-function manager::app::_test_is_package_name_valid() {
+function TEST::manager::app::is_package_name_valid() {
     manager::app::is_package_name_valid "pamac:app_name"
     utest::assert $?
 
@@ -680,7 +680,7 @@ function manager::app::_test_is_package_name_valid() {
     utest::assert_fail $?
 }
 
-function manager::app::_test_all() {
+function TEST::manager::app::all() {
     # source 进来的就不要测试了
     local parent_function_name
     parent_function_name=$(get_caller_function_name 1)
@@ -688,8 +688,8 @@ function manager::app::_test_all() {
         return
     fi
 
-    manager::app::_test_is_package_name_valid
+    TEST::manager::app::is_package_name_valid || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && manager::app::_test_all
+string::is_true "$TEST" && TEST::manager::app::all
 true

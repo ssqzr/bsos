@@ -161,7 +161,7 @@ function string::split_with() {
 
 ######################################### 下面是单元测试代码 #########################################
 
-function string::_test_is_empty() {
+function TEST::string::is_empty() {
     string::is_empty
     utest::assert $?
 
@@ -178,7 +178,7 @@ function string::_test_is_empty() {
     utest::assert_fail $?
 }
 
-function string::_test_length() {
+function TEST::string::length() {
     utest::assert_equal "$(string::length "")" 0
 
     utest::assert_equal "$(string::length " ")" 1
@@ -187,7 +187,7 @@ function string::_test_length() {
 
 }
 
-function string::_test_default() {
+function TEST::string::default() {
     local str
 
     string::default str
@@ -207,7 +207,7 @@ function string::_test_default() {
 
 }
 
-function string::_test_is_true_or_false() {
+function TEST::string::is_true_or_false() {
     string::is_true_or_false ""
     utest::assert $?
 
@@ -357,7 +357,7 @@ function string::_test_is_true_or_false() {
 
 }
 
-function string::_test_is_true() {
+function TEST::string::is_true() {
     string::is_true ""
     utest::assert_fail $?
 
@@ -416,7 +416,7 @@ function string::_test_is_true() {
     utest::assert_fail $?
 }
 
-function string::_test_is_false() {
+function TEST::string::is_false() {
     string::is_false ""
     utest::assert $?
 
@@ -475,20 +475,20 @@ function string::_test_is_false() {
     utest::assert $?
 }
 
-function string::_test_all() {
+function TEST::string::all() {
     # source 进来的就不要测试了
     local parent_function_name
     parent_function_name=$(get_caller_function_name 1)
     if [ "$parent_function_name" = "source" ]; then
         return
     fi
-    string::_test_is_empty
-    string::_test_length
-    string::_test_default
-    string::_test_is_true_or_false
-    string::_test_is_true
-    string::_test_is_false
+    TEST::string::is_empty || return "$SHELL_FALSE"
+    TEST::string::length || return "$SHELL_FALSE"
+    TEST::string::default || return "$SHELL_FALSE"
+    TEST::string::is_true_or_false || return "$SHELL_FALSE"
+    TEST::string::is_true || return "$SHELL_FALSE"
+    TEST::string::is_false || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && string::_test_all
+string::is_true "$TEST" && TEST::string::all
 true
