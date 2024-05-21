@@ -365,10 +365,10 @@ function main::run() {
 function main::wrap_run() {
     main::run "$@"
     if [ $? -eq "$SHELL_TRUE" ]; then
-        println_success "all success."
+        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "all success."
         return "$SHELL_TRUE"
     else
-        println_error "something is wrong, please check log."
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "something is wrong, please check log."
         return "$SHELL_FALSE"
     fi
 }

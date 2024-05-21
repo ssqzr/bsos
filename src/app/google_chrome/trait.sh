@@ -92,8 +92,8 @@ function google_chrome::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function google_chrome::trait::fixme() {
-    println_info "${PM_APP_NAME}: you should login to chrome and sync data"
-    println_info "${PM_APP_NAME}: you should change chrome default download path"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should login to chrome and sync data"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should change chrome default download path"
     return "${SHELL_TRUE}"
 }
 

@@ -114,7 +114,7 @@ function zsh::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function zsh::trait::fixme() {
-    println_warn "if you found some keys not working, you can run '/usr/share/zsh/functions/Misc/zkbd' to define keys."
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "if you found some keys not working, you can run '/usr/share/zsh/functions/Misc/zkbd' to define keys."
     return "${SHELL_TRUE}"
 }
 

@@ -71,10 +71,10 @@ function audio::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function audio::trait::fixme() {
-    println_info "${PM_APP_NAME}: you should run 'wpctl status' to check audio status"
-    println_info "${PM_APP_NAME}: you should run 'wpctl set-default {sink_id}' to select audio output"
-    println_info "${PM_APP_NAME}: you should run 'wpctl set-volume {sink_id} n%' to set volume percent of audio"
-    println_info "${PM_APP_NAME}: you can run 'pavucontrol' to control audio output"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should run 'wpctl status' to check audio status"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should run 'wpctl set-default {sink_id}' to select audio output"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should run 'wpctl set-volume {sink_id} n%' to set volume percent of audio"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you can run 'pavucontrol' to control audio output"
 
     return "${SHELL_TRUE}"
 }

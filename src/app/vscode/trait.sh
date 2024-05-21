@@ -90,8 +90,8 @@ function vscode::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function vscode::trait::fixme() {
-    println_info "${PM_APP_NAME}: you should login vscode to sync settings."
-    println_info "${PM_APP_NAME}: you should modify $XDG_CONFIG_HOME/code-flags.conf --profile setting to your default profile."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should login vscode to sync settings."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should modify $XDG_CONFIG_HOME/code-flags.conf --profile setting to your default profile."
 
     return "${SHELL_TRUE}"
 }

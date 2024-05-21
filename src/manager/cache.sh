@@ -29,8 +29,7 @@ function manager::cache::generate_top_apps() {
     # 先清空安装列表
     config::cache::top_apps::clean || return "$SHELL_FALSE"
 
-    println_info "generate top install app list, it take a long time..."
-    linfo "generate top install app list, it take a long time..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top install app list, it take a long time..."
 
     if manager::flags::develop::is_exists; then
         linfo "is in develop mode, not add prior install apps to top app list"
@@ -92,8 +91,7 @@ function manager::cache::generate_top_apps() {
         config::cache::top_apps::rpush_unique "$item" || return "$SHELL_FALSE"
     done
 
-    linfo "generate top install app list success"
-    println_success "generate top install app list success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top install app list success"
 
     return "$SHELL_TRUE"
 }
@@ -196,7 +194,7 @@ function manager::cache::generate_apps_relation() {
         done
     done
 
-    println_success "generate apps relation map success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate apps relation map success."
 
     return "$SHELL_TRUE"
 }

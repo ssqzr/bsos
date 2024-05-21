@@ -82,13 +82,13 @@ function ryujinx::trait::post_uninstall() {
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function ryujinx::trait::fixme() {
     # firmware 文件太大了，下载很耗时。没有一个免费的支持直链下载的网站存储 firmware
-    println_info "${PM_APP_NAME}: you should install firmware manually."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should install firmware manually."
     # keys 文件不大，但是需要和firmware配套，就不自动处理了
-    println_info "${PM_APP_NAME}: you should install keys manually."
-    println_info "${PM_APP_NAME}: view https://theprodkeys.com/ to get more infomation."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should install keys manually."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: view https://theprodkeys.com/ to get more infomation."
 
-    println_info "${PM_APP_NAME}: you should add games manually."
-    println_info "${PM_APP_NAME}: you should add games update and DLC manually."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should add games manually."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should add games update and DLC manually."
     return "${SHELL_TRUE}"
 }
 

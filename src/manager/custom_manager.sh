@@ -36,7 +36,7 @@ function custom_manager::_env() {
     fi
 
     if [ -z "$HOME" ]; then
-        println_error "env HOME is not set"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "env HOME is not set"
         return "$SHELL_FALSE"
     fi
 
@@ -49,7 +49,7 @@ function custom_manager::_env() {
     fi
 
     if [ -z "$ROOT_PASSWORD" ]; then
-        println_error "env ROOT_PASSWORD is not set"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "env ROOT_PASSWORD is not set"
         return "$SHELL_FALSE"
     fi
 
@@ -58,7 +58,7 @@ function custom_manager::_env() {
 
     # export BUILD_TEMP_DIR
     if [ -z "${BUILD_ROOT_DIR}" ]; then
-        println_error "env BUILD_ROOT_DIR is not set"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "env BUILD_ROOT_DIR is not set"
         return "$SHELL_FALSE"
     fi
     # 路径中包含特殊字符可能导致一些问题，例如：

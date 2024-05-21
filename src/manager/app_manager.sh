@@ -119,15 +119,13 @@ function manager::app::is_no_loop_relationships() {
 
     if array::is_contain "${!cache_apps_2fcf6903}" "$pm_app"; then
         # 如果已经在缓存中，那么不需要检查循环依赖
-        linfo "app($pm_app) has checked no loop ${relation_type}. skip it."
-        println_info "app($pm_app) has checked no loop ${relation_type}. skip it."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($pm_app) has checked no loop ${relation_type}. skip it."
         return "$SHELL_TRUE"
     fi
 
     echo "$link_path" | grep -wq "$pm_app"
     if [ $? -eq "${SHELL_TRUE}" ]; then
-        println_error "app($pm_app) has loop ${relation_type}. ${relation_type} link path: ${link_path} $pm_app"
-        lerror "app($pm_app) has loop ${relation_type}. ${relation_type} link path: ${link_path} $pm_app"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($pm_app) has loop ${relation_type}. ${relation_type} link path: ${link_path} $pm_app"
         return "$SHELL_FALSE"
     fi
 
@@ -144,8 +142,7 @@ function manager::app::is_no_loop_relationships() {
 # 检查循环依赖
 function manager::app::check_loop_relationships() {
 
-    linfo "start check all app loop relationships..."
-    println_info "start check all app loop relationships, it may take a long time..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start check all app loop relationships, it may take a long time..."
 
     local _d4dd25bd_dependencies_cache_apps=()
     local _83bf212f_features_cache_apps=()
@@ -159,8 +156,7 @@ function manager::app::check_loop_relationships() {
         manager::app::is_no_loop_relationships _83bf212f_features_cache_apps "features" "${pm_app}" || return "$SHELL_FALSE"
     done
 
-    linfo "check all app loop relationships success"
-    println_success "check all app loop relationships success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "check all app loop relationships success"
     return "$SHELL_TRUE"
 }
 
@@ -181,17 +177,14 @@ function manager::app::do_command_recursion() {
     local temp_str
 
     if ! manager::app::is_custom "${pm_app}"; then
-        linfo "app(${pm_app}) is not custom, skip run ${command}"
-        println_info "${level_indent}${pm_app}: is not custom, skip run ${command}"
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is not custom, skip run ${command}"
         return "$SHELL_TRUE"
     fi
 
-    linfo "app(${pm_app}) run ${command}..."
-    println_info "${level_indent}${pm_app}: run ${command}..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run ${command}..."
 
     # 获取它的依赖
-    linfo "app(${pm_app}) dependencies run ${command}..."
-    println_info "${level_indent}${pm_app}: dependencies run ${command}..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: dependencies run ${command}..."
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")"
     array::readarray dependencies < <(echo "$temp_str")
 
@@ -200,26 +193,22 @@ function manager::app::do_command_recursion() {
     done
 
     if array::is_contain "${!cache_apps_9efd3e61}" "${pm_app}"; then
-        linfo "app(${pm_app}) has run command(${command}), skip it"
-        println_info "${level_indent}${pm_app}: has run command(${command}), skip it"
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: has run command(${command}), skip it"
     else
-        linfo "app(${pm_app}) self run ${command}..."
-        println_info "${level_indent}${pm_app}: self run ${command}..."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: self run ${command}..."
         manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
         cache_apps_9efd3e61+=("${pm_app}")
     fi
 
     # 获取它的feature
-    linfo "app(${pm_app}) features run ${command}..."
-    println_info "${level_indent}${pm_app}: features run ${command}..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: features run ${command}..."
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
         manager::app::do_command_recursion "${!cache_apps_9efd3e61}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) run ${command} done"
-    println_info "${level_indent}${pm_app}: run ${command} done"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run ${command} done"
 
     return "${SHELL_TRUE}"
 }
@@ -241,17 +230,14 @@ function manager::app::do_command_recursion_reverse() {
     local temp_str
 
     if ! manager::app::is_custom "${pm_app}"; then
-        linfo "app(${pm_app}) is not custom, skip run ${command}"
-        println_info "${level_indent}${pm_app}: is not custom, skip run ${command}"
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is not custom, skip run ${command}"
         return "$SHELL_TRUE"
     fi
 
-    linfo "app(${pm_app}) run ${command}..."
-    println_info "${level_indent}${pm_app}: run ${command}..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run ${command}..."
 
     # 获取它的feature
-    linfo "app(${pm_app}) features run ${command}..."
-    println_info "${level_indent}${pm_app}: features run ${command}..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: features run ${command}..."
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
@@ -259,18 +245,15 @@ function manager::app::do_command_recursion_reverse() {
     done
 
     if array::is_contain "${!cache_apps_565a8946}" "${pm_app}"; then
-        linfo "app(${pm_app}) has run command(${command}), skip it"
-        println_info "${level_indent}${pm_app}: has run command(${command}), skip it"
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: has run command(${command}), skip it"
     else
-        linfo "app(${pm_app}) self run ${command}..."
-        println_info "${level_indent}${pm_app}: self run ${command}..."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: self run ${command}..."
         manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
         cache_apps_565a8946+=("${pm_app}")
     fi
 
     # 获取它的依赖
-    linfo "app(${pm_app}) dependencies run ${command}..."
-    println_info "${level_indent}${pm_app}: dependencies run ${command}..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: dependencies run ${command}..."
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")"
     array::readarray dependencies < <(echo "$temp_str")
 
@@ -278,8 +261,7 @@ function manager::app::do_command_recursion_reverse() {
         manager::app::do_command_recursion_reverse "${!cache_apps_565a8946}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) run ${command} done"
-    println_info "${level_indent}${pm_app}: run ${command} done"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run ${command} done"
 
     return "${SHELL_TRUE}"
 }
@@ -303,8 +285,7 @@ function manager::app::do_install_use_pm() {
     fi
 
     if manager::app::is_custom "${pm_app}"; then
-        lerror "app(${pm_app}) is custom, can not use package manager direct install"
-        println_error "${level_indent}${pm_app}: is custom, can not use package manager direct install"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is custom, can not use package manager direct install"
         return "$SHELL_FALSE"
     fi
 
@@ -314,18 +295,15 @@ function manager::app::do_install_use_pm() {
     package_manager=$(manager::app::parse_package_manager "$pm_app")
     package=$(manager::app::parse_app_name "$pm_app")
 
-    linfo "${pm_app}: direct installing app with ${package_manager}"
-    println_info "${level_indent}${pm_app}: direct installing app with ${package_manager}"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: direct installing app with ${package_manager}"
 
     package_manager::install "${package_manager}" "${package}" || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "${pm_app}: direct install app with ${package_manager} failed"
-        println_error "${level_indent}${pm_app}: direct install app with ${package_manager} failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: direct install app with ${package_manager} failed"
         return "$SHELL_FALSE"
     fi
 
-    linfo "${pm_app}: direct install app with ${package_manager} success"
-    println_success "${level_indent}${pm_app}: direct install app with ${package_manager} success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: direct install app with ${package_manager} success"
 
     return "$SHELL_TRUE"
 }
@@ -345,8 +323,7 @@ function manager::app::do_install_use_custom() {
     local temp_str
 
     if ! manager::app::is_custom "${pm_app}"; then
-        lerror "app(${pm_app}) is not custom, can not use custom to install"
-        println_error "${level_indent}${pm_app}: is not custom, can not use custom to install"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is not custom, can not use custom to install"
         return "$SHELL_FALSE"
     fi
 
@@ -356,8 +333,7 @@ function manager::app::do_install_use_custom() {
     fi
 
     # 安装所有 dependencies
-    linfo "app(${pm_app}) install all dependencies..."
-    println_info "${level_indent}${pm_app}: install all dependencies..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: install all dependencies..."
 
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
     array::readarray dependencies < <(echo "$temp_str")
@@ -366,36 +342,28 @@ function manager::app::do_install_use_custom() {
         manager::app::do_install "${!install_apps_ae2e39de}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) install all dependencies success"
-    println_success "${level_indent}${pm_app}: install all dependencies success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: install all dependencies success"
 
     # 安装前置操作
-    linfo "app(${pm_app}) run pre_install..."
-    println_info "${level_indent}${pm_app}: run pre_install..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run pre_install..."
     manager::app::run_custom_manager "${pm_app}" "pre_install"
     if [ $? -ne "${SHELL_TRUE}" ]; then
-        lerror "app(${pm_app}) pre_install failed"
-        println_error "${level_indent}${pm_app}: pre_install failed."
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: pre_install failed."
         return "$SHELL_FALSE"
     fi
-    linfo "app(${pm_app}) run pre_install success."
-    println_info "${level_indent}${pm_app}: run pre_install success."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run pre_install success."
 
     # 安装流程
-    linfo "app(${pm_app}) run do_install..."
-    println_info "${level_indent}${pm_app}: run do_install..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run do_install..."
     manager::app::run_custom_manager "${pm_app}" "do_install"
     if [ $? -ne "${SHELL_TRUE}" ]; then
-        lerror "app(${pm_app}) do_install failed"
-        println_error "${level_indent}${pm_app}: do_install failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: do_install failed"
         return "$SHELL_FALSE"
     fi
-    linfo "app(${pm_app}) run do_install success."
-    println_info "${level_indent}${pm_app}: run do_install success."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run do_install success."
 
     # 安装所有 features
-    linfo "app(${pm_app}) install all features..."
-    println_info "${level_indent}${pm_app}: install all features..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: install all features..."
 
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
@@ -403,20 +371,16 @@ function manager::app::do_install_use_custom() {
     for item in "${features[@]}"; do
         manager::app::do_install "${!install_apps_ae2e39de}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
-    linfo "app(${pm_app}) all features install success."
-    println_success "${level_indent}${pm_app}: all features install success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: all features install success."
 
     # 安装后置操作
-    linfo "app(${pm_app}) run post_install..."
-    println_info "${level_indent}${pm_app}: run post_install..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run post_install..."
     manager::app::run_custom_manager "${pm_app}" "post_install"
     if [ $? -ne "${SHELL_TRUE}" ]; then
-        lerror "app(${pm_app}) post_install failed"
-        println_error "${level_indent}${pm_app}: post_install failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: post_install failed"
         return "$SHELL_FALSE"
     fi
-    linfo "app(${pm_app}) run post_install success."
-    println_info "${level_indent}${pm_app}: run post_install success."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run post_install success."
     return "$SHELL_TRUE"
 }
 
@@ -431,12 +395,10 @@ function manager::app::do_install() {
         return "$SHELL_FALSE"
     fi
 
-    println_info "${level_indent}${pm_app}: install..."
-    linfo "start install app(${pm_app})..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: install..."
 
     if array::is_contain "${!install_apps_abdee2e4}" "${pm_app}"; then
-        linfo "app(${pm_app}) has installed. dont need install again."
-        println_success "${level_indent}${pm_app}: installed. dont need install again."
+        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: installed. dont need install again."
         return "${SHELL_TRUE}"
     fi
 
@@ -448,8 +410,7 @@ function manager::app::do_install() {
 
     install_apps_abdee2e4+=("${pm_app}")
 
-    linfo "app(${pm_app}) install success."
-    println_success "${level_indent}${pm_app}: install success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: install success."
     return "${SHELL_TRUE}"
 }
 
@@ -479,8 +440,7 @@ function manager::app::_do_uninstall_use_pm() {
     fi
 
     if manager::app::is_custom "${pm_app}"; then
-        lerror "app(${pm_app}) is custom, can not use package manager direct uninstall"
-        println_error "${level_indent}${pm_app}: is custom, can not use package manager direct uninstall"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is custom, can not use package manager direct uninstall"
         return "$SHELL_FALSE"
     fi
 
@@ -490,18 +450,15 @@ function manager::app::_do_uninstall_use_pm() {
     package_manager=$(manager::app::parse_package_manager "$pm_app")
     package=$(manager::app::parse_app_name "$pm_app")
 
-    linfo "${pm_app}: direct uninstalling app with ${package_manager}"
-    println_info "${level_indent}${pm_app}: direct uninstalling app with ${package_manager}"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: direct uninstalling app with ${package_manager}"
 
     package_manager::uninstall "${package_manager}" "${package}" || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "${pm_app}: direct uninstall app with ${package_manager} failed"
-        println_error "${level_indent}${pm_app}: direct uninstall app with ${package_manager} failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: direct uninstall app with ${package_manager} failed"
         return "$SHELL_FALSE"
     fi
 
-    linfo "${pm_app}: direct uninstall app with ${package_manager} success"
-    println_success "${level_indent}${pm_app}: direct uninstall app with ${package_manager} success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: direct uninstall app with ${package_manager} success"
 
     return "$SHELL_TRUE"
 }
@@ -521,8 +478,7 @@ function manager::app::_do_uninstall_use_custom() {
     local temp_str
 
     if ! manager::app::is_custom "${pm_app}"; then
-        lerror "app(${pm_app}) is not custom, can not use custom to uninstall"
-        println_error "${level_indent}${pm_app}: is not custom, can not use custom to uninstall"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is not custom, can not use custom to uninstall"
         return "$SHELL_FALSE"
     fi
 
@@ -532,55 +488,43 @@ function manager::app::_do_uninstall_use_custom() {
     fi
 
     # 先运行卸载前置操作
-    linfo "app(${pm_app}) run pre_uninstall..."
-    println_info "${level_indent}${pm_app}: run pre_uninstall..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run pre_uninstall..."
     manager::app::run_custom_manager "${pm_app}" "pre_uninstall"
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "app(${pm_app}) run pre_uninstall failed"
-        println_error "${level_indent}${pm_app}: run pre_uninstall failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run pre_uninstall failed"
         return "$SHELL_FALSE"
     fi
-    linfo "app(${pm_app}) run pre_uninstall success"
-    println_success "${level_indent}${pm_app}: run pre_uninstall success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run pre_uninstall success"
 
     # 卸载所有 features
-    linfo "app(${pm_app}) uninstall all features..."
-    println_info "${level_indent}${pm_app}: uninstall all features..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstall all features..."
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
         manager::app::do_uninstall "${!uninstalled_apps_a7a18468}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
-    linfo "app(${pm_app}) uninstall all features success"
-    println_success "${level_indent}${pm_app}: uninstall all features success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstall all features success"
 
     # 卸载自己
-    linfo "app(${pm_app}) run do_uninstall..."
-    println_info "${level_indent}${pm_app}: run do_uninstall..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run do_uninstall..."
     manager::app::run_custom_manager "${pm_app}" "do_uninstall"
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "app(${pm_app}) run do_uninstall failed"
-        println_error "${level_indent}${pm_app}: run do_uninstall failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run do_uninstall failed"
         return "$SHELL_FALSE"
     fi
-    linfo "app(${pm_app}) run do_uninstall success"
-    println_success "${level_indent}${pm_app}: run do_uninstall success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run do_uninstall success"
 
     # 运行卸载后置操作
-    linfo "app(${pm_app}) run post_uninstall..."
-    println_info "${level_indent}${pm_app}: run post_uninstall..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run post_uninstall..."
     manager::app::run_custom_manager "${pm_app}" "post_uninstall"
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "app(${pm_app}) run post_uninstall failed"
-        println_error "${level_indent}${pm_app}: run post_uninstall failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run post_uninstall failed"
         return "$SHELL_FALSE"
     fi
-    linfo "app(${pm_app}) run post_uninstall success"
-    println_success "${level_indent}${pm_app}: run post_uninstall success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: run post_uninstall success"
 
     # 卸载所有 dependencies
-    linfo "start uninstall app(${pm_app}) dependencies..."
-    println_info "${level_indent}${pm_app}: uninstall dependencies..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstall dependencies..."
 
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")" || return "$SHELL_FALSE"
     array::readarray dependencies < <(echo "$temp_str")
@@ -589,8 +533,7 @@ function manager::app::_do_uninstall_use_custom() {
         manager::app::do_uninstall "${!uninstalled_apps_a7a18468}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
 
-    linfo "app(${pm_app}) uninstall all dependencies success"
-    println_success "${level_indent}${pm_app}: uninstall all dependencies success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstall all dependencies success"
 
     return "$SHELL_TRUE"
 }
@@ -604,12 +547,10 @@ function manager::app::do_uninstall() {
         lerror "pm_app is empty"
         return "$SHELL_FALSE"
     fi
-    println_info "${level_indent}${pm_app}: uninstalling..."
-    linfo "start uninstall app(${pm_app})..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstalling..."
 
     if array::is_contain "${!uninstalled_apps_03c55110}" "${pm_app}"; then
-        linfo "app(${pm_app}) has uninstalled. dont need uninstall again."
-        println_success "${level_indent}${pm_app}: uninstalled. dont need uninstall again."
+        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstalled. dont need uninstall again."
         return "${SHELL_TRUE}"
     fi
 
@@ -621,8 +562,7 @@ function manager::app::do_uninstall() {
 
     uninstalled_apps_03c55110+=("${pm_app}")
 
-    linfo "app(${pm_app}) uninstall success."
-    println_success "${level_indent}${pm_app}: uninstall success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstall success."
     return "$SHELL_TRUE"
 }
 

@@ -46,11 +46,9 @@ function pacman::trait::pre_install() {
     fi
 
     # 先升级系统
-    linfo "start upgrade system..."
-    println_info "start upgrade system..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start upgrade system..."
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Syu --noconfirm"\" || return "${SHELL_FALSE}"
-    linfo "upgrade system success."
-    println_success "upgrade system success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system success."
 
     return "${SHELL_TRUE}"
 }

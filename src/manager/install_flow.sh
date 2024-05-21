@@ -93,30 +93,29 @@ function install_flow::do_fixme() {
 
 function install_flow::main_flow() {
     # 先更新系统
-    println_info "upgrade system first..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system first..."
     package_manager::upgrade_all_pm || return "$SHELL_FALSE"
-    println_success "upgrade system success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system success."
 
     install_flow::pre_install || return "$SHELL_FALSE"
     install_flow::do_install || return "$SHELL_FALSE"
     install_flow::post_install || return "$SHELL_FALSE"
     install_flow::do_fixme || return "$SHELL_FALSE"
 
-    println_success "all success."
-    println_warn "you should reboot you system."
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "you should reboot you system."
 
     return "$SHELL_TRUE"
 }
 
 function install_flow::fixme_flow() {
     # 先更新系统
-    println_info "upgrade system first..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system first..."
     package_manager::upgrade_all_pm || return "$SHELL_FALSE"
-    println_success "upgrade system success."
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system success."
 
     install_flow::do_fixme || return "$SHELL_FALSE"
 
-    println_warn "you should reboot you system."
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "you should reboot you system."
 
     return "$SHELL_TRUE"
 }

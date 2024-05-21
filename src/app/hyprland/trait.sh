@@ -171,7 +171,7 @@ function hyprland::plugins::clean() {
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
 
     if ! hyprctl::is_can_connect; then
-        println_warn "${PM_APP_NAME}: can not connect to hyprland, do not clean plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not clean plugin"
         return "${SHELL_TRUE}"
     fi
 
@@ -201,7 +201,7 @@ function hyprland::plugins::install() {
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
 
     if ! hyprctl::is_can_connect; then
-        println_warn "${PM_APP_NAME}: can not connect to hyprland, do not install plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install plugin"
         return "${SHELL_TRUE}"
     fi
 
@@ -321,7 +321,7 @@ function hyprland::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function hyprland::trait::fixme() {
-    println_warn "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
 
     hyprland::plugins::install || return "${SHELL_FALSE}"
 
@@ -332,7 +332,7 @@ function hyprland::trait::fixme() {
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
 function hyprland::trait::unfixme() {
-    println_info "${PM_APP_NAME}: start undo fixme..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: start undo fixme..."
 
     hyprland::plugins::clean || return "${SHELL_FALSE}"
 

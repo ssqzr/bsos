@@ -79,11 +79,11 @@ function develop::command::create() {
         local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
 
         if [ -e "${app_dir}" ]; then
-            println_warn "app already exists: $app_name"
+            lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app already exists: $app_name"
             continue
         fi
 
-        println_info "add app: $app_name"
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "add app: $app_name"
 
         cp -r "${SCRIPT_DIR_d6dc03c7}/template/app_name" "${app_dir}"
 
@@ -123,7 +123,7 @@ function develop::command::update() {
 
         for file in "${files[@]}"; do
             if [ ! -d "$file" ]; then
-                println_warn "$file is not a directory"
+                lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "$file is not a directory"
                 continue
             fi
             app_names+=("$(basename "$file")")
@@ -145,11 +145,11 @@ function develop::command::update() {
         local app_dir="${SCRIPT_DIR_d6dc03c7}/app/$app_name"
 
         if [ ! -e "$app_dir" ]; then
-            println_error "app($app_name) not exists"
+            lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($app_name) not exists"
             return "$SHELL_FALSE"
         fi
 
-        println_info "update app($app_name) template..."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "update app($app_name) template..."
         # 复制新的文件
         cp -r --update=none "${SCRIPT_DIR_d6dc03c7}/template/app_name"/* "${app_dir}"
         if [ $? -ne "$SHELL_TRUE" ]; then
@@ -226,9 +226,9 @@ function develop::command::trait() {
     for app_name in "${app_names[@]}"; do
         pm_app="custom:$app_name"
         for command in "${traits[@]}"; do
-            println_info "call app($pm_app) trait ${command}..."
+            linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "call app($pm_app) trait ${command}..."
             manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
-            println_success "call app($pm_app) trait ${command} success."
+            lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "call app($pm_app) trait ${command} success."
         done
     done
 

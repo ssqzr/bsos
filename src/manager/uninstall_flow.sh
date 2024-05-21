@@ -73,8 +73,7 @@ function uninstall_flow::main_flow() {
     uninstall_flow::pre_uninstall || return "$SHELL_FALSE"
     uninstall_flow::do_uninstall || return "$SHELL_FALSE"
     uninstall_flow::post_uninstall || return "$SHELL_FALSE"
-    println_success "all success."
-    println_warn "you should reboot you system."
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "you should reboot you system."
 
     return "$SHELL_TRUE"
 }
@@ -82,7 +81,7 @@ function uninstall_flow::main_flow() {
 function uninstall_flow::unfixme_flow() {
     uninstall_flow::do_unfixme || return "$SHELL_FALSE"
 
-    println_warn "you should reboot you system."
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "you should reboot you system."
 
     return "$SHELL_TRUE"
 }

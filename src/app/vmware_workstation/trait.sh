@@ -78,7 +78,7 @@ function vmware_workstation::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function vmware_workstation::trait::fixme() {
-    println_info "${PM_APP_NAME}: you should add exists vm manual"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: you should add exists vm manual"
     return "${SHELL_TRUE}"
 }
 

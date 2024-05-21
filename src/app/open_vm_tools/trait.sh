@@ -105,7 +105,7 @@ function open_vm_tools::trait::post_uninstall() {
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function open_vm_tools::trait::fixme() {
     if ! os::is_vmware; then
-        println_info "${PM_APP_NAME}: os is vmware guest, not install this app."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: os is vmware guest, not install this app."
         return "$SHELL_TRUE"
     fi
     return "${SHELL_TRUE}"

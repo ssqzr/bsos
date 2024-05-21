@@ -46,6 +46,7 @@ function base::prior_install_apps::list() {
 # NOTE: 不要打印日志，因为一般调用这个函数在日志初始化前
 function base::check_root_user() {
     if [ "$(id -u)" -eq 0 ]; then
+        # 此时还没初始化日志，所以不能使用日志接口
         println_error "this script cannot be run as root."
         return "$SHELL_FALSE"
     fi
@@ -58,7 +59,7 @@ function base::lock() {
     exec 99>"$lock_file"
     flock -n 99
     if [ $? -ne "$SHELL_TRUE" ]; then
-        println_info "already running, exit."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "already running, exit."
         return "${SHELL_FALSE}"
     fi
     echo "$$" >&99
@@ -75,7 +76,7 @@ function base::input_root_password() {
         printf_blue "Please input your root password: "
         read -r -s -e password
         if [ -z "$password" ]; then
-            println_warn "password is required to continue."
+            lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "password is required to continue."
             continue
         fi
         break
@@ -86,6 +87,9 @@ function base::input_root_password() {
 # 导出全局的变量
 function base::export_env() {
     local src_dir
+
+    export LOG_HANDLER_STREAM_FORMATTER="{{datetime}} [{{level}}] {{message}}"
+
     src_dir="$(dirname "${SCRIPT_DIR_b5b83ba6}")"
     export SRC_ROOT_DIR="${src_dir}"
     export BUILD_ROOT_DIR="/var/tmp/bsos/build"
@@ -97,8 +101,7 @@ function base::export_env() {
 # 启用无需密码
 function base::enable_no_password() {
     # NOTE: 此时不一定有sudo，只能通过su root来执行
-    linfo "enable no password..."
-    println_info "enable no password..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "enable no password..."
 
     local username
     username=$(id -un)
@@ -119,8 +122,7 @@ function base::enable_no_password() {
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'sed -i \"s/usergroup/"${group_name}"/g\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
     linfo "enable no password for group(${group_name}) to run pamac success"
 
-    linfo "enable no password success"
-    println_success "enable no password success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "enable no password success"
 
     return "$SHELL_TRUE"
 }
@@ -129,8 +131,7 @@ function base::enable_no_password() {
 function base::disable_no_password() {
     # NOTE: 此时不一定有sudo，只能通过su root来执行
 
-    linfo "disable no password..."
-    println_info "disable no password..."
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "disable no password..."
 
     local username
     username=$(id -un)
@@ -144,7 +145,6 @@ function base::disable_no_password() {
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'rm -f \""${filepath}"\"\' || return "${SHELL_FALSE}"
     linfo "disable no password for pamac success"
 
-    linfo "disable no password success"
-    println_success "disable no password success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "disable no password success"
     return "$SHELL_TRUE"
 }

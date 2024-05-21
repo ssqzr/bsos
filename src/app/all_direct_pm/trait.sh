@@ -71,7 +71,7 @@ function all_direct_pm::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function all_direct_pm::trait::fixme() {
-    println_info "Steam: you should login and download games and settings"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "Steam: you should login and download games and settings"
     return "${SHELL_TRUE}"
 }
 
