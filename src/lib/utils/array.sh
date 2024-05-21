@@ -20,24 +20,24 @@ source "${SCRIPT_DIR_3cd455df}/utest.sh"
 
 function array::print() {
     # 虽然是局部变量，但是引用的名字不能和参数的名字一样
-    local -n _ref_array_3828487c=$1
-    local item
-    for item in "${_ref_array_3828487c[@]}"; do
-        echo "$item"
+    local -n array_3828487c=$1
+    local item_3828487c
+    for item_3828487c in "${array_3828487c[@]}"; do
+        echo "$item_3828487c"
     done
     return "$SHELL_TRUE"
 }
 
 function array::length() {
-    local -n _ref_array_4bd6518c=$1
+    local -n array_4bd6518c=$1
 
-    echo "${#_ref_array_4bd6518c[@]}"
+    echo "${#array_4bd6518c[@]}"
 }
 
 function array::is_empty() {
-    local -n _ref_array_6d0f7b0e=$1
+    local -n array_6d0f7b0e=$1
 
-    if [ "$(array::length "${!_ref_array_6d0f7b0e}")" -eq "0" ]; then
+    if [ "$(array::length "${!array_6d0f7b0e}")" -eq "0" ]; then
         return "$SHELL_TRUE"
     fi
 
@@ -46,11 +46,11 @@ function array::is_empty() {
 
 function array::is_contain() {
     # shellcheck disable=SC2178
-    local -n _ref_array_24667025=$1
-    local element=$2
-    local item
-    for item in "${_ref_array_24667025[@]}"; do
-        if [ "$item" = "$element" ]; then
+    local -n array_24667025=$1
+    local element_24667025=$2
+    local item_24667025
+    for item_24667025 in "${array_24667025[@]}"; do
+        if [ "$item_24667025" = "$element_24667025" ]; then
             return "$SHELL_TRUE"
         fi
     done
@@ -60,36 +60,36 @@ function array::is_contain() {
 # 去重
 function array::dedup() {
     # shellcheck disable=SC2178
-    local -n _ref_array_a16ccf13=$1
-    local temp_array=()
-    local item
-    for item in "${_ref_array_a16ccf13[@]}"; do
-        if array::is_contain temp_array "$item"; then
+    local -n array_a16ccf13=$1
+    local temp_array_a16ccf13=()
+    local item_a16ccf13
+    for item_a16ccf13 in "${array_a16ccf13[@]}"; do
+        if array::is_contain temp_array_a16ccf13 "$item_a16ccf13"; then
             continue
         fi
-        temp_array+=("$item")
+        temp_array_a16ccf13+=("$item_a16ccf13")
     done
-    _ref_array_a16ccf13=("${temp_array[@]}")
+    array_a16ccf13=("${temp_array_a16ccf13[@]}")
     return "$SHELL_TRUE"
 }
 
 function array::remove() {
-    local -n _ref_array_6338e158=$1
-    local remove_item="$2"
+    local -n array_6338e158=$1
+    local remove_item_6338e158="$2"
 
-    local new_array=()
-    local item
-    for item in "${_ref_array_6338e158[@]}"; do
-        if [ "$item" != "$remove_item" ]; then
-            new_array+=("$item")
+    local new_array_6338e158=()
+    local item_6338e158
+    for item_6338e158 in "${array_6338e158[@]}"; do
+        if [ "$item_6338e158" != "$remove_item_6338e158" ]; then
+            new_array_6338e158+=("$item_6338e158")
         fi
     done
-    _ref_array_6338e158=("${new_array[@]}")
+    array_6338e158=("${new_array_6338e158[@]}")
 }
 
 function array::remove_empty() {
-    local -n _ref_array_7d0b5b5e=$1
-    array::remove _ref_array_7d0b5b5e ""
+    local -n array_7d0b5b5e=$1
+    array::remove "${!array_7d0b5b5e}" ""
 }
 
 # readarray的用法： readarray -t array_var < <(command)
@@ -102,126 +102,129 @@ function array::remove_empty() {
 # 因为 echo 出错的几率更小
 # 所以这个函数也推荐先执行命令，然后使用echo输出结果
 function array::readarray() {
-    local -n _ref_array_8b0e7b2e=$1
+    local -n array_8b0e7b2e=$1
 
-    readarray -t _ref_array_8b0e7b2e <&0
-    array::remove_empty _ref_array_8b0e7b2e
+    readarray -t array_8b0e7b2e <&0
+    array::remove_empty "${!array_8b0e7b2e}"
 }
 
 function array::rpush() {
     # shellcheck disable=SC2178
-    local -n _ref_array_8d8f5bce=$1
-    local item=$2
-    _ref_array_8d8f5bce+=("${item}")
+    local -n array_8d8f5bce=$1
+    local item_8d8f5bce=$2
+    array_8d8f5bce+=("${item_8d8f5bce}")
 }
 
 # 数组里没有这个元素时才添加
 function array::rpush_unique() {
     # shellcheck disable=SC2178
-    local -n _ref_array_868d2cea=$1
-    local item=$2
-    if ! array::is_contain _ref_array_868d2cea "$item"; then
-        _ref_array_868d2cea+=("${item}")
+    local -n array_868d2cea=$1
+    local item_868d2cea=$2
+    if ! array::is_contain "${!array_868d2cea}" "$item_868d2cea"; then
+        array_868d2cea+=("${item_868d2cea}")
     fi
 }
 
 function array::rpop() {
     # shellcheck disable=SC2178
-    local -n _ref_array_18f43693=$1
-    local -n _ref_result_be0584d1
+    local -n array_18f43693=$1
+    local -n result_18f43693
     if [ "${#@}" -gt 1 ]; then
-        _ref_result_be0584d1=$2
+        result_18f43693=$2
     fi
-    if array::is_empty "${!_ref_array_18f43693}"; then
-        lerror "array(${!_ref_array_18f43693}) is empty, can not rpop"
+    if array::is_empty "${!array_18f43693}"; then
+        lerror "array(${!array_18f43693}) is empty, can not rpop"
         return "$SHELL_FALSE"
     fi
-    if [ -R _ref_result_be0584d1 ]; then
-        _ref_result_be0584d1="${_ref_array_18f43693[-1]}"
+    if [ -R result_18f43693 ]; then
+        result_18f43693="${array_18f43693[-1]}"
     fi
-    unset "_ref_array_18f43693[-1]"
+    unset "array_18f43693[-1]"
     return "$SHELL_TRUE"
 }
 
 function array::lpush() {
     # shellcheck disable=SC2178
-    local -n _ref_array_af246e16=$1
-    local item=$2
+    local -n array_af246e16=$1
+    local item_af246e16=$2
 
-    _ref_array_af246e16=("$item" "${_ref_array_af246e16[@]}")
+    array_af246e16=("$item_af246e16" "${array_af246e16[@]}")
     return "$SHELL_TRUE"
 }
 
 # 数组里没有这个元素时才添加
 function array::lpush_unique() {
     # shellcheck disable=SC2178
-    local -n _ref_array_15434693=$1
-    local item=$2
+    local -n array_15434693=$1
+    local item_15434693=$2
 
-    if ! array::is_contain _ref_array_15434693 "$item"; then
-        array::lpush "${!_ref_array_15434693}" "$item" || return "$SHELL_FALSE"
+    if ! array::is_contain "${!array_15434693}" "$item_15434693"; then
+        array::lpush "${!array_15434693}" "$item_15434693" || return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
 }
 
 function array::lpop() {
     # shellcheck disable=SC2178
-    local -n _ref_array_fd6d55c0=$1
-    local -n _ref_result_2c967585
+    local -n array_fd6d55c0=$1
+    local -n result_fd6d55c0
     if [ "${#@}" -gt 1 ]; then
-        _ref_result_2c967585=$2
+        result_fd6d55c0=$2
     fi
 
-    if array::is_empty "${!_ref_array_fd6d55c0}"; then
-        lerror "array(${!_ref_array_fd6d55c0}) is empty, can not lpop"
+    if array::is_empty "${!array_fd6d55c0}"; then
+        lerror "array(${!array_fd6d55c0}) is empty, can not lpop"
         return "$SHELL_FALSE"
     fi
 
-    if [ -R _ref_result_2c967585 ]; then
-        _ref_result_2c967585="${_ref_array_fd6d55c0[0]}"
+    if [ -R result_fd6d55c0 ]; then
+        result_fd6d55c0="${array_fd6d55c0[0]}"
     fi
-    # 不能使用 unset "_ref_array_fd6d55c0[0]"
+    # 不能使用 unset "array_fd6d55c0[0]"
     # 测试发现第一次 lpop ("1" "2" "3") 正常，返回 1，剩余元素为 (2 3)。继续 lpop 不符合预期，返回空，剩余元素仍为 (2 3)。
-    _ref_array_fd6d55c0=("${_ref_array_fd6d55c0[@]:1}")
+    array_fd6d55c0=("${array_fd6d55c0[@]:1}")
     return "$SHELL_TRUE"
 }
 
 function array::extend() {
     # shellcheck disable=SC2178
-    local -n _ref_array_84a72974=$1
-    local -n _ref_array_29f69789=$2
-    _ref_array_84a72974+=("${_ref_array_29f69789[@]}")
+    local -n array_84a72974=$1
+    local -n array2_84a72974=$2
+    array_84a72974+=("${array2_84a72974[@]}")
 }
 
 # 反转后保存到其他数组
 function array::reverse_new() {
     # shellcheck disable=SC2178
-    local -n _ref_array_c0b35efa=$1 # 用于保存反转后的数组
-    local -n _ref_array_86c99128=$2 # 需要反转的数组
-    local length
-    length="$(array::length "${!_ref_array_86c99128}")"
-    while [ "$length" -gt 0 ]; do
-        length=$((length - 1))
-        _ref_array_c0b35efa+=("${_ref_array_86c99128[$length]}")
+    local -n result_c0b35efa=$1 # 用于保存反转后的数组
+    local -n array_c0b35efa=$2  # 需要反转的数组
+    local length_c0b35efa
+    length_c0b35efa="$(array::length "${!array_c0b35efa}")"
+    while [ "$length_c0b35efa" -gt 0 ]; do
+        length_c0b35efa=$((length_c0b35efa - 1))
+        result_c0b35efa+=("${array_c0b35efa[$length_c0b35efa]}")
     done
 }
 
 # 反转后保存到自身
 function array::reverse() {
     # shellcheck disable=SC2178
-    local -n _ref_array_f46f59e5=$1 # 用于保存反转后的数组
-    local length
-    length="$(array::length "${!_ref_array_f46f59e5}")"
-    local left=$((length / 2))
+    local -n array_f46f59e5=$1 # 用于保存反转后的数组
+    local length_f46f59e5
+    length_f46f59e5="$(array::length "${!array_f46f59e5}")"
+    local left_f46f59e5=$((length_f46f59e5 / 2))
+    local left_index_f46f59e5
+    local right_index_f46f59e5
+    local temp_f46f59e5
 
-    while [ "$left" -gt 0 ]; do
-        local left_index=$((left - 1))
-        local right_index=$((length - left))
-        local temp="${_ref_array_f46f59e5[$left_index]}"
-        _ref_array_f46f59e5[left_index]="${_ref_array_f46f59e5[$right_index]}"
-        _ref_array_f46f59e5[right_index]="$temp"
+    while [ "$left_f46f59e5" -gt 0 ]; do
+        left_index_f46f59e5=$((left_f46f59e5 - 1))
+        right_index_f46f59e5=$((length_f46f59e5 - left_f46f59e5))
+        temp_f46f59e5="${array_f46f59e5[$left_index_f46f59e5]}"
+        array_f46f59e5[left_index_f46f59e5]="${array_f46f59e5[$right_index_f46f59e5]}"
+        array_f46f59e5[right_index_f46f59e5]="$temp_f46f59e5"
 
-        left=$((left - 1))
+        left_f46f59e5=$((left_f46f59e5 - 1))
     done
 }
 

@@ -61,10 +61,10 @@ function string::length() {
 }
 
 function string::default() {
-    local -n _5c1d20cc_data="$1"
-    local default="$2"
-    if string::is_empty "$_5c1d20cc_data"; then
-        _5c1d20cc_data="$default"
+    local -n data_5c1d20cc="$1"
+    local default_5c1d20cc="$2"
+    if string::is_empty "$data_5c1d20cc"; then
+        data_5c1d20cc="$default_5c1d20cc"
     fi
     return "$SHELL_TRUE"
 }
@@ -141,20 +141,20 @@ function string::is_num() {
 }
 
 function string::split_with() {
-    local -n _5c9e7642_array="$1"
-    local _30cb1cce_data="$2"
-    local _4f4c4f1d_separator="${3:- }"
+    local -n array_5c9e7642="$1"
+    local data_5c9e7642="$2"
+    local separator_5c9e7642="${3:- }"
 
-    local _586124e6_temp_str
+    local temp_str_5c9e7642
 
-    if [ -z "${_30cb1cce_data}" ]; then
-        _5c9e7642_array=()
+    if [ -z "${data_5c9e7642}" ]; then
+        array_5c9e7642=()
         return "$SHELL_TRUE"
     fi
 
     # shellcheck disable=SC2001
-    _586124e6_temp_str=$(echo "$_30cb1cce_data" | sed -e "s/$_4f4c4f1d_separator/\n/g") || return "$SHELL_FALSE"
-    readarray -t "${!_5c9e7642_array}" < <(echo "$_586124e6_temp_str")
+    temp_str_5c9e7642=$(echo "$data_5c9e7642" | sed -e "s/$separator_5c9e7642/\n/g") || return "$SHELL_FALSE"
+    readarray -t "${!array_5c9e7642}" < <(echo "$temp_str_5c9e7642")
 
     return "$SHELL_TRUE"
 }

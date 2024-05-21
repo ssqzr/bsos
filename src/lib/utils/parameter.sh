@@ -24,138 +24,139 @@ source "${SCRIPT_DIR_6f82ee3f}/utest.sh"
 # 参数解析成功，返回 true，输出 解析 的值
 # 参数解析失败，返回 false
 function parameter::parse_value() {
-    local -n _5cb47da1_result="$1"
-    local _aef4ba0f_option="$2"
-    local _74871808_temp_str
+    local -n result_5cb47da1="$1"
+    local option_5cb47da1="$2"
+    local temp_str_5cb47da1
 
-    if [ -z "$_aef4ba0f_option" ]; then
+    if [ -z "$option_5cb47da1" ]; then
         lerror "param(option) is empty"
         return "$SHELL_FALSE"
     fi
 
     # 参数需要以 - 开头，这里对有几个 - 不做限制
-    if [[ "$_aef4ba0f_option" != -* ]]; then
-        lerror "option($_aef4ba0f_option) format is invalid"
+    if [[ "$option_5cb47da1" != -* ]]; then
+        lerror "option($option_5cb47da1) format is invalid"
         return "$SHELL_FALSE"
     fi
 
-    _74871808_temp_str="${_aef4ba0f_option#*=}"
-    if [ "$_74871808_temp_str" == "$_aef4ba0f_option" ]; then
+    temp_str_5cb47da1="${option_5cb47da1#*=}"
+    if [ "$temp_str_5cb47da1" == "$option_5cb47da1" ]; then
         # 没有找到 =，说明没有传值
-        _5cb47da1_result=""
+        result_5cb47da1=""
         return "$SHELL_TRUE"
     fi
 
-    _5cb47da1_result="$_74871808_temp_str"
+    # shellcheck disable=SC2034
+    result_5cb47da1="$temp_str_5cb47da1"
 
     return "$SHELL_TRUE"
 }
 
 function parameter::parse_string() {
     # 关键字参数
-    local is_no_empty="$SHELL_FALSE"
-    local min_length
-    local max_length
-    local default_value
-    local -n _b7f786d2_result
-    local _939cc810_option
+    local -n result_b7f786d2
+    local is_no_empty_b7f786d2="$SHELL_FALSE"
+    local min_length_b7f786d2
+    local max_length_b7f786d2
+    local default_b7f786d2
+    local option_b7f786d2
 
-    local _226eba81_temp_str
+    local temp_str_b7f786d2
 
-    local param
-    for param in "$@"; do
-        case "$param" in
+    local param_b7f786d2
+    for param_b7f786d2 in "$@"; do
+        case "$param_b7f786d2" in
         --no-empty | --no-empty=*)
-            parameter::parse_value is_no_empty "$param" || return "$SHELL_FALSE"
-            if ! string::is_true_or_false "$is_no_empty"; then
-                lerror --caller-frame="1" "option(--no-empty) value($is_no_empty) format is invalid"
+            parameter::parse_value is_no_empty_b7f786d2 "$param_b7f786d2" || return "$SHELL_FALSE"
+            if ! string::is_true_or_false "$is_no_empty_b7f786d2"; then
+                lerror --caller-frame="1" "option(--no-empty) value($is_no_empty_b7f786d2) format is invalid"
                 return "$SHELL_FALSE"
             fi
-            if [ -z "$is_no_empty" ] || string::is_true "$is_no_empty"; then
-                is_no_empty="$SHELL_TRUE"
+            if [ -z "$is_no_empty_b7f786d2" ] || string::is_true "$is_no_empty_b7f786d2"; then
+                is_no_empty_b7f786d2="$SHELL_TRUE"
             else
-                is_no_empty="$SHELL_FALSE"
+                is_no_empty_b7f786d2="$SHELL_FALSE"
             fi
             ;;
         --min=*)
-            min_length="${param#*=}"
-            if ! string::is_num "$min_length"; then
-                lerror --caller-frame="1" "option(--min) value($min_length) format is not number"
+            min_length_b7f786d2="${param_b7f786d2#*=}"
+            if ! string::is_num "$min_length_b7f786d2"; then
+                lerror --caller-frame="1" "option(--min) value($min_length_b7f786d2) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --max=*)
-            max_length="${param#*=}"
-            if ! string::is_num "$max_length"; then
-                lerror --caller-frame="1" "option(--max) value($max_length) format is not number"
+            max_length_b7f786d2="${param_b7f786d2#*=}"
+            if ! string::is_num "$max_length_b7f786d2"; then
+                lerror --caller-frame="1" "option(--max) value($max_length_b7f786d2) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --default=*)
-            default_value="${param#*=}"
+            default_b7f786d2="${param_b7f786d2#*=}"
             ;;
         --option=*)
-            _939cc810_option="${param#*=}"
+            option_b7f786d2="${param_b7f786d2#*=}"
             ;;
         -*)
-            lerror "unknown option $param"
+            lerror "unknown option $param_b7f786d2"
             return "$SHELL_FALSE"
             ;;
         *)
-            if [ ! -R _b7f786d2_result ]; then
-                _b7f786d2_result="$param"
+            if [ ! -R result_b7f786d2 ]; then
+                result_b7f786d2="$param_b7f786d2"
                 continue
             fi
-            lerror --caller-frame="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param_b7f786d2"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
-    if [ ! -R _b7f786d2_result ]; then
+    if [ ! -R result_b7f786d2 ]; then
         lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ ! -v _939cc810_option ]; then
+    if [ ! -v option_b7f786d2 ]; then
         lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ -z "$_939cc810_option" ]; then
+    if [ -z "$option_b7f786d2" ]; then
         lerror --caller-frame="1" "param(--option) is empty"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$min_length" ] && [ -n "$max_length" ] && [ "$min_length" -gt "$max_length" ]; then
-        lerror --caller-frame="1" "param min($min_length) gt max($max_length)"
+    if [ -n "$min_length_b7f786d2" ] && [ -n "$max_length_b7f786d2" ] && [ "$min_length_b7f786d2" -gt "$max_length_b7f786d2" ]; then
+        lerror --caller-frame="1" "param min($min_length_b7f786d2) gt max($max_length_b7f786d2)"
         return "$SHELL_FALSE"
     fi
 
-    parameter::parse_value _226eba81_temp_str "${_939cc810_option}" || return "$SHELL_FALSE"
+    parameter::parse_value temp_str_b7f786d2 "${option_b7f786d2}" || return "$SHELL_FALSE"
 
     # 先赋值默认值
-    if [ -z "$_226eba81_temp_str" ] && [ -n "$default_value" ]; then
-        _226eba81_temp_str="$default_value"
+    if [ -z "$temp_str_b7f786d2" ] && [ -n "$default_b7f786d2" ]; then
+        temp_str_b7f786d2="$default_b7f786d2"
     fi
 
-    if [ "$is_no_empty" -eq "$SHELL_TRUE" ] && [ -z "${_226eba81_temp_str}" ]; then
+    if [ "$is_no_empty_b7f786d2" -eq "$SHELL_TRUE" ] && [ -z "${temp_str_b7f786d2}" ]; then
         # 参数限定不能为空
-        lerror --caller-frame="1" "check option(${_939cc810_option}) string type failed, string limit no empty, current value is empty"
+        lerror --caller-frame="1" "check option(${option_b7f786d2}) string type failed, string limit no empty, current value is empty"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$min_length" ] && [ "$(string::length "${_226eba81_temp_str}")" -lt "$min_length" ]; then
-        lerror --caller-frame="1" "check option(${_939cc810_option}) string type failed, value limit min length is $min_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
+    if [ -n "$min_length_b7f786d2" ] && [ "$(string::length "${temp_str_b7f786d2}")" -lt "$min_length_b7f786d2" ]; then
+        lerror --caller-frame="1" "check option(${option_b7f786d2}) string type failed, value limit min length is $min_length_b7f786d2, current value(${temp_str_b7f786d2}) length is $(string::length "${temp_str_b7f786d2}")"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$max_length" ] && [ "$(string::length "${_226eba81_temp_str}")" -gt "$max_length" ]; then
-        lerror --caller-frame="1" "check option(${_939cc810_option}) string type failed, value limit max length is $max_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
+    if [ -n "$max_length_b7f786d2" ] && [ "$(string::length "${temp_str_b7f786d2}")" -gt "$max_length_b7f786d2" ]; then
+        lerror --caller-frame="1" "check option(${option_b7f786d2}) string type failed, value limit max length is $max_length_b7f786d2, current value(${temp_str_b7f786d2}) length is $(string::length "${temp_str_b7f786d2}")"
         return "$SHELL_FALSE"
     fi
 
-    _b7f786d2_result="$_226eba81_temp_str"
+    result_b7f786d2="$temp_str_b7f786d2"
 
     return "$SHELL_TRUE"
 }
@@ -169,74 +170,74 @@ function parameter::parse_string() {
 # 3. 空字符串解析为 true
 function parameter::parse_bool() {
     # 关键字参数
-    local default_value
-    local _5589d0cd_option
-    local -n _7aab068b_result
+    local -n result_7aab068b
+    local default_7aab068b
+    local option_7aab068b
 
-    local _a8926db1_temp_str
+    local temp_str_7aab068b
 
-    local param
-    for param in "$@"; do
-        case "$param" in
+    local param_7aab068b
+    for param_7aab068b in "$@"; do
+        case "$param_7aab068b" in
         --default=*)
-            default_value="${param#*=}"
-            if ! string::is_true_or_false "$default_value"; then
-                lerror --caller-frame="1" "option(--default) value($default_value) format is invalid"
+            default_7aab068b="${param_7aab068b#*=}"
+            if ! string::is_true_or_false "$default_7aab068b"; then
+                lerror --caller-frame="1" "option(--default) value($default_7aab068b) format is invalid"
                 return "$SHELL_FALSE"
             fi
-            string::is_true "$default_value"
-            default_value="$?"
+            string::is_true "$default_7aab068b"
+            default_7aab068b="$?"
             ;;
         --option=*)
-            _5589d0cd_option="${param#*=}"
+            option_7aab068b="${param_7aab068b#*=}"
             ;;
         -*)
-            lerror "unknown option $param"
+            lerror "unknown option $param_7aab068b"
             return "$SHELL_FALSE"
             ;;
         *)
-            if [ ! -R _7aab068b_result ]; then
-                _7aab068b_result="$param"
+            if [ ! -R result_7aab068b ]; then
+                result_7aab068b="$param_7aab068b"
                 continue
             fi
-            lerror --caller-frame="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param_7aab068b"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
-    if [ ! -R _7aab068b_result ]; then
+    if [ ! -R result_7aab068b ]; then
         lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ ! -v _5589d0cd_option ]; then
+    if [ ! -v option_7aab068b ]; then
         lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ -z "$_5589d0cd_option" ]; then
+    if [ -z "$option_7aab068b" ]; then
         lerror --caller-frame="1" "param(--option) is empty"
         return "$SHELL_FALSE"
     fi
 
-    default_value=${default_value:-$SHELL_TRUE}
+    default_7aab068b=${default_7aab068b:-$SHELL_TRUE}
 
-    parameter::parse_value _a8926db1_temp_str "$_5589d0cd_option" || return "$SHELL_FALSE"
+    parameter::parse_value temp_str_7aab068b "$option_7aab068b" || return "$SHELL_FALSE"
 
-    if [ -z "${_a8926db1_temp_str}" ] && [ -n "$default_value" ]; then
-        _7aab068b_result="$default_value"
+    if [ -z "${temp_str_7aab068b}" ] && [ -n "$default_7aab068b" ]; then
+        result_7aab068b="$default_7aab068b"
         return "$SHELL_TRUE"
     fi
 
-    if ! string::is_true_or_false "$_a8926db1_temp_str"; then
+    if ! string::is_true_or_false "$temp_str_7aab068b"; then
         # 构造成父级函数打印的现象
-        lerror --caller-frame="1" "check option($_5589d0cd_option) boolean type failed, value($_a8926db1_temp_str) format is invalid"
+        lerror --caller-frame="1" "check option($option_7aab068b) boolean type failed, value($temp_str_7aab068b) format is invalid"
         return "$SHELL_FALSE"
     fi
 
-    string::is_true "$_a8926db1_temp_str"
-    _7aab068b_result="$?"
+    string::is_true "$temp_str_7aab068b"
+    result_7aab068b="$?"
 
     return "$SHELL_TRUE"
 }
@@ -244,161 +245,161 @@ function parameter::parse_bool() {
 function parameter::parse_num() {
 
     # 关键字参数
-    local min
-    local max
-    local default_value
-    local _0988dc65_option
-    local -n _875b0d67_result
+    local -n result_875b0d67
+    local min_875b0d67
+    local max_875b0d67
+    local default_875b0d67
+    local option_875b0d67
 
-    local _84cda4a4_temp_str
+    local temp_str_875b0d67
 
-    local param
-    for param in "$@"; do
-        case "$param" in
+    local param_875b0d67
+    for param_875b0d67 in "$@"; do
+        case "$param_875b0d67" in
         --min=*)
-            min="${param#*=}"
-            if ! string::is_num "$min"; then
-                lerror --caller-frame="1" "option(--min) value($min) format is not number"
+            min_875b0d67="${param_875b0d67#*=}"
+            if ! string::is_num "$min_875b0d67"; then
+                lerror --caller-frame="1" "option(--min) value($min_875b0d67) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --max=*)
-            max="${param#*=}"
-            if ! string::is_num "$max"; then
-                lerror --caller-frame="1" "option(--max) value($max) format is not number"
+            max_875b0d67="${param_875b0d67#*=}"
+            if ! string::is_num "$max_875b0d67"; then
+                lerror --caller-frame="1" "option(--max) value($max_875b0d67) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --default=*)
-            default_value="${param#*=}"
-            if ! string::is_num "$default_value"; then
-                lerror --caller-frame="1" "option(--default) value($default_value) format is not number"
+            default_875b0d67="${param_875b0d67#*=}"
+            if ! string::is_num "$default_875b0d67"; then
+                lerror --caller-frame="1" "option(--default) value($default_875b0d67) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --option=*)
-            _0988dc65_option="${param#*=}"
+            option_875b0d67="${param_875b0d67#*=}"
             ;;
         -*)
-            lerror "unknown option $param"
+            lerror "unknown option $param_875b0d67"
             return "$SHELL_FALSE"
             ;;
         *)
-            if [ ! -R _875b0d67_result ]; then
-                _875b0d67_result="$param"
+            if [ ! -R result_875b0d67 ]; then
+                result_875b0d67="$param_875b0d67"
                 continue
             fi
-            lerror --caller-frame="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param_875b0d67"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
-    if [ ! -R _875b0d67_result ]; then
+    if [ ! -R result_875b0d67 ]; then
         lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ ! -v _0988dc65_option ]; then
+    if [ ! -v option_875b0d67 ]; then
         lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ -z "$_0988dc65_option" ]; then
+    if [ -z "$option_875b0d67" ]; then
         lerror --caller-frame="1" "param(option) is empty"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$min" ] && [ -n "$max" ] && [ "$min" -gt "$max" ]; then
-        lerror --caller-frame="1" "param min($min) gt max($max)"
+    if [ -n "$min_875b0d67" ] && [ -n "$max_875b0d67" ] && [ "$min_875b0d67" -gt "$max_875b0d67" ]; then
+        lerror --caller-frame="1" "param min($min_875b0d67) gt max($max_875b0d67)"
         return "$SHELL_FALSE"
     fi
 
-    parameter::parse_value _84cda4a4_temp_str "${_0988dc65_option}" || return "$SHELL_FALSE"
+    parameter::parse_value temp_str_875b0d67 "${option_875b0d67}" || return "$SHELL_FALSE"
 
     # 先赋值默认值
-    if [ -z "$_84cda4a4_temp_str" ] && [ -n "$default_value" ]; then
-        _84cda4a4_temp_str="$default_value"
-    elif [ -z "$_84cda4a4_temp_str" ]; then
+    if [ -z "$temp_str_875b0d67" ] && [ -n "$default_875b0d67" ]; then
+        temp_str_875b0d67="$default_875b0d67"
+    elif [ -z "$temp_str_875b0d67" ]; then
         # 没有赋值，也没有给默认值
-        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value is empty and no default value"
+        lerror --caller-frame="1" "check option(${option_875b0d67}) number type failed, value is empty and no default value"
         return "$SHELL_FALSE"
     fi
 
-    if ! string::is_num "$_84cda4a4_temp_str"; then
-        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value($_84cda4a4_temp_str) is not number"
+    if ! string::is_num "$temp_str_875b0d67"; then
+        lerror --caller-frame="1" "check option(${option_875b0d67}) number type failed, value($temp_str_875b0d67) is not number"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$min" ] && [ "${_84cda4a4_temp_str}" -lt "$min" ]; then
-        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value limit min value is $min, current value is ${_84cda4a4_temp_str}"
+    if [ -n "$min_875b0d67" ] && [ "${temp_str_875b0d67}" -lt "$min_875b0d67" ]; then
+        lerror --caller-frame="1" "check option(${option_875b0d67}) number type failed, value limit min value is $min_875b0d67, current value is ${temp_str_875b0d67}"
         return "$SHELL_FALSE"
     fi
 
-    if [ -n "$max" ] && [ "${_84cda4a4_temp_str}" -gt "$max" ]; then
-        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value limit max value is $max, current value is ${_84cda4a4_temp_str}"
+    if [ -n "$max_875b0d67" ] && [ "${temp_str_875b0d67}" -gt "$max_875b0d67" ]; then
+        lerror --caller-frame="1" "check option(${option_875b0d67}) number type failed, value limit max value is $max_875b0d67, current value is ${temp_str_875b0d67}"
         return "$SHELL_FALSE"
     fi
 
-    _875b0d67_result="$_84cda4a4_temp_str"
+    result_875b0d67="$temp_str_875b0d67"
 
     return "$SHELL_TRUE"
 }
 
 function parameter::parse_array() {
     # 关键字参数
-    local _139533c8_option
-    local -n _46d69f2e_result
-    local separator
-    local _ab5146fe_temp_str
-    local _74d16f3d_temp_array
+    local -n result_46d69f2e
+    local option_46d69f2e
+    local separator_46d69f2e
+    local temp_str_46d69f2e
+    local temp_array_46d69f2e
 
-    local param
-    for param in "$@"; do
-        case "$param" in
+    local param_46d69f2e
+    for param_46d69f2e in "$@"; do
+        case "$param_46d69f2e" in
         --separator=*)
-            separator="${param#*=}"
+            separator_46d69f2e="${param_46d69f2e#*=}"
             ;;
         --option=*)
-            _139533c8_option="${param#*=}"
+            option_46d69f2e="${param_46d69f2e#*=}"
             ;;
         -*)
-            lerror "unknown option $param"
+            lerror "unknown option $param_46d69f2e"
             return "$SHELL_FALSE"
             ;;
         *)
-            if [ ! -R _46d69f2e_result ]; then
-                _46d69f2e_result="$param"
+            if [ ! -R result_46d69f2e ]; then
+                result_46d69f2e="$param_46d69f2e"
                 continue
             fi
-            lerror --caller-frame="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param_46d69f2e"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
-    if [ ! -R _46d69f2e_result ]; then
+    if [ ! -R result_46d69f2e ]; then
         lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
-    if [ ! -v _139533c8_option ]; then
+    if [ ! -v option_46d69f2e ]; then
         lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
-    string::default separator "," || return "$SHELL_FALSE"
+    string::default separator_46d69f2e "," || return "$SHELL_FALSE"
 
-    parameter::parse_value _ab5146fe_temp_str "${_139533c8_option}" || return "$SHELL_FALSE"
+    parameter::parse_value temp_str_46d69f2e "${option_46d69f2e}" || return "$SHELL_FALSE"
 
-    if [ -z "$_ab5146fe_temp_str" ]; then
-        ldebug "param(${_139533c8_option}) value is empty"
+    if [ -z "$temp_str_46d69f2e" ]; then
+        ldebug "param(${option_46d69f2e}) value is empty"
         return "$SHELL_TRUE"
     fi
 
-    string::split_with _74d16f3d_temp_array "$_ab5146fe_temp_str" "$separator" || return "$SHELL_FALSE"
+    string::split_with temp_array_46d69f2e "$temp_str_46d69f2e" "$separator_46d69f2e" || return "$SHELL_FALSE"
 
-    array::extend "${!_46d69f2e_result}" _74d16f3d_temp_array || return "$SHELL_FALSE"
+    array::extend "${!result_46d69f2e}" temp_array_46d69f2e || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

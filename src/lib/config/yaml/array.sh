@@ -245,16 +245,15 @@ function config::array::clean() {
 }
 
 function config::array::set() {
-    local path="$1"
-    local -n _ref_array_43639596=$2
-    local filepath="$3"
-    local value=""
+    local path_43639596="$1"
+    local -n array_43639596=$2
+    local filepath_43639596="$3"
 
     # FIXME: 分多次就导致原子性的问题。
     # 如果一次性添加所有元素，特殊字符不知道怎么处理
-    local item
-    for item in "${_ref_array_43639596[@]}"; do
-        config::array::rpush "${path}" "${item}" "${filepath}" || return "$SHELL_FALSE"
+    local item_43639596
+    for item_43639596 in "${array_43639596[@]}"; do
+        config::array::rpush "${path_43639596}" "${item_43639596}" "${filepath_43639596}" || return "$SHELL_FALSE"
     done
     return $?
 }

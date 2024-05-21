@@ -100,7 +100,7 @@ function manager::app::run_custom_manager() {
 # app1依赖app2，app2依赖app3，app3没有循环依赖，那么app2也没有循环依赖，那么app1也没有循环依赖
 # app1依赖app2，app2依赖app3，app3有循环依赖，那么app2也有循环依赖，那么app1也有循环依赖
 function manager::app::is_no_loop_relationships() {
-    local -n cache_apps="$1"
+    local -n cache_apps_2fcf6903="$1"
     # relation_type 取值：dependencies 或者 features
     local relation_type="$2"
     local pm_app="$3"
@@ -117,7 +117,7 @@ function manager::app::is_no_loop_relationships() {
         return "$SHELL_TRUE"
     fi
 
-    if array::is_contain "${!cache_apps}" "$pm_app"; then
+    if array::is_contain "${!cache_apps_2fcf6903}" "$pm_app"; then
         # 如果已经在缓存中，那么不需要检查循环依赖
         linfo "app($pm_app) has checked no loop ${relation_type}. skip it."
         println_info "app($pm_app) has checked no loop ${relation_type}. skip it."
@@ -134,10 +134,10 @@ function manager::app::is_no_loop_relationships() {
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "${relation_type}")" || return "$SHELL_FALSE"
     array::readarray temp_array < <(echo "$temp_str")
     for item in "${temp_array[@]}"; do
-        manager::app::is_no_loop_relationships "${!cache_apps}" "${relation_type}" "${item}" "$link_path $pm_app" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_relationships "${!cache_apps_2fcf6903}" "${relation_type}" "${item}" "$link_path $pm_app" || return "$SHELL_FALSE"
     done
 
-    cache_apps+=("${pm_app}")
+    cache_apps_2fcf6903+=("${pm_app}")
     return "$SHELL_TRUE"
 }
 
@@ -166,7 +166,7 @@ function manager::app::check_loop_relationships() {
 
 # 根据依赖关系递归调用 trait 的命令
 function manager::app::do_command_recursion() {
-    local -n cache_apps="$1"
+    local -n cache_apps_9efd3e61="$1"
     local command="$2"
     local pm_app="$3"
     local level_indent="$4"
@@ -196,17 +196,17 @@ function manager::app::do_command_recursion() {
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_command_recursion "${!cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion "${!cache_apps_9efd3e61}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    if array::is_contain "${!cache_apps}" "${pm_app}"; then
+    if array::is_contain "${!cache_apps_9efd3e61}" "${pm_app}"; then
         linfo "app(${pm_app}) has run command(${command}), skip it"
         println_info "${level_indent}${pm_app}: has run command(${command}), skip it"
     else
         linfo "app(${pm_app}) self run ${command}..."
         println_info "${level_indent}${pm_app}: self run ${command}..."
         manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
-        cache_apps+=("${pm_app}")
+        cache_apps_9efd3e61+=("${pm_app}")
     fi
 
     # 获取它的feature
@@ -215,7 +215,7 @@ function manager::app::do_command_recursion() {
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
-        manager::app::do_command_recursion "${!cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion "${!cache_apps_9efd3e61}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
     linfo "app(${pm_app}) run ${command} done"
@@ -226,7 +226,7 @@ function manager::app::do_command_recursion() {
 
 # 根据依赖关系递归调用 trait 的命令
 function manager::app::do_command_recursion_reverse() {
-    local -n cache_apps="$1"
+    local -n cache_apps_565a8946="$1"
     local command="$2"
     local pm_app="$3"
     local level_indent="$4"
@@ -255,17 +255,17 @@ function manager::app::do_command_recursion_reverse() {
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
-        manager::app::do_command_recursion_reverse "${!cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion_reverse "${!cache_apps_565a8946}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
-    if array::is_contain "${!cache_apps}" "${pm_app}"; then
+    if array::is_contain "${!cache_apps_565a8946}" "${pm_app}"; then
         linfo "app(${pm_app}) has run command(${command}), skip it"
         println_info "${level_indent}${pm_app}: has run command(${command}), skip it"
     else
         linfo "app(${pm_app}) self run ${command}..."
         println_info "${level_indent}${pm_app}: self run ${command}..."
         manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
-        cache_apps+=("${pm_app}")
+        cache_apps_565a8946+=("${pm_app}")
     fi
 
     # 获取它的依赖
@@ -275,7 +275,7 @@ function manager::app::do_command_recursion_reverse() {
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_command_recursion_reverse "${!cache_apps}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
+        manager::app::do_command_recursion_reverse "${!cache_apps_565a8946}" "${command}" "${item}" "${level_indent}  " || return "$SHELL_FALSE"
     done
 
     linfo "app(${pm_app}) run ${command} done"
@@ -286,9 +286,9 @@ function manager::app::do_command_recursion_reverse() {
 
 # 运行安装向导
 function manager::app::do_install_guide() {
-    local -n cache_apps="$1"
+    local -n cache_apps_91f1e7eb="$1"
     local pm_app="$2"
-    manager::app::do_command_recursion "${!cache_apps}" "install_guide" "${pm_app}" || return "$SHELL_FALSE"
+    manager::app::do_command_recursion "${!cache_apps_91f1e7eb}" "install_guide" "${pm_app}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -331,7 +331,7 @@ function manager::app::do_install_use_pm() {
 }
 
 function manager::app::do_install_use_custom() {
-    local -n install_apps="$1"
+    local -n install_apps_ae2e39de="$1"
     local pm_app="$2"
     local level_indent="$3"
 
@@ -363,7 +363,7 @@ function manager::app::do_install_use_custom() {
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_install "${!install_apps}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
+        manager::app::do_install "${!install_apps_ae2e39de}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
 
     linfo "app(${pm_app}) install all dependencies success"
@@ -401,7 +401,7 @@ function manager::app::do_install_use_custom() {
     array::readarray features < <(echo "$temp_str")
 
     for item in "${features[@]}"; do
-        manager::app::do_install "${!install_apps}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
+        manager::app::do_install "${!install_apps_ae2e39de}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
     linfo "app(${pm_app}) all features install success."
     println_success "${level_indent}${pm_app}: all features install success."
@@ -422,7 +422,7 @@ function manager::app::do_install_use_custom() {
 
 # 安装一个APP，附带其他的操作
 function manager::app::do_install() {
-    local -n install_apps="$1"
+    local -n install_apps_abdee2e4="$1"
     local pm_app="$2"
     local level_indent="$3"
 
@@ -434,7 +434,7 @@ function manager::app::do_install() {
     println_info "${level_indent}${pm_app}: install..."
     linfo "start install app(${pm_app})..."
 
-    if array::is_contain "${!install_apps}" "${pm_app}"; then
+    if array::is_contain "${!install_apps_abdee2e4}" "${pm_app}"; then
         linfo "app(${pm_app}) has installed. dont need install again."
         println_success "${level_indent}${pm_app}: installed. dont need install again."
         return "${SHELL_TRUE}"
@@ -443,10 +443,10 @@ function manager::app::do_install() {
     if ! manager::app::is_custom "$pm_app"; then
         manager::app::do_install_use_pm "$pm_app" "$level_indent" || return "$SHELL_FALSE"
     else
-        manager::app::do_install_use_custom "${!install_apps}" "$pm_app" "$level_indent" || return "$SHELL_FALSE"
+        manager::app::do_install_use_custom "${!install_apps_abdee2e4}" "$pm_app" "$level_indent" || return "$SHELL_FALSE"
     fi
 
-    install_apps+=("${pm_app}")
+    install_apps_abdee2e4+=("${pm_app}")
 
     linfo "app(${pm_app}) install success."
     println_success "${level_indent}${pm_app}: install success."
@@ -455,16 +455,16 @@ function manager::app::do_install() {
 
 # 运行 fixme
 function manager::app::do_fixme() {
-    local -n cache_apps="$1"
+    local -n cache_apps_3e3889c9="$1"
     local pm_app="$2"
-    manager::app::do_command_recursion "${!cache_apps}" "fixme" "${pm_app}" || return "$SHELL_FALSE"
+    manager::app::do_command_recursion "${!cache_apps_3e3889c9}" "fixme" "${pm_app}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function manager::app::do_unfixme() {
-    local -n cache_apps="$1"
+    local -n cache_apps_9f5466d3="$1"
     local pm_app="$2"
-    manager::app::do_command_recursion_reverse "${!cache_apps}" "unfixme" "${pm_app}" || return "$SHELL_FALSE"
+    manager::app::do_command_recursion_reverse "${!cache_apps_9f5466d3}" "unfixme" "${pm_app}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -507,7 +507,7 @@ function manager::app::_do_uninstall_use_pm() {
 }
 
 function manager::app::_do_uninstall_use_custom() {
-    local -n uninstalled_apps="$1"
+    local -n uninstalled_apps_a7a18468="$1"
     local pm_app="$2"
     local level_indent="$3"
 
@@ -549,7 +549,7 @@ function manager::app::_do_uninstall_use_custom() {
     temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
     array::readarray features < <(echo "$temp_str")
     for item in "${features[@]}"; do
-        manager::app::do_uninstall "${!uninstalled_apps}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
+        manager::app::do_uninstall "${!uninstalled_apps_a7a18468}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
     linfo "app(${pm_app}) uninstall all features success"
     println_success "${level_indent}${pm_app}: uninstall all features success"
@@ -586,7 +586,7 @@ function manager::app::_do_uninstall_use_custom() {
     array::readarray dependencies < <(echo "$temp_str")
 
     for item in "${dependencies[@]}"; do
-        manager::app::do_uninstall "${!uninstalled_apps}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
+        manager::app::do_uninstall "${!uninstalled_apps_a7a18468}" "${item}" "  ${level_indent}" || return "$SHELL_FALSE"
     done
 
     linfo "app(${pm_app}) uninstall all dependencies success"
@@ -596,7 +596,7 @@ function manager::app::_do_uninstall_use_custom() {
 }
 
 function manager::app::do_uninstall() {
-    local -n uninstalled_apps="$1"
+    local -n uninstalled_apps_03c55110="$1"
     local pm_app="$2"
     local level_indent="$3"
 
@@ -607,7 +607,7 @@ function manager::app::do_uninstall() {
     println_info "${level_indent}${pm_app}: uninstalling..."
     linfo "start uninstall app(${pm_app})..."
 
-    if array::is_contain "${!uninstalled_apps}" "${pm_app}"; then
+    if array::is_contain "${!uninstalled_apps_03c55110}" "${pm_app}"; then
         linfo "app(${pm_app}) has uninstalled. dont need uninstall again."
         println_success "${level_indent}${pm_app}: uninstalled. dont need uninstall again."
         return "${SHELL_TRUE}"
@@ -616,10 +616,10 @@ function manager::app::do_uninstall() {
     if ! manager::app::is_custom "$pm_app"; then
         manager::app::_do_uninstall_use_pm "$pm_app" "$level_indent" || return "$SHELL_FALSE"
     else
-        manager::app::_do_uninstall_use_custom "${!uninstalled_apps}" "$pm_app" "$level_indent" || return "$SHELL_FALSE"
+        manager::app::_do_uninstall_use_custom "${!uninstalled_apps_03c55110}" "$pm_app" "$level_indent" || return "$SHELL_FALSE"
     fi
 
-    uninstalled_apps+=("${pm_app}")
+    uninstalled_apps_03c55110+=("${pm_app}")
 
     linfo "app(${pm_app}) uninstall success."
     println_success "${level_indent}${pm_app}: uninstall success."

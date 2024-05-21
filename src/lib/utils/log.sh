@@ -127,31 +127,6 @@ function log::formatter::_init() {
     return "$SHELL_TRUE"
 }
 
-# log_format 的格式类似: "xxxxxx {{datetime:SSSSSSSSS}} xxxxxxx"
-function log::formatter::_get_datetime_foramt() {
-    local log_formatter="$1"
-
-    local datetime_format
-
-    log_formatter="${log_formatter:-$__log_formatter}"
-
-    datetime_format=$(grep -o -P "\{\{datetime.*?}}" <<<"${log_formatter}")
-
-    if [ "$datetime_format" == "{{datetime}}" ] || [ "$datetime_format" == "{{datetime:}}" ]; then
-        datetime_format=""
-    fi
-
-    if [ -z "${datetime_format}" ]; then
-        datetime_format=$(log::formatter::_default_datetime_format)
-    elif [ "$datetime_format" == "{{datetime}}" ] || [ "$datetime_format" == "{{datetime:}}" ]; then
-        datetime_format=$(log::formatter::_default_datetime_format)
-    else
-        datetime_format="${datetime_format#*:}"
-        datetime_format="${datetime_format%*\}\}}"
-    fi
-    printf "%s" "$datetime_format"
-}
-
 function log::formatter::set() {
     local formatter="$1"
 
@@ -166,47 +141,49 @@ function log::formatter::set_datetime_format() {
 }
 
 function log::formatter::_format_message() {
-    local -n _9e86f16f_result="$1"
+    local -n result_9e86f16f="$1"
     shift
-    local formatter="$1"
+    local formatter_9e86f16f="$1"
     shift
-    local level="$1"
+    local level_9e86f16f="$1"
     shift
-    local datetime="$1"
+    local datetime_9e86f16f="$1"
     shift
-    local pid="$1"
+    local pid_9e86f16f="$1"
     shift
-    local filename="$1"
+    local filename_9e86f16f="$1"
     shift
-    local line="$1"
+    local line_9e86f16f="$1"
     shift
-    local function_name="$1"
+    local function_9e86f16f="$1"
     shift
-    local message_format="$1"
+    local message_format_9e86f16f="$1"
     shift
-    local message_params
-    message_params=("$@")
+    local message_params_9e86f16f
+    message_params_9e86f16f=("$@")
 
-    local _5faa5dc6_temp_str
+    local temp_str_9e86f16f
 
-    local message
+    local message_9e86f16f
     # shellcheck disable=SC2059
-    printf -v message "$message_format" "${message_params[@]}"
+    printf -v message_9e86f16f "$message_format_9e86f16f" "${message_params_9e86f16f[@]}"
 
-    _5faa5dc6_temp_str="${formatter}"
+    # 由于 message 可能包含各种特殊字符，所以不能使用 sed 命令。
+    # 例如： sed -e "s/{{message}}/${message}/g" 当 $message 包含 "/" 字符时，会出现问题，并且没法转义
+    temp_str_9e86f16f="${formatter_9e86f16f}"
     # 先替换常规字符的
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{level\}\}/${level}}"
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{pid\}\}/${pid}}"
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{line\}\}/${line}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{level\}\}/${level_9e86f16f}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{pid\}\}/${pid_9e86f16f}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{line\}\}/${line_9e86f16f}}"
     # 再替换可能包含其他字符的
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{function\}\}/${function_name}}"
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{filename\}\}/${filename}}"
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{datetime\}\}/${datetime}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{function\}\}/${function_9e86f16f}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{filename\}\}/${filename_9e86f16f}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{datetime\}\}/${datetime_9e86f16f}}"
     # 最后替换 message，因为 message 可能包含诸如 {{xxx}} 这样的
-    _5faa5dc6_temp_str="${_5faa5dc6_temp_str//\{\{message\}\}/${message}}"
+    temp_str_9e86f16f="${temp_str_9e86f16f//\{\{message\}\}/${message_9e86f16f}}"
 
-    # _9e86f16f_result="$(echo "${formatter}" | sed -e "s/{{level}}/${level}/g" -e "s/{{datetime}}/${datetime}/g" -e "s/{{pid}}/${pid}/g" -e "s/{{filename}}/${filename}/g" -e "s/{{line}}/${line}/g" -e "s/{{function}}/${function_name}/g" -e "s/{{message}}/${message}/g")" || return "$SHELL_FALSE"
-    _9e86f16f_result="${_5faa5dc6_temp_str}"
+    # shellcheck disable=SC2034
+    result_9e86f16f="${temp_str_9e86f16f}"
     return "$SHELL_TRUE"
 }
 
@@ -419,6 +396,9 @@ function log::_log() {
     local temp_array=()
     local param
 
+    # shellcheck disable=SC2001
+    readarray -t handlers < <(echo "${__log_handler}" | sed 's/,/\n/g')
+
     for param in "$@"; do
         case "$param" in
         --level=*)
@@ -482,9 +462,6 @@ function log::_log() {
 
     datetime_format="${datetime_format:-${__log_datetime_format}}"
     datetime="$(date "+${datetime_format}")"
-
-    # shellcheck disable=SC2001
-    readarray -t handlers < <(echo "${__log_handler}" | sed 's/,/\n/g')
 
     for handler in "${handlers[@]}"; do
         if [ -z "$handler" ]; then
@@ -573,46 +550,6 @@ function lsuccess() {
     log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
-    # local message_format
-    # local message_params
-    # local caller_frame
-
-    # local other_options=()
-    # local other_params=()
-
-    # local param
-    # for param in "$@"; do
-    #     case "$param" in
-    #     --caller-frame=*)
-    #         caller_frame="${param#*=}"
-    #         ;;
-    #     --level=* | --message-format=*)
-    #         println_error "unknown option $param"
-    #         return "$SHELL_FALSE"
-    #         ;;
-    #     -*)
-    #         other_options+=("$param")
-    #         ;;
-    #     *)
-    #         other_params+=("$param")
-    #         ;;
-    #     esac
-    # done
-
-    # caller_frame=${caller_frame:-0}
-    # ((caller_frame += 1))
-
-    # if [ "${#other_params[@]}" -gt 1 ]; then
-    #     message_format="${other_params[0]}"
-    #     message_params=("${other_params[@]:1}")
-    # else
-    #     message_format="%s"
-    #     message_params=("${other_params[@]}")
-    # fi
-
-    # log::_log --caller-frame="${caller_frame}" --level="$level" --message-format="${message_format}" "${other_options[@]}" "${message_params[@]}" || return "$SHELL_FALSE"
-
-    # return "$SHELL_TRUE"
 }
 
 function linfo() {
@@ -697,41 +634,6 @@ function lwrite() {
 # ============================== END log API END ==============================
 
 # ==================================== 下面是测试代码 ====================================
-
-function log::_test::formatter::_get_datetime_foramt() {
-    local formatter
-    local default
-    local temp_format
-    default="$(log::formatter::_default_datetime_format)"
-
-    __log_formatter=""
-    formatter=$(log::formatter::_get_datetime_foramt)
-    utest::assert_equal "${formatter}" "${default}"
-
-    __log_formatter="{{datetime}}"
-    formatter=$(log::formatter::_get_datetime_foramt)
-    utest::assert_equal "${formatter}" "${default}"
-
-    __log_formatter="{{datetime:yyyy-MM-dd HH:mm:ss}}"
-    formatter=$(log::formatter::_get_datetime_foramt)
-    utest::assert_equal "${formatter}" "yyyy-MM-dd HH:mm:ss"
-
-    temp_format='`1234567890-=~!@#$%^&*()_+[]{}\|;:,.<>/?'
-    temp_format+="'\""
-    __log_formatter="{{datetime:${temp_format}}}"
-    formatter=$(log::formatter::_get_datetime_foramt)
-    utest::assert_equal "${formatter}" "${temp_format}"
-
-    __log_formatter="{{datetime:123}}"
-    formatter=$(log::formatter::_get_datetime_foramt "{{12datetime:abc}}")
-    utest::assert_equal "${formatter}" "${default}"
-
-    temp_format='`1234567890-=~!@#$%^&*()_+[]{}\|;:,.<>/?'
-    temp_format+="'\""
-    __log_formatter=""
-    formatter=$(log::formatter::_get_datetime_foramt "{{datetime:${temp_format}}}")
-    utest::assert_equal "${formatter}" "${temp_format}"
-}
 
 function log::_test::_check_log_handler() {
     log::handler::_check_handler_name ""
@@ -824,7 +726,6 @@ function log::_test::all() {
         return "$SHELL_TRUE"
     fi
 
-    log::_test::formatter::_get_datetime_foramt
     log::_test::_check_log_handler || return "$SHELL_FALSE"
     log::_test::add_handler || return "$SHELL_FALSE"
     log::_test::remove_handler || return "$SHELL_FALSE"
