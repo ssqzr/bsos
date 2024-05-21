@@ -24,7 +24,7 @@ function utest::assert_equal() {
 
     if [ "$left" != "$right" ]; then
         println_error " failed"
-        println_error "left: $left, right: $right"
+        println_error "left: %s, right: %s" "$left" "$right"
         return "$SHELL_FALSE"
     fi
     println_success " success"

@@ -325,7 +325,8 @@ function main::run() {
 
     # 其次设置日志的路径，尽量记录日志
     log_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/main.log"
-    log::set_log_file "${log_filepath}"
+    log::handler::file_handler::register || return "$SHELL_FALSE"
+    log::handler::file_handler::set_log_file "${log_filepath}" || return "$SHELL_FALSE"
 
     # 单例
     base::lock || return "$SHELL_FALSE"

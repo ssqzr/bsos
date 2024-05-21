@@ -68,7 +68,7 @@ function parameter::parse_string() {
         --no-empty | --no-empty=*)
             parameter::parse_value is_no_empty "$param" || return "$SHELL_FALSE"
             if ! string::is_true_or_false "$is_no_empty"; then
-                lerror --caller-level="1" "option(--no-empty) value($is_no_empty) format is invalid"
+                lerror --caller-frame="1" "option(--no-empty) value($is_no_empty) format is invalid"
                 return "$SHELL_FALSE"
             fi
             if [ -z "$is_no_empty" ] || string::is_true "$is_no_empty"; then
@@ -80,14 +80,14 @@ function parameter::parse_string() {
         --min=*)
             min_length="${param#*=}"
             if ! string::is_num "$min_length"; then
-                lerror --caller-level="1" "option(--min) value($min_length) format is not number"
+                lerror --caller-frame="1" "option(--min) value($min_length) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --max=*)
             max_length="${param#*=}"
             if ! string::is_num "$max_length"; then
-                lerror --caller-level="1" "option(--max) value($max_length) format is not number"
+                lerror --caller-frame="1" "option(--max) value($max_length) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
@@ -106,29 +106,29 @@ function parameter::parse_string() {
                 _b7f786d2_result="$param"
                 continue
             fi
-            lerror --caller-level="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
     if [ ! -R _b7f786d2_result ]; then
-        lerror --caller-level="1" "param(result-ref) is not set"
+        lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ ! -v _939cc810_option ]; then
-        lerror --caller-level="1" "param(--option) is not set"
+        lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ -z "$_939cc810_option" ]; then
-        lerror --caller-level="1" "param(--option) is empty"
+        lerror --caller-frame="1" "param(--option) is empty"
         return "$SHELL_FALSE"
     fi
 
     if [ -n "$min_length" ] && [ -n "$max_length" ] && [ "$min_length" -gt "$max_length" ]; then
-        lerror --caller-level="1" "param min($min_length) gt max($max_length)"
+        lerror --caller-frame="1" "param min($min_length) gt max($max_length)"
         return "$SHELL_FALSE"
     fi
 
@@ -141,17 +141,17 @@ function parameter::parse_string() {
 
     if [ "$is_no_empty" -eq "$SHELL_TRUE" ] && [ -z "${_226eba81_temp_str}" ]; then
         # 参数限定不能为空
-        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, string limit no empty, current value is empty"
+        lerror --caller-frame="1" "check option(${_939cc810_option}) string type failed, string limit no empty, current value is empty"
         return "$SHELL_FALSE"
     fi
 
     if [ -n "$min_length" ] && [ "$(string::length "${_226eba81_temp_str}")" -lt "$min_length" ]; then
-        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, value limit min length is $min_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
+        lerror --caller-frame="1" "check option(${_939cc810_option}) string type failed, value limit min length is $min_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
         return "$SHELL_FALSE"
     fi
 
     if [ -n "$max_length" ] && [ "$(string::length "${_226eba81_temp_str}")" -gt "$max_length" ]; then
-        lerror --caller-level="1" "check option(${_939cc810_option}) string type failed, value limit max length is $max_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
+        lerror --caller-frame="1" "check option(${_939cc810_option}) string type failed, value limit max length is $max_length, current value(${_226eba81_temp_str}) length is $(string::length "${_226eba81_temp_str}")"
         return "$SHELL_FALSE"
     fi
 
@@ -181,7 +181,7 @@ function parameter::parse_bool() {
         --default=*)
             default_value="${param#*=}"
             if ! string::is_true_or_false "$default_value"; then
-                lerror --caller-level="1" "option(--default) value($default_value) format is invalid"
+                lerror --caller-frame="1" "option(--default) value($default_value) format is invalid"
                 return "$SHELL_FALSE"
             fi
             string::is_true "$default_value"
@@ -199,24 +199,24 @@ function parameter::parse_bool() {
                 _7aab068b_result="$param"
                 continue
             fi
-            lerror --caller-level="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
     if [ ! -R _7aab068b_result ]; then
-        lerror --caller-level="1" "param(result-ref) is not set"
+        lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ ! -v _5589d0cd_option ]; then
-        lerror --caller-level="1" "param(--option) is not set"
+        lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ -z "$_5589d0cd_option" ]; then
-        lerror --caller-level="1" "param(--option) is empty"
+        lerror --caller-frame="1" "param(--option) is empty"
         return "$SHELL_FALSE"
     fi
 
@@ -231,7 +231,7 @@ function parameter::parse_bool() {
 
     if ! string::is_true_or_false "$_a8926db1_temp_str"; then
         # 构造成父级函数打印的现象
-        lerror --caller-level=1 "check option($_5589d0cd_option) boolean type failed, value($_a8926db1_temp_str) format is invalid"
+        lerror --caller-frame="1" "check option($_5589d0cd_option) boolean type failed, value($_a8926db1_temp_str) format is invalid"
         return "$SHELL_FALSE"
     fi
 
@@ -258,21 +258,21 @@ function parameter::parse_num() {
         --min=*)
             min="${param#*=}"
             if ! string::is_num "$min"; then
-                lerror --caller-level="1" "option(--min) value($min) format is not number"
+                lerror --caller-frame="1" "option(--min) value($min) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --max=*)
             max="${param#*=}"
             if ! string::is_num "$max"; then
-                lerror --caller-level="1" "option(--max) value($max) format is not number"
+                lerror --caller-frame="1" "option(--max) value($max) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --default=*)
             default_value="${param#*=}"
             if ! string::is_num "$default_value"; then
-                lerror --caller-level="1" "option(--default) value($default_value) format is not number"
+                lerror --caller-frame="1" "option(--default) value($default_value) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
@@ -288,29 +288,29 @@ function parameter::parse_num() {
                 _875b0d67_result="$param"
                 continue
             fi
-            lerror --caller-level="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
     if [ ! -R _875b0d67_result ]; then
-        lerror --caller-level="1" "param(result-ref) is not set"
+        lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ ! -v _0988dc65_option ]; then
-        lerror --caller-level="1" "param(--option) is not set"
+        lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ -z "$_0988dc65_option" ]; then
-        lerror --caller-level="1" "param(option) is empty"
+        lerror --caller-frame="1" "param(option) is empty"
         return "$SHELL_FALSE"
     fi
 
     if [ -n "$min" ] && [ -n "$max" ] && [ "$min" -gt "$max" ]; then
-        lerror --caller-level="1" "param min($min) gt max($max)"
+        lerror --caller-frame="1" "param min($min) gt max($max)"
         return "$SHELL_FALSE"
     fi
 
@@ -321,22 +321,22 @@ function parameter::parse_num() {
         _84cda4a4_temp_str="$default_value"
     elif [ -z "$_84cda4a4_temp_str" ]; then
         # 没有赋值，也没有给默认值
-        lerror --caller-level=1 "check option(${_0988dc65_option}) number type failed, value is empty and no default value"
+        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value is empty and no default value"
         return "$SHELL_FALSE"
     fi
 
     if ! string::is_num "$_84cda4a4_temp_str"; then
-        lerror --caller-level="1" "check option(${_0988dc65_option}) number type failed, value($_84cda4a4_temp_str) is not number"
+        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value($_84cda4a4_temp_str) is not number"
         return "$SHELL_FALSE"
     fi
 
     if [ -n "$min" ] && [ "${_84cda4a4_temp_str}" -lt "$min" ]; then
-        lerror --caller-level="1" "check option(${_0988dc65_option}) number type failed, value limit min value is $min, current value is ${_84cda4a4_temp_str}"
+        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value limit min value is $min, current value is ${_84cda4a4_temp_str}"
         return "$SHELL_FALSE"
     fi
 
     if [ -n "$max" ] && [ "${_84cda4a4_temp_str}" -gt "$max" ]; then
-        lerror --caller-level="1" "check option(${_0988dc65_option}) number type failed, value limit max value is $max, current value is ${_84cda4a4_temp_str}"
+        lerror --caller-frame="1" "check option(${_0988dc65_option}) number type failed, value limit max value is $max, current value is ${_84cda4a4_temp_str}"
         return "$SHELL_FALSE"
     fi
 
@@ -371,19 +371,19 @@ function parameter::parse_array() {
                 _46d69f2e_result="$param"
                 continue
             fi
-            lerror --caller-level="1" "unknown parameter $param"
+            lerror --caller-frame="1" "unknown parameter $param"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
     if [ ! -R _46d69f2e_result ]; then
-        lerror --caller-level="1" "param(result-ref) is not set"
+        lerror --caller-frame="1" "param(result-ref) is not set"
         return "$SHELL_FALSE"
     fi
 
     if [ ! -v _139533c8_option ]; then
-        lerror --caller-level="1" "param(--option) is not set"
+        lerror --caller-frame="1" "param(--option) is not set"
         return "$SHELL_FALSE"
     fi
 

@@ -123,7 +123,8 @@ function hyprland::wallpaper::check_hyprpaper_ready() {
 function hyprland::wallpaper::set_log_file() {
     local log_filename="${BASH_SOURCE[0]}"
     log_filename="${log_filename##*/}"
-    log::set_log_file "$(hyprland::cache_dir)/${log_filename}.log" || return "$SHELL_FALSE"
+    log::handler::file_handler::register || return "$SHELL_FALSE"
+    log::handler::file_handler::set_log_file "$(hyprland::cache_dir)/${log_filename}.log" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 

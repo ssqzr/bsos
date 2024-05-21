@@ -66,15 +66,45 @@ P_DISPLAY_MODE_REVERSE=7
 P_DISPLAY_MODE_HIDE=8
 
 function printf_style() {
-    local display_mode="$1"
-    local foreground="$2"
-    local background="$3"
-    local format="$4"
-    local params=("${@:5}")
+    local display_mode
+    local foreground
+    local background
+    local format
 
-    # if [ -z "$display_mode" ]; then
-    #     display_mode="${P_DISPLAY_MODE_DEFAULT}"
-    # fi
+    local other_params=()
+    local stream
+    local printf_format
+
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --stream=*)
+            stream="${param#*=}"
+            ;;
+        --display-mode=*)
+            display_mode="${param#*=}"
+            ;;
+        --foreground=*)
+            foreground="${param#*=}"
+            ;;
+        --background=*)
+            background="${param#*=}"
+            ;;
+        --format=*)
+            format="${param#*=}"
+            ;;
+        -*)
+            printf "unknown option %s" "$param" >"$(tty)"
+            ;;
+        *)
+            other_params+=("$param")
+            ;;
+        esac
+    done
+
+    stream="${stream:-tty}"
+    display_mode="${display_mode:-${P_DISPLAY_MODE_DEFAULT}}"
+    format="${format:-%s}"
 
     if [ -n "$foreground" ]; then
         foreground=";${foreground}"
@@ -84,120 +114,185 @@ function printf_style() {
         background=";${background}"
     fi
 
-    # https://linuxize.com/post/bash-printf-command/
-    # shellcheck disable=SC2059
-    # 一些函数返回字符串时一般是输出到标准输出，所以这里不能打印到标准输出，只能打印到标准错误输出
-    printf "\e[${display_mode}${foreground}${background}m$format\e[0m" "${params[@]}" >&2
+    printf_format="\e[${display_mode}${foreground}${background}m$format\e[${P_DISPLAY_MODE_DEFAULT}m"
+
+    case "$stream" in
+    stdout)
+        # https://linuxize.com/post/bash-printf-command/
+        # shellcheck disable=SC2059
+        # 一些函数返回字符串时一般是输出到标准输出，所以这里不能打印到标准输出和标准错误，输出到当前的 tty
+        printf "${printf_format}" "${other_params[@]}" >&1
+        ;;
+    stderr)
+        # shellcheck disable=SC2059
+        printf "${printf_format}" "${other_params[@]}" >&2
+        ;;
+    tty)
+        # shellcheck disable=SC2059
+        printf "${printf_format}" "${other_params[@]}" >"$(tty)"
+        ;;
+    *)
+        # 文件路径
+        # shellcheck disable=SC2059
+        printf "${printf_format}" "${other_params[@]}" >>"$stream"
+        ;;
+    esac
+
+    return "$SHELL_TRUE"
+}
+
+function _println_wrap() {
+    local name
+    local options=()
+    local other_params=()
+    local message_format="%s"
+
+    local param
+    for param in "$@"; do
+        case "$param" in
+        --name=*)
+            name="${param#*=}"
+            ;;
+        -*)
+            options+=("$param")
+            ;;
+        *)
+            other_params+=("$param")
+            ;;
+        esac
+    done
+
+    if [ "${#other_params[@]}" -gt 0 ]; then
+        message_format="${other_params[0]}"
+        other_params=("${other_params[@]:1}")
+    fi
+
+    "printf_${name}" "${options[@]}" --format="${message_format}\n" "${other_params[@]}" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
 }
 
 # 前景色是黑色
 function printf_black() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_BLACK}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_BLACK}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_black() {
-    printf_black "$1\n" "${@:2}"
+    _println_wrap --name="black" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是红色
 function printf_red() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_RED}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_RED}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_red() {
-    printf_red "$1\n" "${@:2}"
+    _println_wrap --name="red" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是绿色
 function printf_green() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_GREEN}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_GREEN}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_green() {
-    printf_green "$1\n" "${@:2}"
+    _println_wrap --name="green" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是黄色
 function printf_yellow() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_YELLOW}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_YELLOW}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_yellow() {
-    printf_yellow "$1\n" "${@:2}"
+    _println_wrap --name="yellow" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是蓝色
 function printf_blue() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_BLUE}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_BLUE}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_blue() {
-    printf_blue "$1\n" "${@:2}"
+    _println_wrap --name="blue" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是紫色
 function printf_purple() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_PURPLE}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_PURPLE}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 function println_purple() {
-    printf_purple "$1\n" "${@:2}"
+    _println_wrap --name="purple" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是深绿
 function printf_dark_green() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_DARK_GREEN}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_DARK_GREEN}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_dark_green() {
-    printf_dark_green "$1\n" "${@:2}"
+    _println_wrap --name="dark_green" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 前景色是白色
 function printf_white() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_WHITE}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_WHITE}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_white() {
-    printf_white "$1\n" "${@:2}"
+    _println_wrap --name="white" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 ################################################## 下面是和日志功能相关的函数 ##############################################
 function printf_debug() {
-    printf_style "" "${P_FOREGROUND_WHITE}" "" "$@"
+    printf_style --foreground="${P_FOREGROUND_WHITE}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_debug() {
-    printf_debug "$1\n" "${@:2}"
+    _println_wrap --name="debug" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function printf_info() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_WHITE}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_DEFAULT}" "$@"
 }
 
 function println_info() {
-    printf_info "$1\n" "${@:2}"
+    _println_wrap --name="info" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function printf_warn() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT};${P_DISPLAY_MODE_BLINK}" "${P_FOREGROUND_YELLOW}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT};${P_DISPLAY_MODE_BLINK}" --foreground="${P_FOREGROUND_YELLOW}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_warn() {
-    printf_warn "$1\n" "${@:2}"
+    _println_wrap --name="warn" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function printf_success() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_GREEN}" "" "$@"
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_GREEN}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_success() {
-    printf_success "$1\n" "${@:2}"
+    _println_wrap --name="success" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
-function print_error() {
-    printf_style "${P_DISPLAY_MODE_HIGHLIGHT}" "${P_FOREGROUND_RED}" "" "$@"
+function printf_error() {
+    printf_style --display-mode="${P_DISPLAY_MODE_HIGHLIGHT}" --foreground="${P_FOREGROUND_RED}" --background="$P_BACKGROUND_BLACK" "$@"
 }
 
 function println_error() {
-    print_error "$1\n" "${@:2}"
+    _println_wrap --name="error" "$@" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
