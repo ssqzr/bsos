@@ -460,9 +460,9 @@ function TEST::array::lpop() {
 function TEST::array::all() {
     # source 进来的就不要测试了
     local parent_function_name
-    parent_function_name=$(get_caller_function_name 1)
+    parent_function_name=$(get_caller_function_name 2)
     if [ "$parent_function_name" = "source" ]; then
-        return
+        return "$SHELL_TRUE"
     fi
     TEST::array::length || return "$SHELL_FALSE"
     TEST::array::is_empty || return "$SHELL_FALSE"
@@ -480,7 +480,14 @@ function TEST::array::all() {
     TEST::array::lpop || return "$SHELL_FALSE"
 }
 
-if [ "$TEST" == "true" ] || [ "$TEST" == "1" ]; then
-    TEST::array::all || return "$SHELL_FALSE"
-fi
-true
+function array::_main() {
+    case "${TEST,,}" in
+    1 | true | yes | y)
+        TEST::array::all || return "$SHELL_FALSE"
+        ;;
+    *) ;;
+    esac
+    return "$SHELL_TRUE"
+}
+
+array::_main

@@ -65,6 +65,47 @@ P_DISPLAY_MODE_REVERSE=7
 # 隐藏
 P_DISPLAY_MODE_HIDE=8
 
+function get_tty() {
+    # 当前进程的标准输入是命名管道时，$(tty) 获取不到 tty 。返回 "not a tty"
+    # 因为 tty 命令获取的是标准输入关联的终端
+
+    local tty_filepath
+
+    if tty -s; then
+        tty_filepath="$(tty)"
+    elif [ -n "$BASHPID" ]; then
+        tty_filepath="$(ps hotty "$BASHPID")"
+        if [ -z "$tty_filepath" ] || [ "$tty_filepath" == "?" ]; then
+            tty_filepath=""
+        else
+            tty_filepath="/dev/${tty_filepath}"
+        fi
+    fi
+
+    # 尝试获取父脚本进程的 tty
+    if [ -z "$tty_filepath" ]; then
+        tty_filepath="$(ps hotty "$$")"
+        if [ -z "$tty_filepath" ] || [ "$tty_filepath" == "?" ]; then
+            tty_filepath=""
+        else
+            tty_filepath="/dev/${tty_filepath}"
+        fi
+    fi
+
+    echo "$tty_filepath"
+    return "$SHELL_TRUE"
+}
+
+# 参数说明
+# 必选参数
+# 可选参数
+#   --stream=STREAM             输出流，默认是 stdout
+#   --display-mode=MODE         显示模式，默认是 ${P_DISPLAY_MODE_DEFAULT} ，即默认模式
+#   --foreground=FOREGROUND     前景色，默认不会设置。
+#   --background=BACKGROUND     背景色，默认不会设置。
+#   --format=FORMAT             输出格式，例如： %s。具体参考： man printf
+# 位置参数
+#   message-params              消息参数
 function printf_style() {
     local display_mode
     local foreground
@@ -74,6 +115,7 @@ function printf_style() {
     local other_params=()
     local stream
     local printf_format
+    local tty_filepath
 
     local param
     for param in "$@"; do
@@ -94,7 +136,8 @@ function printf_style() {
             format="${param#*=}"
             ;;
         -*)
-            printf "unknown option %s" "$param" >"$(tty)"
+            printf "unknown option %s" "$param" >&2
+            return "$SHELL_FALSE"
             ;;
         *)
             other_params+=("$param")
@@ -102,7 +145,7 @@ function printf_style() {
         esac
     done
 
-    stream="${stream:-tty}"
+    stream="${stream:-stdout}"
     display_mode="${display_mode:-${P_DISPLAY_MODE_DEFAULT}}"
     format="${format:-%s}"
 
@@ -128,8 +171,14 @@ function printf_style() {
         printf "${printf_format}" "${other_params[@]}" >&2
         ;;
     tty)
-        # shellcheck disable=SC2059
-        printf "${printf_format}" "${other_params[@]}" >"$(tty)"
+        tty_filepath="$(get_tty)"
+        if [ -z "$tty_filepath" ]; then
+            # shellcheck disable=SC2059
+            printf "${printf_format}" "${other_params[@]}" >&2
+        else
+            # shellcheck disable=SC2059
+            printf "${printf_format}" "${other_params[@]}" >"$tty_filepath"
+        fi
         ;;
     *)
         # 文件路径
@@ -162,7 +211,7 @@ function _println_wrap() {
         esac
     done
 
-    if [ "${#other_params[@]}" -gt 0 ]; then
+    if [ "${#other_params[@]}" -gt 1 ]; then
         message_format="${other_params[0]}"
         other_params=("${other_params[@]:1}")
     fi

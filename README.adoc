@@ -378,6 +378,7 @@ grep -- -v file
 * [*] 日志支持多个 handler ，并且支持从命令行参数指定
 * [ ] xref:src/app/hyprland/README.adoc#per-workspace-layer[关注 hyprland 支持不同工作空间设置不同的 layer 的特性]
 * [ ] zsh 库的 string 库怎么复用 bash 库。
+* [ ] 单元测试支持测试某个文件、某个测试等细粒度操作。
 
 ## 引用
 

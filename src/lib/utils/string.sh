@@ -522,9 +522,9 @@ function TEST::string::is_false() {
 function TEST::string::all() {
     # source 进来的就不要测试了
     local parent_function_name
-    parent_function_name=$(get_caller_function_name 1)
+    parent_function_name=$(get_caller_function_name 2)
     if [ "$parent_function_name" = "source" ]; then
-        return
+        return "$SHELL_TRUE"
     fi
     TEST::string::is_empty || return "$SHELL_FALSE"
     TEST::string::is_not_empty || return "$SHELL_FALSE"
@@ -536,5 +536,11 @@ function TEST::string::all() {
     TEST::string::is_false || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && TEST::string::all
-true
+function string::_main() {
+    if string::is_true "$TEST"; then
+        TEST::string::all || return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+string::_main

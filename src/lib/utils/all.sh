@@ -12,7 +12,7 @@ source "${SCRIPT_DIR_cd871afe}/string.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/print.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_cd871afe}/log.sh"
+source "${SCRIPT_DIR_cd871afe}/log/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/parameter.sh"
 # shellcheck source=/dev/null

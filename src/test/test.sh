@@ -7,9 +7,11 @@ SRC_DIR="$(dirname "${SCRIPT_DIR_98e0c032}")"
 SRC_DIR="$(realpath "${SRC_DIR}")"
 
 # shellcheck disable=SC1091
-source "${SRC_DIR}/lib/utils/array.sh"
+source "${SRC_DIR}/lib/utils/all.sh"
 
 function main() {
+    log::handler::file_handler::register || exit 1
+    log::handler::file_handler::set_log_file "${SRC_DIR}/utest.log" || exit 1
     local tests=()
 
     readarray -t tests < <(grep "\$TEST" -rn "${SRC_DIR}" | grep -v "test.sh" | awk -F ':' '{print $1}')

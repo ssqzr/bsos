@@ -623,13 +623,19 @@ function TEST::manager::app::is_package_name_valid() {
 function TEST::manager::app::all() {
     # source 进来的就不要测试了
     local parent_function_name
-    parent_function_name=$(get_caller_function_name 1)
+    parent_function_name=$(get_caller_function_name 2)
     if [ "$parent_function_name" = "source" ]; then
-        return
+        return "$SHELL_TRUE"
     fi
 
     TEST::manager::app::is_package_name_valid || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && TEST::manager::app::all
-true
+function manager::app::_main() {
+    if string::is_true "$TEST"; then
+        TEST::manager::app::all || return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+manager::app::_main

@@ -12,7 +12,7 @@ source "${SCRIPT_DIR_825f52f6}/constant.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_825f52f6}/print.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_825f52f6}/log.sh"
+source "${SCRIPT_DIR_825f52f6}/log/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_825f52f6}/string.sh"
 # shellcheck source=/dev/null

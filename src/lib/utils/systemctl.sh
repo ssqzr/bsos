@@ -10,7 +10,7 @@ SCRIPT_DIR_ecd3403f="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_ecd3403f}/constant.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_ecd3403f}/log.sh"
+source "${SCRIPT_DIR_ecd3403f}/log/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_ecd3403f}/cmd.sh"
 

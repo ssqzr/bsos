@@ -11,7 +11,7 @@ SCRIPT_DIR_e53d23f3="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "${SCRIPT_DIR_e53d23f3}/constant.sh"
 
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_e53d23f3}/log.sh"
+source "${SCRIPT_DIR_e53d23f3}/log/log.sh"
 
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_e53d23f3}/string.sh"
@@ -38,6 +38,10 @@ function cmd::_init_cmd_history_filepath() {
     fi
 
     export __cmd_history_filepath="${cmd_history_dir}/bsos/cmd.history"
+}
+
+function cmd::_init() {
+    cmd::_init_cmd_history_filepath || return "$SHELL_FALSE"
 }
 
 function cmd::_default_stdout_handler() {
@@ -132,7 +136,7 @@ function cmd::run_cmd() {
         echo "${cmds[*]}" >>"${__cmd_history_filepath}"
     fi
 
-    bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}") 2> >(${stderr_handler} "${stderr_handler_params[@]}")
+    { bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
 
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "run cmd failed: ${cmds[*]}"
@@ -220,6 +224,14 @@ function TEST::cmd::run_cmd::simple() {
     local test_str="hello world"
     output=$(cmd::run_cmd -- echo "$test_str")
     utest::assert_equal "$output" "$test_str"
+
+    output=$(cmd::run_cmd -- printf "hello\ world")
+    utest::assert_equal "$output" "$test_str"
+
+    test_str='`~!@#$%^&*()-_=+{}[]\|;:"<>,./?'
+    test_str+="'"
+    output=$(cmd::run_cmd -- printf "%s" "${test_str@Q}")
+    utest::assert_equal "$output" "${test_str}"
 }
 
 function TEST::cmd::run_cmd::simple_and_error() {
@@ -248,7 +260,11 @@ function TEST::cmd::run_cmd::multi_pipe() {
 
 function TEST::cmd::run_cmd::redirect() {
     local output
-    output=$(cmd::run_cmd -- echo "hello world" "1>/dev/null")
+    output=$(cmd::run_cmd -- echo "hello world" "1>" "/dev/null")
+    utest::assert "$?"
+    utest::assert_equal "$output" ""
+
+    output=$(cmd::run_cmd -- echo "hello world" "1>>" "/dev/null")
     utest::assert "$?"
     utest::assert_equal "$output" ""
 }
@@ -270,6 +286,7 @@ function TEST::cmd::run_cmd::stderr_handler() {
     local output
     output=$(cmd::run_cmd --stderr=sed --stderr-option="s/hello/xxx/" -- echo "hello world" "1>&2")
     utest::assert_equal "$output" "xxx world"
+
 }
 
 function TEST::cmd::run_cmd::stderr_handler_and_error() {
@@ -320,14 +337,21 @@ function TEST::cmd::run_cmd::all() {
 function TEST::cmd::all() {
     # source 进来的就不要测试了
     local parent_function_name
-    parent_function_name=$(get_caller_function_name 1)
+    parent_function_name=$(get_caller_function_name 2)
     if [ "$parent_function_name" = "source" ]; then
-        return
+        return "$SHELL_TRUE"
     fi
 
     TEST::cmd::run_cmd::all || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && TEST::cmd::all
-true
-cmd::_init_cmd_history_filepath
+function cmd::_main() {
+    cmd::_init || return "$SHELL_FALSE"
+
+    if string::is_true "$TEST"; then
+        TEST::cmd::all || return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+cmd::_main

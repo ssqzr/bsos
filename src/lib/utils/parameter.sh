@@ -12,7 +12,7 @@ source "${SCRIPT_DIR_6f82ee3f}/constant.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_6f82ee3f}/debug.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_6f82ee3f}/log.sh"
+source "${SCRIPT_DIR_6f82ee3f}/log/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_6f82ee3f}/string.sh"
 # shellcheck source=/dev/null
@@ -644,9 +644,9 @@ function TEST::parameter::parse_array() {
 function TEST::parameter::all() {
     # source 进来的就不要测试了
     local parent_function_name
-    parent_function_name=$(get_caller_function_name 1)
+    parent_function_name=$(get_caller_function_name 2)
     if [ "$parent_function_name" = "source" ]; then
-        return
+        return "$SHELL_TRUE"
     fi
     TEST::parameter::parse_value || return "$SHELL_FALSE"
     TEST::parameter::parse_bool || return "$SHELL_FALSE"
@@ -655,5 +655,11 @@ function TEST::parameter::all() {
     TEST::parameter::parse_array || return "$SHELL_FALSE"
 }
 
-string::is_true "$TEST" && TEST::parameter::all
-true
+function parameter::_main() {
+    if string::is_true "$TEST"; then
+        TEST::parameter::all || return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+parameter::_main

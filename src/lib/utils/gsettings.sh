@@ -10,7 +10,7 @@ SCRIPT_DIR_d7eac859="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_d7eac859}/constant.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_d7eac859}/log.sh"
+source "${SCRIPT_DIR_d7eac859}/log/log.sh"
 
 # 可能的值为：
 # 1. default
