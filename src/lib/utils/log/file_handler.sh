@@ -137,23 +137,9 @@ function TEST::log::handler::file_handler::trait::log() {
 
 }
 
-function TEST::log::handler::file_handler::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-
-    TEST::log::handler::file_handler::trait::log || return "$SHELL_FALSE"
-}
-
 function log::handler::file_handler::_main() {
     log::handler::file_handler::_init || return "$SHELL_FALSE"
 
-    if string::is_true "$TEST"; then
-        TEST::log::handler::file_handler::all || return "$SHELL_FALSE"
-    fi
     return "$SHELL_TRUE"
 }
 

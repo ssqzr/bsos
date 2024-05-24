@@ -102,22 +102,9 @@ function log::handler::stream_handler::trait::log() {
 
 # ==================================== 下面是测试代码 ====================================
 
-function TEST::log::handler::stream_handler::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-
-}
-
 function log::handler::stream_handler::_main() {
     log::handler::stream_handler::_init
 
-    if string::is_true "$TEST"; then
-        TEST::log::handler::stream_handler::all || return "$SHELL_FALSE"
-    fi
     return "$SHELL_TRUE"
 }
 

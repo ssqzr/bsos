@@ -260,21 +260,8 @@ function lwrite() {
 
 # ==================================== 下面是测试代码 ====================================
 
-function TEST::log::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-
-}
-
 function log::_main() {
 
-    if string::is_true "$TEST"; then
-        TEST::log::all || return "$SHELL_FALSE"
-    fi
     return "$SHELL_TRUE"
 }
 

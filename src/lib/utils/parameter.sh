@@ -641,24 +641,8 @@ function TEST::parameter::parse_array() {
 
 }
 
-function TEST::parameter::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-    TEST::parameter::parse_value || return "$SHELL_FALSE"
-    TEST::parameter::parse_bool || return "$SHELL_FALSE"
-    TEST::parameter::parse_string || return "$SHELL_FALSE"
-    TEST::parameter::parse_num || return "$SHELL_FALSE"
-    TEST::parameter::parse_array || return "$SHELL_FALSE"
-}
-
 function parameter::_main() {
-    if string::is_true "$TEST"; then
-        TEST::parameter::all || return "$SHELL_FALSE"
-    fi
+
     return "$SHELL_TRUE"
 }
 

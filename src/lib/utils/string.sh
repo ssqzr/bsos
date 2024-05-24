@@ -519,27 +519,8 @@ function TEST::string::is_false() {
     utest::assert $?
 }
 
-function TEST::string::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-    TEST::string::is_empty || return "$SHELL_FALSE"
-    TEST::string::is_not_empty || return "$SHELL_FALSE"
-    TEST::string::length || return "$SHELL_FALSE"
-    TEST::string::default || return "$SHELL_FALSE"
-    TEST::string::is_bool || return "$SHELL_FALSE"
-    TEST::string::is_not_bool || return "$SHELL_FALSE"
-    TEST::string::is_true || return "$SHELL_FALSE"
-    TEST::string::is_false || return "$SHELL_FALSE"
-}
-
 function string::_main() {
-    if string::is_true "$TEST"; then
-        TEST::string::all || return "$SHELL_FALSE"
-    fi
+
     return "$SHELL_TRUE"
 }
 

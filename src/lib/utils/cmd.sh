@@ -296,61 +296,9 @@ function TEST::cmd::run_cmd::stderr_handler_and_error() {
     utest::assert_equal "$output" ""
 }
 
-# cmd::run_cmd 的测试案例
-function TEST::cmd::run_cmd::all() {
-    # 测试普通的命令
-    TEST::cmd::run_cmd::simple || return "$SHELL_FALSE"
-
-    # 测试错误的命令
-    TEST::cmd::run_cmd::simple_and_error || return "$SHELL_FALSE"
-
-    # 测试带参数的命令
-
-    # 测试双引号
-
-    # 测试单引号
-
-    # 测试管道符
-    TEST::cmd::run_cmd::pipe || return "$SHELL_FALSE"
-
-    # 测试多个管道符
-    TEST::cmd::run_cmd::multi_pipe || return "$SHELL_FALSE"
-
-    # 测试重定向
-    TEST::cmd::run_cmd::redirect || return "$SHELL_FALSE"
-
-    # 测试标准输出处理函数
-    TEST::cmd::run_cmd::stdout_handler || return "$SHELL_FALSE"
-
-    # 测试标准输出处理函数返回失败
-    TEST::cmd::run_cmd::stdout_handler_and_error || return "$SHELL_FALSE"
-
-    # 测试标准错误输出处理函数
-    TEST::cmd::run_cmd::stderr_handler || return "$SHELL_FALSE"
-
-    # 测试标准错误输出处理函数返回失败
-    TEST::cmd::run_cmd::stderr_handler_and_error || return "$SHELL_FALSE"
-
-    return "$SHELL_TRUE"
-}
-
-function TEST::cmd::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-
-    TEST::cmd::run_cmd::all || return "$SHELL_FALSE"
-}
-
 function cmd::_main() {
     cmd::_init || return "$SHELL_FALSE"
 
-    if string::is_true "$TEST"; then
-        TEST::cmd::all || return "$SHELL_FALSE"
-    fi
     return "$SHELL_TRUE"
 }
 

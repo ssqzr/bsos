@@ -457,36 +457,7 @@ function TEST::array::lpop() {
     utest::assert_equal "${arr[*]}" ""
 }
 
-function TEST::array::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-    TEST::array::length || return "$SHELL_FALSE"
-    TEST::array::is_empty || return "$SHELL_FALSE"
-
-    TEST::array::reverse || return "$SHELL_FALSE"
-    TEST::array::reverse_new || return "$SHELL_FALSE"
-    TEST::array::dedup || return "$SHELL_FALSE"
-
-    TEST::array::rpush || return "$SHELL_FALSE"
-    TEST::array::rpush_unique || return "$SHELL_FALSE"
-    TEST::array::rpop || return "$SHELL_FALSE"
-
-    TEST::array::lpush || return "$SHELL_FALSE"
-    TEST::array::lpush_unique || return "$SHELL_FALSE"
-    TEST::array::lpop || return "$SHELL_FALSE"
-}
-
 function array::_main() {
-    case "${TEST,,}" in
-    1 | true | yes | y)
-        TEST::array::all || return "$SHELL_FALSE"
-        ;;
-    *) ;;
-    esac
     return "$SHELL_TRUE"
 }
 

@@ -393,26 +393,10 @@ function TEST::log::handler::remove() {
 
 # ==================================== 下面是测试代码 ====================================
 
-function TEST::log::handler::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-
-    TEST::log::handler::_check_handler_name || return "$SHELL_FALSE"
-    TEST::log::handler::add || return "$SHELL_FALSE"
-    TEST::log::handler::remove || return "$SHELL_FALSE"
-}
-
 function log::handler::_main() {
 
     log::handler::_init || return "$SHELL_FALSE"
 
-    if string::is_true "$TEST"; then
-        TEST::log::handler::all || return "$SHELL_FALSE"
-    fi
     return "$SHELL_TRUE"
 }
 

@@ -12,58 +12,86 @@ source "${SCRIPT_DIR_00577440}/debug.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_00577440}/print.sh"
 
+declare UTEST_RESULT_FAILED="failed"
+declare UTEST_RESULT_SUCCESS="success"
+
+function utest::printf_result() {
+    local result="$1"
+    case "$result" in
+    "$UTEST_RESULT_FAILED")
+        printf_error --format="%-10s" "$result"
+        ;;
+    "$UTEST_RESULT_SUCCESS")
+        printf_success --format="%-10s" "$result"
+        ;;
+    *)
+        printf_info --format="%-10s" "$result"
+        ;;
+    esac
+}
+
+function utest::printf_function() {
+    local filename
+    local line_num
+    local function_name
+    filename=$(get_caller_filename 2)
+    line_num=$(get_caller_file_line_num 2)
+    function_name=$(get_caller_function_name 2)
+    printf_info --format="%-100s" "$filename:$line_num -> $function_name"
+}
+
 function utest::assert_equal() {
     local left="$1"
     local right="$2"
-    local line_num
-    local caller_frame
-    line_num=$(get_caller_file_line_num 1)
-    caller_frame=$(get_caller_frame 1)
 
-    printf_info "$caller_frame:$line_num"
+    utest::printf_function
 
     if [ "$left" != "$right" ]; then
-        println_error " failed"
-        println_error "left: %s, right: %s" "$left" "$right"
+        utest::printf_result "$UTEST_RESULT_FAILED"
+        println_info ""
+        printf_error --format="%11s" "left: "
+        println_error "$left"
+        printf_error --format="%11s" "right: "
+        println_error "$right"
         return "$SHELL_FALSE"
     fi
-    println_success " success"
+
+    utest::printf_result "$UTEST_RESULT_SUCCESS"
+    println_info ""
 
     return "$SHELL_TRUE"
 }
 
 function utest::assert() {
-    local left="$1"
-    local caller_frame
-    local line_num
-    line_num=$(get_caller_file_line_num 1)
-    caller_frame=$(get_caller_frame 1)
+    local is_true="$1"
+    local message="$2"
 
-    printf_info "$caller_frame:$line_num"
+    utest::printf_function
 
-    if [ "$left" != "$SHELL_TRUE" ]; then
-        println_error " failed, assert failed"
+    if [ "$is_true" != "$SHELL_TRUE" ]; then
+        utest::printf_result "$UTEST_RESULT_FAILED"
+        println_error "$message"
         return "$SHELL_FALSE"
     fi
 
-    println_success " success"
+    utest::printf_result "$UTEST_RESULT_SUCCESS"
+    println_info ""
     return "$SHELL_TRUE"
 }
 
 function utest::assert_fail() {
-    local left="$1"
-    local caller_frame
-    local line_num
-    line_num=$(get_caller_file_line_num 1)
-    caller_frame=$(get_caller_frame 1)
+    local is_false="$1"
+    local message="$2"
 
-    printf_info "$caller_frame:$line_num"
+    utest::printf_function
 
-    if [ "$left" = "$SHELL_TRUE" ]; then
-        println_error " failed, assert failed"
+    if [ "$is_false" = "$SHELL_TRUE" ]; then
+        utest::printf_result "$UTEST_RESULT_FAILED"
+        println_error "$message"
         return "$SHELL_FALSE"
     fi
 
-    println_success " success"
+    utest::printf_result "$UTEST_RESULT_SUCCESS"
+    println_info ""
     return "$SHELL_TRUE"
 }

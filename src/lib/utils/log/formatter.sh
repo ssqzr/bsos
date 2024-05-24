@@ -205,22 +205,9 @@ function TEST::log::formatter::format_message() {
     utest::assert_equal "$message" "info ${temp_str}|abcdefg"
 }
 
-function TEST::log::formatter::all() {
-    # source 进来的就不要测试了
-    local parent_function_name
-    parent_function_name=$(get_caller_function_name 2)
-    if [ "$parent_function_name" = "source" ]; then
-        return "$SHELL_TRUE"
-    fi
-    TEST::log::formatter::format_message || return "$SHELL_FALSE"
-}
-
 function log::formatter::_main() {
     log::formatter::_init || return "$SHELL_FALSE"
 
-    if string::is_true "$TEST"; then
-        TEST::log::formatter::all || return "$SHELL_FALSE"
-    fi
     return "$SHELL_TRUE"
 }
 
