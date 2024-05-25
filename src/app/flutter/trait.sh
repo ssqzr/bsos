@@ -91,6 +91,9 @@ function flutter::trait::post_install() {
     cmd::run_cmd_with_history -- "${flutter_cmd[@]}" config --enable-linux-desktop || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- "${flutter_cmd[@]}" config --enable-android || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- "${flutter_cmd[@]}" config --android-studio-dir=/var/lib/flatpak/app/com.google.AndroidStudio/current/active/files/extra/android-studio || return "${SHELL_FALSE}"
+
+    # 运行 flutter 命令会调用 adb 命令运行一个服务，子进程会占用锁文件不释放。
+    process::kill_by_name adb || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
