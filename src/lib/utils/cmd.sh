@@ -52,9 +52,11 @@ function cmd::_default_stderr_handler() {
     cat 1>&2
 }
 
-# https://stackoverflow.com/questions/9112979/pipe-stdout-and-stderr-to-two-different-processes-in-shell-script
 # 函数的返回结果是命令的执行结果
 # stdout_handler 和 stderr_handler 的返回结果并不影响函数的返回结果
+# NOTE: 如果命令的部分需要转义，可以将字符串用 {{}} 包裹起来
+# 例如： {{hello world!@#$%^&*}} ，被包裹的字符串会通过 ${xxx@Q} 进行转义
+# 或者自己进行转义再调用函数也可以
 function cmd::run_cmd() {
     local cmds
     local is_sudo="$SHELL_FALSE"
@@ -67,6 +69,7 @@ function cmd::run_cmd() {
     local is_parse_self="$SHELL_TRUE"
     local param
     local temp_str
+    local index
 
     for param in "$@"; do
         if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
@@ -131,11 +134,21 @@ function cmd::run_cmd() {
         fi
     fi
 
+    for ((index = 0; index < "${#cmds[@]}"; index++)); do
+        temp_str="${cmds[$index]}"
+        if [ "${#temp_str}" -ge 4 ] && [ "${temp_str:0:2}" == "{{" ] && [ "${temp_str: -2}" == "}}" ]; then
+            temp_str="${temp_str:2:-2}"
+            cmds[index]="${temp_str@Q}"
+            continue
+        fi
+    done
+
     ldebug "start run cmd: ${cmds[*]}"
     if [ "$is_record_cmd" -eq "$SHELL_TRUE" ]; then
         echo "${cmds[*]}" >>"${__cmd_history_filepath}"
     fi
 
+    # https://stackoverflow.com/questions/9112979/pipe-stdout-and-stderr-to-two-different-processes-in-shell-script
     { bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
 
     if [ $? -ne "$SHELL_TRUE" ]; then
@@ -217,7 +230,7 @@ function cmd::run_cmd_retry_three() {
     return "$SHELL_TRUE"
 }
 
-################################################ 以下是测试代码 #########################################＃
+##################################### 以下是测试代码 #####################################
 
 function TEST::cmd::run_cmd::simple() {
     local output
@@ -225,13 +238,65 @@ function TEST::cmd::run_cmd::simple() {
     output=$(cmd::run_cmd -- echo "$test_str")
     utest::assert_equal "$output" "$test_str"
 
-    output=$(cmd::run_cmd -- printf "hello\ world")
+    output=$(cmd::run_cmd -- printf "${test_str}")
+    utest::assert_equal "$output" "hello"
+
+    output=$(cmd::run_cmd -- printf "'${test_str}'")
+    utest::assert_equal "$output" "$test_str"
+
+}
+
+function TEST::cmd::run_cmd::origin_pipe_char() {
+    local output
+
+    output=$(cmd::run_cmd -- echo "'|'")
+    utest::assert_equal "$output" "|"
+
+    output=$(cmd::run_cmd -- printf "{{|}}")
+    utest::assert_equal "$output" "|"
+}
+
+function TEST::cmd::run_cmd::bracket() {
+    local output
+    local test_str
+
+    output=$(cmd::run_cmd -- echo "{{}}")
+    utest::assert_equal "$output" ""
+
+    output=$(cmd::run_cmd -- echo "{{abc}}")
+    utest::assert_equal "$output" "abc"
+
+    output=$(cmd::run_cmd -- printf "%s")
+    utest::assert_equal "$output" ""
+    output=$(cmd::run_cmd -- printf "{{%s}}")
+    utest::assert_equal "$output" ""
+    test_str="%s"
+    output=$(cmd::run_cmd -- printf "{{${test_str@Q}}}")
+    utest::assert_equal "$output" "''"
+    test_str="%%s"
+    output=$(cmd::run_cmd -- printf "{{${test_str}}}")
+    utest::assert_equal "$output" "%s"
+
+    test_str="hello world"
+    output=$(cmd::run_cmd -- printf "${test_str}")
+    utest::assert_equal "$output" "hello"
+    output=$(cmd::run_cmd -- printf "{{${test_str}}}")
     utest::assert_equal "$output" "$test_str"
 
     test_str='`~!@#$%^&*()-_=+{}[]\|;:"<>,./?'
     test_str+="'"
-    output=$(cmd::run_cmd -- printf "%s" "${test_str@Q}")
+    output=$(cmd::run_cmd -- printf "%s" "{{${test_str}}}")
     utest::assert_equal "$output" "${test_str}"
+}
+
+function TEST::cmd::run_cmd::origin_bracket() {
+    local output
+
+    output=$(cmd::run_cmd -- echo "'{{}}'")
+    utest::assert_equal "$output" "{{}}"
+
+    output=$(cmd::run_cmd -- printf "{{{{}}}}")
+    utest::assert_equal "$output" "{{}}"
 }
 
 function TEST::cmd::run_cmd::simple_and_error() {
@@ -248,7 +313,13 @@ function TEST::cmd::run_cmd::simple_and_error() {
 
 function TEST::cmd::run_cmd::pipe() {
     local output
-    output=$(cmd::run_cmd -- echo "hello world" "|" sed "s/hello/xxx/")
+    output=$(cmd::run_cmd -- echo "{{hello world}}" "|" sed "s/hello/xxx/")
+    utest::assert_equal "$output" "xxx world"
+
+    output=$(cmd::run_cmd -- printf "{{hello world}}" "|" sed "s/hello/xxx/")
+    utest::assert_equal "$output" "xxx world"
+
+    output=$(cmd::run_cmd -- printf "'hello world'" "|" sed "s/hello/xxx/")
     utest::assert_equal "$output" "xxx world"
 }
 
