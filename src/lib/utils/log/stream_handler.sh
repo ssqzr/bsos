@@ -54,6 +54,7 @@ function log::handler::stream_handler::trait::log() {
 
     local message
     local param
+    local level_name
 
     for param in "$@"; do
         case "$param" in
@@ -92,10 +93,11 @@ function log::handler::stream_handler::trait::log() {
     done
 
     stream="${stream:-${__log_stream_handler_stream}}"
+    level_name=$(log::level::level_name "${level}") || return "$SHELL_FALSE"
 
     message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
 
-    "println_${level}" --stream="$stream" "${message}" || return "$SHELL_FALSE"
+    "println_${level_name}" --stream="$stream" "${message}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

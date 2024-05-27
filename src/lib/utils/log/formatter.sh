@@ -18,6 +18,8 @@ source "${SCRIPT_DIR_aa90c9d9}/../print.sh" || exit 1
 source "${SCRIPT_DIR_aa90c9d9}/../string.sh" || exit 1
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_aa90c9d9}/../utest.sh" || exit 1
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_aa90c9d9}/level.sh" || exit 1
 
 function log::formatter::default_datetime_format() {
     # 格式是 date 命令支持的格式
@@ -340,6 +342,7 @@ function log::formatter::format_message() {
     message_format="${message_format:-%s}"
     # shellcheck disable=SC2034
     pid="$(log::formatter::get_pid)" || return "$SHELL_FALSE"
+    level=$(log::level::level_name "${level}") || return "$SHELL_FALSE"
 
     datetime="$(log::formatter::get_datetime_by_format "$datetime_format")" || return "$SHELL_FALSE"
 
@@ -609,24 +612,24 @@ function TEST::log::formatter::format_message() {
     local temp_str
 
     # 测试格式
-    message=$(log::formatter::format_message --formatter="{{level}} {{file}}:{{line}} {{function_name}} {{message}}" --level="info" --file="test.sh" --line="1" --function-name="function_name" "test message")
+    message=$(log::formatter::format_message --formatter="{{level}} {{file}}:{{line}} {{function_name}} {{message}}" --level="$LOG_LEVEL_INFO" --file="test.sh" --line="1" --function-name="function_name" "test message")
     utest::assert $?
     utest::assert_equal "$message" "info test.sh:1 function_name test message"
 
     # 测试时间
-    message=$(log::formatter::format_message --formatter="{{datetime}} {{message}}" --datetime-format="%Y" "test message")
+    message=$(log::formatter::format_message --level="$LOG_LEVEL_INFO" --formatter="{{datetime}} {{level}} {{message}}" --datetime-format="%Y" "test message")
     utest::assert $?
-    utest::assert_equal "$message" "$(log::formatter::get_datetime_by_format "%Y") test message"
+    utest::assert_equal "$message" "$(log::formatter::get_datetime_by_format "%Y") info test message"
 
     # 测试特殊字符
     temp_str='123abcABC`~!@#$%^&*()-=_+\|[]{};:",.<>/?'
     temp_str+="'"
-    message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="info" "${temp_str}")
+    message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="$LOG_LEVEL_INFO" "${temp_str}")
     utest::assert $?
     utest::assert_equal "$message" "info ${temp_str}"
 
     # 测试可变参数
-    message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="info" --message-format="%s|%s" "${temp_str}" "abcdefg")
+    message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="$LOG_LEVEL_INFO" --message-format="%s|%s" "${temp_str}" "abcdefg")
     utest::assert $?
     utest::assert_equal "$message" "info ${temp_str}|abcdefg"
 }
@@ -635,11 +638,11 @@ function TEST::log::formatter::format_message::justify_filter() {
     local message
     local temp_str
 
-    message=$(log::formatter::format_message --formatter="{{level|justify 10 left}} {{file}}:{{line}} {{function_name}} {{message}}" --level="info" --file="test.sh" --line="1" --function-name="function_name" "test message")
+    message=$(log::formatter::format_message --formatter="{{level|justify 10 left}} {{file}}:{{line}} {{function_name}} {{message}}" --level="$LOG_LEVEL_INFO" --file="test.sh" --line="1" --function-name="function_name" "test message")
     utest::assert $?
     utest::assert_equal "$message" "info       test.sh:1 function_name test message"
 
-    message=$(log::formatter::format_message --formatter="{{level|justify 10 right}} {{file}}:{{line}} {{function_name}} {{message}}" --level="info" --file="test.sh" --line="1" --function-name="function_name" "test message")
+    message=$(log::formatter::format_message --formatter="{{level|justify 10 right}} {{file}}:{{line}} {{function_name}} {{message}}" --level="$LOG_LEVEL_INFO" --file="test.sh" --line="1" --function-name="function_name" "test message")
     utest::assert $?
     utest::assert_equal "$message" "      info test.sh:1 function_name test message"
 }
@@ -648,7 +651,7 @@ function TEST::log::formatter::format_message::trim_filter() {
     local message
     local temp_str
 
-    message=$(log::formatter::format_message --formatter="{{level}} {{file}}:{{line}} {{function_name}} {{message  |   trim}}" --level="info" --file="test.sh" --line="1" --function-name="function_name" "    test message  ")
+    message=$(log::formatter::format_message --formatter="{{level}} {{file}}:{{line}} {{function_name}} {{message  |   trim}}" --level="$LOG_LEVEL_INFO" --file="test.sh" --line="1" --function-name="function_name" "    test message  ")
     utest::assert $?
     utest::assert_equal "$message" "info test.sh:1 function_name test message"
 }

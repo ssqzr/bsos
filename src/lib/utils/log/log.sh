@@ -39,6 +39,15 @@
 #       参数列表：
 #           datetime_format                                 时间格式定义
 
+# 支持指定日志级别
+# NOTE: SIGUSR1 被注册为切换 "程序设置的日志级别" 和 DEBUG 日志级别。
+#       第一次触发，切换到 DEBUG 日志级别。
+#       第二次触发，切换到 之前的 日志级别。
+# API:
+#   log::level::set                                         设置日志级别
+#       参数列表：
+#           level                                           日志级别， LOG_LEVEL_[DEBUG|INFO|WARN|ERROR|SUCCESS]
+
 # 全部 API 概览:
 #   log::formatter::set FORMATTER                             设置日志的输出格式
 #   log::formatter::set_datetime_format DATETIME_FORMAT       设置日志里时间的格式
@@ -52,6 +61,8 @@
 #   log::handler::file_handler::set_log_file FILEPATH         设置 file_handler 的 log_file
 
 #   log::handler::clean                                       清除所有 handler
+
+#   log::level::set LEVEL                                     设置日志级别
 
 #   lsuccess                                                成功日志
 #   linfo                                                   流程日志
@@ -83,6 +94,8 @@ source "${SCRIPT_DIR_30e78b31}/../string.sh" || exit 1
 source "${SCRIPT_DIR_30e78b31}/../utest.sh" || exit 1
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_30e78b31}/handler.sh" || exit 1
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_30e78b31}/level.sh" || exit 1
 
 function log::_log_wrap() {
     local level
@@ -121,7 +134,11 @@ function log::_log_wrap() {
         esac
     done
 
-    level="${level:-info}"
+    level="${level:-$LOG_LEVEL_INFO}"
+
+    if log::level::is_not_pass "${level}"; then
+        return "$SHELL_TRUE"
+    fi
 
     caller_frame=${caller_frame:-0}
     # 由于是封装的一层， linfo 等函数是直接传进来的，所以需要算上 linfo 等函数的层级
@@ -162,44 +179,44 @@ function log::_log_wrap() {
 #   位置参数有多个时：
 #       message-format                          消息格式
 #       message                                 消息内容，支持多个。
-function lsuccess() {
-    local level="success"
-
-    log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
-
-    return "$SHELL_TRUE"
-}
-
-# 参数说明参考 lsuccess
-function linfo() {
-    local level="info"
-
-    log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
-
-    return "$SHELL_TRUE"
-}
-
-# 参数说明参考 lsuccess
 function ldebug() {
-    local level="debug"
+    local level="$LOG_LEVEL_DEBUG"
 
     log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
 
-# 参数说明参考 lsuccess
+# 参数说明参考 ldebug
+function linfo() {
+    local level="$LOG_LEVEL_INFO"
+
+    log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+# 参数说明参考 ldebug
 function lwarn() {
-    local level="warn"
+    local level="$LOG_LEVEL_WARN"
 
     log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
 
-# 参数说明参考 lsuccess
+# 参数说明参考 ldebug
 function lerror() {
-    local level="error"
+    local level="$LOG_LEVEL_ERROR"
+
+    log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+# 参数说明参考 ldebug
+function lsuccess() {
+    local level="$LOG_LEVEL_SUCCESS"
 
     log::_log_wrap --level="${level}" "$@" || return "$SHELL_FALSE"
 
@@ -216,7 +233,7 @@ function lerror() {
 # 位置参数列表：
 #   exit_code 退出码
 function lexit() {
-    local level="error"
+    local level="$LOG_LEVEL_ERROR"
 
     local message
     local exit_code
@@ -247,7 +264,7 @@ function lexit() {
     exit "${exit_code}"
 }
 
-# 参数说明参考 lsuccess
+# 参数说明参考 ldebug
 function lwrite() {
     local message
     while IFS= read -r message || [ -n "$message" ]; do
