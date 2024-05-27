@@ -104,7 +104,7 @@ function log::handler::clean() {
 #     --level=LEVEL               日志级别
 #     --file=FILE                 文件路径
 #     --line=LINE                 行号
-#     --function=FUNCTION         函数名
+#     --function-name=FUNCTION    函数名
 # 可选参数：
 #     --stream=STREAM             输出流
 #     --formatter=FORMATTER       日志的格式
@@ -146,7 +146,7 @@ function log::handler::template_handler::trait::log() {
         --line=*)
             line="${param#*=}"
             ;;
-        --function=*)
+        --function-name=*)
             function_name="${param#*=}"
             ;;
         --message-format=*)
@@ -164,7 +164,7 @@ function log::handler::template_handler::trait::log() {
 
     stream="${stream:-/dev/stdout}"
 
-    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
+    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
 
     printf "%s\n" "${message}" >>"${stream}"
 }
@@ -280,7 +280,7 @@ function log::handler::log() {
     ((caller_frame += 1))
 
     function_name=$(get_caller_function_name "${caller_frame}")
-    file=$(get_caller_filename "${caller_frame}")
+    file=$(debug::function::filepath "${caller_frame}")
     line=$(get_caller_file_line_num "${caller_frame}")
 
     for handler in "${handlers[@]}"; do
@@ -300,7 +300,7 @@ function log::handler::log() {
 
         # 底层 handler 需要实现 log::handler::${handler}::trait::log 函数
         # 函数模板见： log::handler::template_handler::trait::log
-        "log::handler::${handler}::trait::log" --stream="$stream" --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function="${function_name}" --message-format="${message_format}" "${message_params[@]}" || return "$SHELL_FALSE"
+        "log::handler::${handler}::trait::log" --stream="$stream" --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" "${message_params[@]}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"

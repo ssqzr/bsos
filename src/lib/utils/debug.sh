@@ -19,6 +19,15 @@ function get_caller_function_name() {
     echo "${function_name}"
 }
 
+function debug::function::filepath() {
+    local level="${1:-0}"
+    ((level += 1))
+    local filepath=${BASH_SOURCE[${level}]}
+    filepath="$(realpath -s "${filepath}")"
+    echo "$filepath"
+    return "$SHELL_FALSE"
+}
+
 # 获取调用者的调用者的所在文件名
 # a->b->get_caller_filename   返回a函数所在的文件名
 function get_caller_filename() {
@@ -59,6 +68,28 @@ function get_caller_frame() {
         frame="${name}->${frame}"
     done
     echo "$frame"
+}
+
+# 不使用 grep ，尽可能对外部依赖少
+function debug::function::is_exists() {
+    local name="$1"
+    local all_functions=()
+    local temp_str
+
+    temp_str="$(compgen -A function)"
+    readarray -t all_functions < <(echo "$temp_str")
+    for temp_str in "${all_functions[@]}"; do
+        if [ "$temp_str" == "$name" ]; then
+            return "$SHELL_TRUE"
+        fi
+    done
+    return "$SHELL_FALSE"
+}
+
+function debug::function::is_not_exists() {
+    local name="$1"
+    debug::function::is_exists "$name" || return "$SHELL_TRUE"
+    return "$SHELL_FALSE"
 }
 
 # 获取时间

@@ -88,7 +88,8 @@ function base::input_root_password() {
 function base::export_env() {
     local src_dir
 
-    export LOG_HANDLER_STREAM_FORMATTER="{{datetime}} [{{level}}] {{message}}"
+    # 最长的是 success 字符串，长度为 7
+    export LOG_HANDLER_STREAM_FORMATTER="{{datetime}} [{{level|to_upper|justify 7 center}}] {{message}}"
 
     src_dir="$(dirname "${SCRIPT_DIR_b5b83ba6}")"
     export SRC_ROOT_DIR="${src_dir}"

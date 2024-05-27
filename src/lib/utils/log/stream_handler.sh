@@ -75,7 +75,7 @@ function log::handler::stream_handler::trait::log() {
         --line=*)
             line="${param#*=}"
             ;;
-        --function=*)
+        --function-name=*)
             function_name="${param#*=}"
             ;;
         --message-format=*)
@@ -93,7 +93,7 @@ function log::handler::stream_handler::trait::log() {
 
     stream="${stream:-${__log_stream_handler_stream}}"
 
-    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
+    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
 
     "println_${level}" --stream="$stream" "${message}" || return "$SHELL_FALSE"
 

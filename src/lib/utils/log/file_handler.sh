@@ -97,7 +97,7 @@ function log::handler::file_handler::trait::log() {
         --line=*)
             line="${param#*=}"
             ;;
-        --function=*)
+        --function-name=*)
             function_name="${param#*=}"
             ;;
         --message-format=*)
@@ -115,7 +115,7 @@ function log::handler::file_handler::trait::log() {
 
     stream="${stream:-${__log_file_handler_filepath}}"
 
-    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
+    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
 
     if [ -z "$stream" ]; then
         printf "%s\n" "${message}"
@@ -131,7 +131,7 @@ function TEST::log::handler::file_handler::trait::log() {
     local output
 
     # 测试 formatter
-    output=$(log::handler::file_handler::trait::log --stream="${stream}" --formatter="{{datetime}} {{level}} {{file}}:{{line}} [{{function}}] {{message}}" --level="debug" --file="test.sh" --line="10" --function="main" --datetime-format="%Y" --message-format="%s|%s" "hello world" "hello world")
+    output=$(log::handler::file_handler::trait::log --stream="${stream}" --formatter="{{datetime}} {{level}} {{file}}:{{line}} [{{function_name}}] {{message}}" --level="debug" --file="test.sh" --line="10" --function-name="main" --datetime-format="%Y" --message-format="%s|%s" "hello world" "hello world")
     utest::assert $?
     utest::assert_equal "${output}" "$(log::formatter::get_datetime_by_format "%Y") debug test.sh:10 [main] hello world|hello world"
 

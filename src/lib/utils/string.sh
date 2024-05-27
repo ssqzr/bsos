@@ -158,21 +158,77 @@ function string::split_with() {
     local data_5c9e7642="$2"
     local separator_5c9e7642="${3:- }"
 
-    local temp_str_5c9e7642
+    local left_5c9e7642=0
+    local right_5c9e7642=0
+    local length_5c9e7642
+    local separator_length_5c9e7642=${#separator_5c9e7642}
+
+    array_5c9e7642=()
 
     if [ -z "${data_5c9e7642}" ]; then
         array_5c9e7642=()
         return "$SHELL_TRUE"
     fi
 
-    # shellcheck disable=SC2001
-    temp_str_5c9e7642=$(echo "$data_5c9e7642" | sed -e "s/$separator_5c9e7642/\n/g") || return "$SHELL_FALSE"
-    readarray -t "${!array_5c9e7642}" < <(echo "$temp_str_5c9e7642")
+    length_5c9e7642=$(string::length "${data_5c9e7642}")
+
+    if [ "$length_5c9e7642" -lt "$separator_length_5c9e7642" ]; then
+        # 整个字符串还没有分隔符长
+        array_5c9e7642+=("$data_5c9e7642")
+        return "$SHELL_TRUE"
+    fi
+
+    while true; do
+        if [ "${data_5c9e7642:$right_5c9e7642:$separator_length_5c9e7642}" == "$separator_5c9e7642" ]; then
+            # 找到分隔符
+            array_5c9e7642+=("${data_5c9e7642:$left_5c9e7642:$((right_5c9e7642 - left_5c9e7642))}")
+            ((right_5c9e7642 += separator_length_5c9e7642))
+            ((left_5c9e7642 = right_5c9e7642))
+            if [ "$right_5c9e7642" -ge "$length_5c9e7642" ]; then
+                array_5c9e7642+=("")
+                break
+            fi
+            continue
+        fi
+        # 没有找到
+        ((right_5c9e7642 += 1))
+        if [ "$right_5c9e7642" -ge "$length_5c9e7642" ]; then
+            array_5c9e7642+=("${data_5c9e7642:$left_5c9e7642:$((right_5c9e7642 - left_5c9e7642))}")
+            break
+        fi
+        continue
+    done
 
     return "$SHELL_TRUE"
 }
 
 ######################################### 下面是单元测试代码 #########################################
+function TEST::string::trim() {
+    local res
+    res=$(string::trim "")
+    utest::assert_equal "$res" ""
+
+    res=$(string::trim " ")
+    utest::assert_equal "$res" ""
+
+    res=$(string::trim "  ")
+    utest::assert_equal "$res" ""
+
+    res=$(string::trim "          ")
+    utest::assert_equal "$res" ""
+
+    res=$(string::trim "a b")
+    utest::assert_equal "$res" "a b"
+
+    res=$(string::trim " a b")
+    utest::assert_equal "$res" "a b"
+
+    res=$(string::trim " a b ")
+    utest::assert_equal "$res" "a b"
+
+    res=$(string::trim "    a    b    ")
+    utest::assert_equal "$res" "a    b"
+}
 
 function TEST::string::is_empty() {
     string::is_empty
@@ -517,6 +573,184 @@ function TEST::string::is_false() {
 
     string::is_false "FALSE"
     utest::assert $?
+}
+
+function TEST::string::split_with::split_with_default() {
+    local data
+    local res=()
+
+    res=()
+    string::split_with res ""
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 0
+
+    string::split_with res " "
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" ""
+
+    string::split_with res "  "
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" ""
+    utest::assert_equal "${res[2]}" ""
+
+    string::split_with res "a"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 1
+    utest::assert_equal "${res[0]}" "a"
+
+    string::split_with res "a b c"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" "b"
+    utest::assert_equal "${res[2]}" "c"
+
+    string::split_with res "a "
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" ""
+
+    string::split_with res " a"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" "a"
+}
+
+function TEST::string::split_with::split_with_one_char() {
+    local data
+    local res=()
+
+    res=()
+    string::split_with res "" ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 0
+
+    res=()
+    string::split_with res "," ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" ""
+
+    res=()
+    string::split_with res ",," ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" ""
+    utest::assert_equal "${res[2]}" ""
+
+    res=()
+    string::split_with res "a" ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 1
+    utest::assert_equal "${res[0]}" "a"
+
+    res=()
+    string::split_with res ",a" ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" "a"
+
+    res=()
+    string::split_with res "a," ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" ""
+
+    res=()
+    string::split_with res "a,b,c" ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" "b"
+    utest::assert_equal "${res[2]}" "c"
+
+    res=()
+    string::split_with res "a, b,c" ","
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" " b"
+    utest::assert_equal "${res[2]}" "c"
+
+}
+
+function TEST::string::split_with::split_with_two_char() {
+    local data
+    local res=()
+
+    res=()
+    string::split_with res "" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 0
+
+    res=()
+    string::split_with res "||" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" ""
+
+    res=()
+    string::split_with res "||||" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" ""
+    utest::assert_equal "${res[2]}" ""
+
+    res=()
+    string::split_with res "|||" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" "|"
+
+    res=()
+    string::split_with res "a" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 1
+    utest::assert_equal "${res[0]}" "a"
+
+    res=()
+    string::split_with res "||a" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" "a"
+
+    res=()
+    string::split_with res "a||" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 2
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" ""
+
+    res=()
+    string::split_with res "a||b||c" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" "b"
+    utest::assert_equal "${res[2]}" "c"
+
+    res=()
+    string::split_with res "a|| b||c" "||"
+    utest::assert $?
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" "a"
+    utest::assert_equal "${res[1]}" " b"
+    utest::assert_equal "${res[2]}" "c"
+
 }
 
 function string::_main() {

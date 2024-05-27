@@ -224,6 +224,44 @@ function array::reverse() {
     done
 }
 
+function array::map() {
+    local -n result_f4a7c537="$1"
+    shift
+    local -n array_f4a7c537="$1"
+    shift
+    local function_name_f4a7c537="$1"
+    shift
+    local function_params_f4a7c537=("$@")
+
+    local index_f4a7c537
+    local temp_array_f4a7c537=()
+
+    for ((index_f4a7c537 = 0; index_f4a7c537 < "${#array_f4a7c537[@]}"; index_f4a7c537++)); do
+        temp_array_f4a7c537+=("$("${function_name_f4a7c537}" "${array_f4a7c537[$index_f4a7c537]}" "${function_params_f4a7c537[@]}")") || return "$SHELL_FALSE"
+    done
+    # shellcheck disable=SC2034
+    result_f4a7c537=("${temp_array_f4a7c537[@]}")
+    return "$SHELL_TRUE"
+}
+
+function array::join_with() {
+    local -n array_3f2ce83a="$1"
+    shift
+    local separator_3f2ce83a="${1-}"
+    local result_3f2ce83a=""
+    local item_3f2ce83a=""
+    for item_3f2ce83a in "${array_3f2ce83a[@]}"; do
+        if [ -z "$result_3f2ce83a" ]; then
+            result_3f2ce83a="$item_3f2ce83a"
+            continue
+        fi
+
+        result_3f2ce83a+="${separator_3f2ce83a}${item_3f2ce83a}"
+    done
+    echo "$result_3f2ce83a"
+    return "$SHELL_TRUE"
+}
+
 ###################################### 下面是测试代码 ######################################
 
 function TEST::array::length() {
@@ -455,6 +493,132 @@ function TEST::array::lpop() {
     utest::assert $?
     utest::assert_equal "$item" "3"
     utest::assert_equal "${arr[*]}" ""
+}
+
+function TEST::array::map() {
+    local res
+
+    function trim() {
+        local str="$1"
+        echo "$str" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+        return "$SHELL_TRUE"
+    }
+
+    # 测试 trim 函数正确性，顺便规避 shellcheck 的检查
+    utest::assert_equal "$(trim " ab    ")" "ab"
+
+    res=()
+    array::map res res trim
+    utest::assert_equal "${#res[@]}" 0
+
+    res=("")
+    array::map res res trim
+    utest::assert_equal "${#res[@]}" 1
+    utest::assert_equal "${res[0]}" ""
+
+    res=(" ")
+    array::map res res trim
+    utest::assert_equal "${#res[@]}" 1
+    utest::assert_equal "${res[0]}" ""
+
+    res=("  ")
+    array::map res res trim
+    utest::assert_equal "${#res[@]}" 1
+    utest::assert_equal "${res[0]}" ""
+
+    res=("  " "a" " ab ")
+    array::map res res trim
+    utest::assert_equal "${#res[@]}" 3
+    utest::assert_equal "${res[0]}" ""
+    utest::assert_equal "${res[1]}" "a"
+    utest::assert_equal "${res[2]}" "ab"
+}
+
+function TEST::array::join_with::default() {
+    local arr=()
+    local res
+
+    res=$(array::join_with arr)
+    utest::assert $?
+    utest::assert_equal "$res" ""
+
+    arr=("abc")
+    res=$(array::join_with arr)
+    utest::assert $?
+    utest::assert_equal "$res" "abc"
+
+    arr=("abc" "def")
+    res=$(array::join_with arr)
+    utest::assert $?
+    utest::assert_equal "$res" "abcdef"
+
+    arr=(" " " ")
+    res=$(array::join_with arr)
+    utest::assert $?
+    utest::assert_equal "$res" "  "
+}
+
+function TEST::array::join_with::on_char() {
+    local arr=()
+    local res
+
+    res=$(array::join_with arr ",")
+    utest::assert $?
+    utest::assert_equal "$res" ""
+
+    arr=("abc")
+    res=$(array::join_with arr ",")
+    utest::assert $?
+    utest::assert_equal "$res" "abc"
+
+    arr=("abc" "def")
+    res=$(array::join_with arr ",")
+    utest::assert $?
+    utest::assert_equal "$res" "abc,def"
+
+    arr=(" " " ")
+    res=$(array::join_with arr ",")
+    utest::assert $?
+    utest::assert_equal "$res" " , "
+
+    arr=("," ",")
+    res=$(array::join_with arr ",")
+    utest::assert $?
+    utest::assert_equal "$res" ",,,"
+}
+
+function TEST::array::join_with::two_char() {
+    local arr=()
+    local res
+
+    res=$(array::join_with arr ",,")
+    utest::assert $?
+    utest::assert_equal "$res" ""
+
+    arr=("abc")
+    res=$(array::join_with arr ",,")
+    utest::assert $?
+    utest::assert_equal "$res" "abc"
+
+    arr=("abc" "def")
+    res=$(array::join_with arr ",,")
+    utest::assert $?
+    utest::assert_equal "$res" "abc,,def"
+
+    arr=(" " " ")
+    res=$(array::join_with arr ",,")
+    utest::assert $?
+    utest::assert_equal "$res" " ,, "
+
+    arr=("," ",")
+    res=$(array::join_with arr ",,")
+    utest::assert $?
+    utest::assert_equal "$res" ",,,,"
+
+    arr=("abc" "def")
+    res=$(array::join_with arr ", ")
+    utest::assert $?
+    utest::assert_equal "$res" "abc, def"
 }
 
 function array::_main() {

@@ -23,11 +23,11 @@
 # - {{datetime}}                                            日期时间
 # - {{pid}}                                                 进程 ID
 # - {{file}}                                                文件
-# - {{function}}                                            函数名
+# - {{function_name}}                                       函数名
 # - {{line}}                                                行号
 # - {{level}}                                               日志等级
 # - {{message}}                                             日志内容
-# formatter 格式示例：{{datetime}} {{level}} [{{pid}}] {{file}}:{{line}} [{{function}}] {{message}}
+# formatter 格式示例：{{datetime}} {{level}} [{{pid}}] {{file}}:{{line}} [{{function_name}}] {{message}}
 # API:
 #   log::formatter::set                                     设置输出格式
 #       参数列表：
