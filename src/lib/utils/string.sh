@@ -144,13 +144,19 @@ function string::print_yes_no() {
     printf "no"
 }
 
-function string::is_num() {
+# 判断字符串是否是整数
+function string::is_integer() {
     local data="$1"
-    echo "$data" | grep -q -E "^[0-9]+$"
-    if [ $? -eq "$SHELL_TRUE" ]; then
+
+    if [[ "$data" =~ ^[-]{0,1}[0-9]+$ ]]; then
         return "$SHELL_TRUE"
     fi
     return "$SHELL_FALSE"
+}
+
+function string::is_not_integer() {
+    string::is_integer "$1" && return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function string::split_with() {
@@ -572,6 +578,76 @@ function TEST::string::is_false() {
     utest::assert $?
 
     string::is_false "FALSE"
+    utest::assert $?
+}
+
+function TEST::string::is_integer() {
+    string::is_integer ""
+    utest::assert_fail $?
+
+    string::is_integer "0"
+    utest::assert $?
+
+    string::is_integer "1"
+    utest::assert $?
+
+    string::is_integer "0000000"
+    utest::assert $?
+
+    string::is_integer "0123456789"
+    utest::assert $?
+
+    string::is_integer "xxxx"
+    utest::assert_fail $?
+
+    string::is_integer "-1"
+    utest::assert $?
+
+    string::is_integer "--1"
+    utest::assert_fail $?
+
+    string::is_integer "+1"
+    utest::assert_fail $?
+
+    string::is_integer "0 1"
+    utest::assert_fail $?
+
+    string::is_integer " 0 "
+    utest::assert_fail $?
+}
+
+function TEST::string::is_not_integer() {
+    string::is_not_integer ""
+    utest::assert $?
+
+    string::is_not_integer "0"
+    utest::assert_fail $?
+
+    string::is_not_integer "1"
+    utest::assert_fail $?
+
+    string::is_not_integer "0000000"
+    utest::assert_fail $?
+
+    string::is_not_integer "0123456789"
+    utest::assert_fail $?
+
+    string::is_not_integer "xxxx"
+    utest::assert $?
+
+    string::is_not_integer "-1"
+    utest::assert_fail $?
+
+    string::is_not_integer "--1"
+    utest::assert $?
+
+    string::is_not_integer "+1"
+    utest::assert $?
+
+    string::is_not_integer "0 1"
+    utest::assert $?
+
+    string::is_not_integer " 0 "
     utest::assert $?
 }
 

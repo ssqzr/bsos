@@ -80,14 +80,14 @@ function parameter::parse_string() {
             ;;
         --min=*)
             min_length_b7f786d2="${param_b7f786d2#*=}"
-            if ! string::is_num "$min_length_b7f786d2"; then
+            if string::is_not_integer "$min_length_b7f786d2"; then
                 lerror --caller-frame="1" "option(--min) value($min_length_b7f786d2) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --max=*)
             max_length_b7f786d2="${param_b7f786d2#*=}"
-            if ! string::is_num "$max_length_b7f786d2"; then
+            if string::is_not_integer "$max_length_b7f786d2"; then
                 lerror --caller-frame="1" "option(--max) value($max_length_b7f786d2) format is not number"
                 return "$SHELL_FALSE"
             fi
@@ -258,21 +258,21 @@ function parameter::parse_num() {
         case "$param_875b0d67" in
         --min=*)
             min_875b0d67="${param_875b0d67#*=}"
-            if ! string::is_num "$min_875b0d67"; then
+            if string::is_not_integer "$min_875b0d67"; then
                 lerror --caller-frame="1" "option(--min) value($min_875b0d67) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --max=*)
             max_875b0d67="${param_875b0d67#*=}"
-            if ! string::is_num "$max_875b0d67"; then
+            if string::is_not_integer "$max_875b0d67"; then
                 lerror --caller-frame="1" "option(--max) value($max_875b0d67) format is not number"
                 return "$SHELL_FALSE"
             fi
             ;;
         --default=*)
             default_875b0d67="${param_875b0d67#*=}"
-            if ! string::is_num "$default_875b0d67"; then
+            if string::is_not_integer "$default_875b0d67"; then
                 lerror --caller-frame="1" "option(--default) value($default_875b0d67) format is not number"
                 return "$SHELL_FALSE"
             fi
@@ -326,7 +326,7 @@ function parameter::parse_num() {
         return "$SHELL_FALSE"
     fi
 
-    if ! string::is_num "$temp_str_875b0d67"; then
+    if string::is_not_integer "$temp_str_875b0d67"; then
         lerror --caller-frame="1" "check option(${option_875b0d67}) number type failed, value($temp_str_875b0d67) is not number"
         return "$SHELL_FALSE"
     fi

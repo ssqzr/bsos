@@ -135,7 +135,7 @@ function tui::search_select() {
     local fzf_options_14bd9c66=()
     if [ "${multi_14bd9c66}" = "multi" ]; then
         fzf_options_14bd9c66+=("--multi")
-    elif string::is_num "${multi_14bd9c66}"; then
+    elif string::is_integer "${multi_14bd9c66}"; then
         fzf_options_14bd9c66+=("--multi=${multi_14bd9c66}")
     fi
     fzf_options_14bd9c66+=("--prompt='${title_14bd9c66}'")
