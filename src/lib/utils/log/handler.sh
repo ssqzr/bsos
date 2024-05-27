@@ -279,9 +279,9 @@ function log::handler::log() {
     caller_frame="${caller_frame:-0}"
     ((caller_frame += 1))
 
-    function_name=$(get_caller_function_name "${caller_frame}")
+    function_name=$(debug::function::name "${caller_frame}")
     file=$(debug::function::filepath "${caller_frame}")
-    line=$(get_caller_file_line_num "${caller_frame}")
+    line=$(debug::function::line_number "${caller_frame}")
 
     for handler in "${handlers[@]}"; do
         if [ -z "$handler" ]; then

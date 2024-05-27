@@ -34,9 +34,9 @@ function utest::printf_function() {
     local filename
     local line_num
     local function_name
-    filename=$(get_caller_filename 2)
-    line_num=$(get_caller_file_line_num 2)
-    function_name=$(get_caller_function_name 2)
+    filename=$(debug::function::filename 2)
+    line_num=$(debug::function::line_number 2)
+    function_name=$(debug::function::name 2)
     printf_info --format="%-100s" "$filename:$line_num -> $function_name"
 }
 
