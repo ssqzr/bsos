@@ -507,6 +507,28 @@ https://www.reddit.com/r/hyprland/comments/15qithj/setting_layer_of_a_window/[Se
 * https://github.com/hyprwm/Hyprland/discussions/3477[per workspace layout?]
 * https://github.com/zakk4223/hyprWorkspaceLayouts[hyprWorkspaceLayouts]
 
+[#hyprland-pywal]
+### Hyprland 使用 pywal 的问题
+
+在 `Hyprland` 中使用 `pywal` 生成的颜色。
+
+目前的做法是在Hyprland的第一行添加 `source = ~/.cache/wal/colors-hyprland.conf` 。
+
+文件 `~/.cache/wal/colors-hyprland.conf` 会由 `pywal` 生成。
+
+但是第一次运行时，是先启动 `Hyprland` ，然后运行 `hyprpaper` 时会调用 `pywal` 来生成颜色。
+
+因为 `hyprpaper` 先下载背景图， pywal 才可以根据背景图生成颜色。
+
+其实不管是不是使用 `hyprpaper` ，都会有这个问题，因为 `Hyprland` 是第一个运行的程序。
+
+[#hyprland-dynamic-config]
+### Hyprland 支持动态的配置
+
+类似的问题： https://www.reddit.com/r/hyprland/comments/174qub7/dynamically_source_config_file/[Dynamically source config file?]
+
+Hyprlan 支持加载一个目录下的配置文件。
+
 [#use-plugin]
 ## 插件的处理
 
@@ -540,22 +562,7 @@ https://github.com/pyt0xic/hyprfocus[Fork hyprfocus] 这个仓库支持。
 
 ### https://github.com/H3rmt/hyprswitch[hyprswitch]
 
-## 问题记录
 
-[#hyprland-pywal]
-### Hyprland 使用 pywal 的问题
-
-在 `Hyprland` 中使用 `pywal` 生成的颜色。
-
-目前的做法是在Hyprland的第一行添加 `source = ~/.cache/wal/colors-hyprland.conf` 。
-
-文件 `~/.cache/wal/colors-hyprland.conf` 会由 `pywal` 生成。
-
-但是第一次运行时，是先启动 `Hyprland` ，然后运行 `hyprpaper` 时会调用 `pywal` 来生成颜色。
-
-因为 `hyprpaper` 先下载背景图， pywal 才可以根据背景图生成颜色。
-
-其实不管是不是使用 `hyprpaper` ，都会有这个问题，因为 `Hyprland` 是第一个运行的程序。
 
 ## 参考
 
