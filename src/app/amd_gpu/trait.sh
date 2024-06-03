@@ -104,7 +104,12 @@ function amd_gpu::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function amd_gpu::trait::features() {
-    local apps=("custom:rust" "yay:amdgpu_top")
+    local apps=()
+    # https://wiki.archlinux.org/title/AMDGPU
+    # 提供硬件加速
+    # lib32-libva-mesa-driver 和 lib32-mesa-vdpau 是对 32 位软件的支持
+    apps+=("pacman:libva-mesa-driver" "pacman:mesa-vdpau")
+    apps+=("custom:rust" "yay:amdgpu_top")
     array::print apps
     return "${SHELL_TRUE}"
 }

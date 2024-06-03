@@ -380,6 +380,7 @@ grep -- -v file
 * [ ] zsh 库的 string 库怎么复用 bash 库。
 * [*] 单元测试支持测试某个文件、某个测试等细粒度操作。
 * [ ] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
+* [ ] 提供命令行的帮助信息
 
 ## 引用
 
