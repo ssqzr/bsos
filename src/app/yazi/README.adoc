@@ -1,5 +1,15 @@
 # yazi 安装说明文档
 include::../../../doc/base.adoc[]
 
-official_document_url[官方文档]
+https://github.com/sxyazi/yazi[官方文档]
+
+
+## 问题记录
+
+[#yazi-file-chooser]
+### yazi 支持文件选择器
+
+https://github.com/sxyazi/yazi/issues/1120[Implement org.freedesktop.FileManager1]
+
+https://github.com/sxyazi/yazi/discussions/281[How can I set yazi as default file/folder picker?]
 

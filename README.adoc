@@ -381,6 +381,7 @@ grep -- -v file
 * [*] 单元测试支持测试某个文件、某个测试等细粒度操作。
 * [ ] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
 * [ ] 提供命令行的帮助信息
+* [ ] xref:src/app/yazi/README.adoc#yazi-file-chooser[yazi 实现文件选择器的功能]
 
 ## 引用
 
