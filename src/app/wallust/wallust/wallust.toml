@@ -124,3 +124,8 @@ new_engine = true
 template = "template/swaync.css"
 target = "~/.cache/colors/swaync.css"
 new_engine = true
+
+[[entry]]
+template = "template/hyprland.conf"
+target = "~/.cache/colors/hyprland.conf"
+new_engine = true

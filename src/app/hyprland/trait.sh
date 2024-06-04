@@ -43,16 +43,7 @@ function hyprland::settings::modify_hyprland_config() {
     fi
 
     # 处理显示器的设置
-    grep -q "monitor.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/monitor.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-
-    # 处理工作空间的设置
-    grep -q "workspace.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/workspace.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
+    hyprland::settings::monitor || return "${SHELL_FALSE}"
 
     # 处理最小化窗口功能的设置
     grep -q "minimized.conf" "$config_filepath"
@@ -123,30 +114,17 @@ function hyprland::settings::monitor() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
     if os::is_vm; then
-        # 反复安装也不会有问题
-        cmd::run_cmd_with_history -- sed -i "'s%^\(source = conf.d/monitor.conf\)%# \\1%g'" "$config_filepath"
+        grep -q "monitor.conf" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
-            lerror "hyprland setting monitor failed"
-            return "$SHELL_FALSE"
+            cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/monitor.conf'" "$config_filepath"
+            if [ "$?" -ne "${SHELL_TRUE}" ]; then
+                lerror "hyprland setting monitor failed"
+                return "$SHELL_FALSE"
+            fi
         fi
+
     fi
     linfo "hyprland setting monitor success"
-    return "${SHELL_TRUE}"
-}
-
-function hyprland::settings::workspace() {
-    local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-    if os::is_vm; then
-        # 反复安装也不会有问题
-        # 还有一个直接的方式就是清空 monitor 设置文件内容
-        cmd::run_cmd_with_history -- sed -i "'s%^\(source = conf.d/workspace.conf\)%# \\1%g'" "$config_filepath"
-        if [ "$?" -ne "${SHELL_TRUE}" ]; then
-            lerror "hyprland setting workspace failed"
-            return "$SHELL_FALSE"
-        fi
-    fi
-    linfo "hyprland setting workspace success"
     return "${SHELL_TRUE}"
 }
 
@@ -154,8 +132,7 @@ function hyprland::settings::hypridle() {
     local config_filepath
     config_filepath="$(hyprland::settings::base_config_filepath)"
     if os::is_vm; then
-        # 反复安装也不会有问题
-        # 还有一个直接的方式就是清空 monitor 设置文件内容
+        # 虚拟机里 hyprlock 会红屏，所以不启用 hypridle 以免触发 hyprlock
         cmd::run_cmd_with_history -- sed -i "'s%^\(exec-once = hypridle\)%# \\1%g'" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             lerror "hyprland setting hypridle failed"
@@ -197,6 +174,7 @@ function hyprland::plugins::clean() {
 }
 
 function hyprland::plugins::install() {
+    # FIXME: 目前编译插件报错， https://github.com/outfoxxed/hy3/issues/109
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
 
@@ -216,7 +194,7 @@ function hyprland::plugins::install() {
     cmd::run_cmd_with_history -- hyprpm update -v || return "${SHELL_FALSE}" || return "${SHELL_TRUE}"
     linfo "hyprpm update success"
 
-    # 添加
+    # 添加 hyprland-plugins
     cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/hyprwm/hyprland-plugins || return "${SHELL_FALSE}"
     linfo "hyprpm add hyprland-plugins plugin success"
 
@@ -230,6 +208,17 @@ function hyprland::plugins::install() {
         cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/hycov.conf'" "$config_filepath" || return "${SHELL_FALSE}"
     fi
     linfo "hyprpm enable hycov plugin success"
+
+    # 添加 hyprfocus
+    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/VortexCoyote/hyprfocus || return "${SHELL_FALSE}"
+    linfo "hyprpm add hyprfocus plugin success"
+    cmd::run_cmd_with_history -- hyprpm -v enable hyprfocus || return "${SHELL_FALSE}"
+    # 处理hycov插件的设置
+    grep -q "hyprfocus.conf" "$config_filepath"
+    if [ "$?" -ne "${SHELL_TRUE}" ]; then
+        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/hyprfocus.conf'" "$config_filepath" || return "${SHELL_FALSE}"
+    fi
+    linfo "hyprpm enable hyprfocus plugin success"
 
     return "${SHELL_TRUE}"
 }
@@ -292,7 +281,6 @@ function hyprland::trait::post_install() {
     hyprland::settings::terminal || return "${SHELL_FALSE}"
     hyprland::settings::file_manager || return "${SHELL_FALSE}"
     hyprland::settings::monitor || return "${SHELL_FALSE}"
-    hyprland::settings::workspace || return "${SHELL_FALSE}"
     hyprland::settings::cursors || return "${SHELL_FALSE}"
     hyprland::settings::hypridle || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
