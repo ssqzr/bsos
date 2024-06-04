@@ -105,10 +105,18 @@ function log::_log_wrap() {
 
     local other_options=()
     local other_params=()
+    local is_parse_self="$SHELL_TRUE"
 
     local param
     for param in "$@"; do
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            other_params+=("$param")
+            continue
+        fi
         case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
+            ;;
         --caller-frame=*)
             caller_frame="${param#*=}"
             ;;
@@ -118,11 +126,11 @@ function log::_log_wrap() {
                 continue
             fi
             # 指定了多个，这个是封装的一层，除了 linfo 等函数调用外， linfo 等函数的调用者不应该指定这个参数
-            println_error "unknown option $param"
+            println_error "[$(debug::function::call_stack)] unknown option $param"
             return "$SHELL_FALSE"
             ;;
         --message-format=*)
-            println_error "unknown option $param"
+            println_error "[$(debug::function::call_stack)] unknown option $param"
             return "$SHELL_FALSE"
             ;;
         -*)
@@ -152,7 +160,7 @@ function log::_log_wrap() {
         message_params=("${other_params[@]}")
     fi
 
-    log::handler::log --caller-frame="${caller_frame}" --level="$level" --message-format="${message_format}" "${other_options[@]}" "${message_params[@]}" || return "$SHELL_FALSE"
+    log::handler::log --caller-frame="${caller_frame}" --level="$level" --message-format="${message_format}" "${other_options[@]}" -- "${message_params[@]}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -268,7 +276,7 @@ function lexit() {
 function lwrite() {
     local message
     while IFS= read -r message || [ -n "$message" ]; do
-        log::_log_wrap --formatter="{{message}}" "${message}" || return "$SHELL_FALSE"
+        log::_log_wrap --formatter="{{message}}" -- "${message}" || return "$SHELL_FALSE"
     done
     return "$SHELL_TRUE"
 }

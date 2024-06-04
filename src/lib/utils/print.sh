@@ -116,10 +116,18 @@ function printf_style() {
     local stream
     local printf_format
     local tty_filepath
+    local is_parse_self="$SHELL_TRUE"
 
     local param
     for param in "$@"; do
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            other_params+=("$param")
+            continue
+        fi
         case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
+            ;;
         --stream=*)
             stream="${param#*=}"
             ;;
@@ -195,10 +203,18 @@ function _println_wrap() {
     local options=()
     local other_params=()
     local message_format="%s"
+    local is_parse_self="$SHELL_TRUE"
 
     local param
     for param in "$@"; do
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            other_params+=("$param")
+            continue
+        fi
         case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
+            ;;
         --name=*)
             name="${param#*=}"
             ;;
@@ -216,7 +232,7 @@ function _println_wrap() {
         other_params=("${other_params[@]:1}")
     fi
 
-    "printf_${name}" "${options[@]}" --format="${message_format}\n" "${other_params[@]}" || return "$SHELL_FALSE"
+    "printf_${name}" "${options[@]}" --format="${message_format}\n" -- "${other_params[@]}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

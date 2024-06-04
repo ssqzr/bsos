@@ -60,14 +60,24 @@ function debug::function::call_stack() {
     ((ignore_level += 1))
 
     local frame
+    local function_name
+    local line
+    local depth="${#FUNCNAME[@]}"
+    local level=0
 
-    local name
-    for name in "${FUNCNAME[@]:${ignore_level}}"; do
-        if [ "$frame" = "" ]; then
-            frame="${name}"
+    for ((level = 0; level < depth; level++)); do
+        if [ "$level" -lt "$ignore_level" ]; then
             continue
         fi
-        frame="${name}->${frame}"
+
+        function_name="$(debug::function::name "${level}")"
+        line="$(debug::function::line_number "${level}")"
+
+        if [ "$frame" = "" ]; then
+            frame="${function_name}:${line}"
+            continue
+        fi
+        frame="${function_name}:${line}->${frame}"
     done
     echo "$frame"
 }

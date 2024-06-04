@@ -55,9 +55,17 @@ function log::handler::stream_handler::trait::log() {
     local message
     local param
     local level_name
+    local is_parse_self="$SHELL_TRUE"
 
     for param in "$@"; do
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            message_params+=("$param")
+            continue
+        fi
         case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
+            ;;
         --stream=*)
             stream="${param#*=}"
             ;;
@@ -83,7 +91,7 @@ function log::handler::stream_handler::trait::log() {
             message_format="${param#*=}"
             ;;
         -*)
-            println_error "unknown option $param"
+            println_error "[$(debug::function::call_stack)] unknown option $param"
             return "$SHELL_FALSE"
             ;;
         *)
@@ -95,9 +103,9 @@ function log::handler::stream_handler::trait::log() {
     stream="${stream:-${__log_stream_handler_stream}}"
     level_name=$(log::level::level_name "${level}") || return "$SHELL_FALSE"
 
-    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" "${message_params[@]}") || return "$SHELL_FALSE"
+    message=$(log::formatter::format_message --formatter="${formatter}" --level="${level}" --datetime-format="${datetime_format}" --file="${file}" --line="${line}" --function-name="${function_name}" --message-format="${message_format}" -- "${message_params[@]}") || return "$SHELL_FALSE"
 
-    "println_${level_name}" --stream="$stream" "${message}" || return "$SHELL_FALSE"
+    "println_${level_name}" --stream="$stream" -- "${message}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

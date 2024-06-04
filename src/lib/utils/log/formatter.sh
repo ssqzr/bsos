@@ -299,9 +299,17 @@ function log::formatter::format_message() {
     local var_infos=()
     local var_name=""
     local result
+    local is_parse_self="$SHELL_TRUE"
 
     for param in "$@"; do
+        if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
+            message_params+=("$param")
+            continue
+        fi
         case "$param" in
+        --)
+            is_parse_self="$SHELL_FALSE"
+            ;;
         --formatter=*)
             formatter="${param#*=}"
             ;;
@@ -328,7 +336,7 @@ function log::formatter::format_message() {
             message_format="${param#*=}"
             ;;
         -*)
-            println_error --stream=stderr "unknown option $param"
+            println_error --stream=stderr "[$(debug::function::call_stack)] unknown option $param"
             return "$SHELL_FALSE"
             ;;
         *)
@@ -632,6 +640,15 @@ function TEST::log::formatter::format_message() {
     message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="$LOG_LEVEL_INFO" --message-format="%s|%s" "${temp_str}" "abcdefg")
     utest::assert $?
     utest::assert_equal "$message" "info ${temp_str}|abcdefg"
+
+    # 测试 message 字符串以 -- 开头
+    message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="$LOG_LEVEL_INFO" -- "--abcdefg")
+    utest::assert $?
+    utest::assert_equal "$message" "info --abcdefg"
+
+    message=$(log::formatter::format_message --formatter="{{level}} {{message}}" --level="$LOG_LEVEL_INFO" -- "--abcdefg" "--" "--12345")
+    utest::assert $?
+    utest::assert_equal "$message" "info --abcdefg----12345"
 }
 
 function TEST::log::formatter::format_message::justify_filter() {
