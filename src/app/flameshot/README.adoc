@@ -1,0 +1,107 @@
+# flameshot 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/flameshot-org/flameshot[官方文档]
+
+
+
+## 问题记录
+
+### 多屏幕支持
+
+https://github.com/flameshot-org/flameshot/issues/1184[Flameshot does not work with multiple monitors]
+https://github.com/flameshot-org/flameshot/issues/2522[flameshot monitor unexpected behavior]
+
+我有两个屏幕分别为 A 和 B 。
+
+A 和 B 的布局是：
+
+* A 的分辨率是 1920x1080 ，定位在 0x0 的位置。
+* B 的分辨率是 960x540 ，定位在 -960x540 的位置。并且旋转了 180 度。
+
+也就是说 B 在 A 的左下角。
+
+当进行截图时，两个屏幕的内容会缩放到屏幕 A 上。
+
+* 缩放后的布局被分成 3 部分，左右对半平分，左边上下平分。
+* 左上角是空白
+* 左下角是屏幕 B 的内容
+* 右边是屏幕 A 的左边一半的内容
+
+就好比截图的区域是 -960x0 到 960x1080 ，区域大小是 1920x1080。
+
+于是我将显示器的布局修改为：
+
+* A 的分辨率是 1920x1080 ，定位在 0x0 的位置。
+* B 的分辨率是 960x540 ，定位在 1920x540 的位置。并且旋转了 180 度。
+
+也就是说 B 在 A 的右下角。
+
+此时截图的区域就是整整屏幕 A 的内容。截图的区域是 0x0 到 1920x1080 ，区域大小是 1920x1080。
+
+所以我的理解是：
+
+* 将所有显示器根据定位和分辨率以及缩放等信息放在一个平面上。
+* 此时鼠标在哪个显示器上，那么截图区域大小就是当前显示器分辨率的大小
+* 以平面的左上角为原点进行截图
+
+回到最开始的显示器布局，然后运行 `flameshot gui --region 1920x1080+960+0` 。会自动选择一个区域，就是缩放前整个屏幕 A 的区域，然后选中截屏也是屏幕 A 的内容。
+
+
+类似的问题： https://github.com/flameshot-org/flameshot/issues/3528[Multi-monitor resolution issue on KDE6 Wayland]
+
+上面提到可以设置窗口规则来规避问题，Hyprland 也有窗口规则，看看是否可以解决问题。
+
+[source]
+----
+windowrulev2 = suppressevent fullscreen, class:^(flameshot)$
+# -960 是我的第二个显示器的分辨率的宽度
+windowrulev2 = move -960 0, class:^(flameshot)$
+----
+
+或者如下配置：
+
+[source]
+----
+windowrulev2 = fakefullscreen, class:^(flameshot)$
+# -960 是我的第二个显示器的分辨率的宽度
+windowrulev2 = move -960 0, class:^(flameshot)$
+----
+
+
+运行 `flameshot gui` 时，是先将所有屏幕的内容截图保存到一个图片，然后 flameshot 窗口显示这个图片，然后我们在这个图片上进行选区，编辑等操作，实际上就是裁剪和编辑图片。
+
+由于 flameshot 窗口是全屏的，遮蔽在其他窗口上面，没有标题栏等，只有显示截图的图片，所以让人看上去像是直接在屏幕上选区而已。
+
+既然 flameshot 也是一个窗口，那么我们只需要将 flameshot 窗口移动到正确位置就可以了。
+
+* 让 flameshot 窗口是浮动的，其实目前就是浮动的。
+* 让 flameshot 窗口不是全屏的，这样才可以移动。不是全屏，并且是浮动的，那么默认就在当前显示器居中显示。
+* 让 flameshot 窗口向左移动 960 像素。也就是屏幕 B 的宽度。这样 flameshot 的所有屏幕的整体截图就和屏幕的内容对应上了。
+
+但是这里有一个问题，上面的方案有一个前提是截屏时鼠标的焦点是在屏幕 A 上面。如果焦点是在屏幕 B 上，那么移动的位置应该是 `0 -540`。
+
+暂时没想到好的办法计算各个显示器的位置关系，最好是 `flameshot gui` 支持截取指定屏幕的内容。
+
+[source]
+----
+FIXME: 处理在不同屏幕上进行截图。
+----
+
+后面使用又发现一个问题，就是截图后 `pin` 在桌面上，由于我们上面的规则，导致 `pin` 的窗口也被移动到 `-960 0` 的位置了。
+
+通过 `hyprctl clients` 查看截图的窗口和 `pin` 的窗口的属性，除了 xwayland 属性基本一样。也就是说这两个窗口难以区分。
+
+
+### 替代方案
+
+https://github.com/rcalixte/awesome-wayland?tab=readme-ov-file#screenshots[wayland screenshots awesome]
+
+觉得还行的：
+
+* https://github.com/gabm/Satty[Satty] 
+** 文字工具不能输入中文
+** 不能 `pin` 到桌面
+** 编辑工具不够精细，使用效果不佳
+* https://github.com/Kirottu/watershot[watershot]，编译失败

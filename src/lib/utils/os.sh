@@ -22,3 +22,8 @@ function os::is_vm() {
     os::is_vmware && return "$SHELL_TRUE"
     return "$SHELL_FALSE"
 }
+
+function os::is_not_vm() {
+    os::is_vm && return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}

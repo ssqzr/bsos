@@ -113,7 +113,7 @@ function hyprland::settings::file_manager() {
 function hyprland::settings::monitor() {
     local config_filepath
     config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-    if os::is_vm; then
+    if os::is_not_vm; then
         grep -q "monitor.conf" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/monitor.conf'" "$config_filepath"
@@ -122,7 +122,6 @@ function hyprland::settings::monitor() {
                 return "$SHELL_FALSE"
             fi
         fi
-
     fi
     linfo "hyprland setting monitor success"
     return "${SHELL_TRUE}"
@@ -280,7 +279,6 @@ function hyprland::trait::post_install() {
 
     hyprland::settings::terminal || return "${SHELL_FALSE}"
     hyprland::settings::file_manager || return "${SHELL_FALSE}"
-    hyprland::settings::monitor || return "${SHELL_FALSE}"
     hyprland::settings::cursors || return "${SHELL_FALSE}"
     hyprland::settings::hypridle || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -384,13 +382,13 @@ function hyprland::trait::features() {
     apps+=("pacman:hyprlock")
 
     # 截图需要的
-    apps+=("pacman:grim" "pacman:slurp" "flatpak:org.ksnip.ksnip")
+    apps+=("custom:flameshot")
 
     # 邮箱
     apps+=("pacman:thunderbird" "pacman:thunderbird-i18n-zh-cn")
 
     # 翻译软件
-    apps+=("custom:pot")
+    apps+=("pacman:grim" "pacman:slurp" "custom:pot")
 
     # 取色软件
     apps+=("yay:hyprpicker")
