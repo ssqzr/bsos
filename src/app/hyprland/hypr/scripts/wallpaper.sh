@@ -24,15 +24,13 @@ fi
 # shellcheck disable=SC1090
 source "$source_filepath" || exit 1
 
-function hyprland::cache_dir() {
-    local cache_dir="$HOME/.cache/hypr"
-    echo "$cache_dir"
+function hyprland::wallpaper::log_dir() {
+    local log_dir="$HOME/.cache/hypr/log"
+    echo "$log_dir"
 }
 
 function hyprland::wallpaper::directory() {
-    local cache_dir
-    cache_dir="$(hyprland::cache_dir)"
-    local wallpaper_dir="$cache_dir/wallpapers"
+    local wallpaper_dir="$HOME/.cache/hypr/wallpapers"
     echo "$wallpaper_dir"
 }
 
@@ -120,11 +118,11 @@ function hyprland::wallpaper::check_hyprpaper_ready() {
     ldebug "hyprpapre ready"
 }
 
-function hyprland::wallpaper::set_log_file() {
+function hyprland::wallpaper::set_log() {
     local log_filename="${BASH_SOURCE[0]}"
     log_filename="${log_filename##*/}"
     log::handler::file_handler::register || return "$SHELL_FALSE"
-    log::handler::file_handler::set_log_file "$(hyprland::cache_dir)/${log_filename}.log" || return "$SHELL_FALSE"
+    log::handler::file_handler::set_log_file "$(hyprland::wallpaper::log_dir)/${log_filename}.log" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -135,7 +133,7 @@ function hyprland::wallpaper::main() {
     local index
     local name
 
-    hyprland::wallpaper::set_log_file || return "$SHELL_FALSE"
+    hyprland::wallpaper::set_log || return "$SHELL_FALSE"
 
     hyprland::wallpaper::check_hyprpaper_ready
 
