@@ -53,7 +53,7 @@ function log::handler::file_handler::set_log_file() {
         filepath="${HOME}${filepath:1}"
     fi
     # 转成绝对路径
-    filepath="$(realpath "${filepath}")"
+    filepath="$(realpath -m "${filepath}")"
     if [ -z "$filepath" ]; then
         return "$SHELL_FALSE"
     fi
