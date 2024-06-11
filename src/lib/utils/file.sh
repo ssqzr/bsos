@@ -16,6 +16,27 @@ source "${SCRIPT_DIR_1d735f60}/cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_1d735f60}/string.sh"
 
+function file::is_exists() {
+    local filepath="$1"
+    if [ -e "$filepath" ]; then
+        return "$SHELL_TRUE"
+    fi
+
+    return "$SHELL_FALSE"
+}
+
+function file::is_not_exists() {
+    ! file::is_exists "$@"
+}
+
+function file::filename() {
+    local filepath="$1"
+    local filename
+    filename=$(basename "$filepath")
+    echo "$filename"
+    return "$SHELL_TRUE"
+}
+
 function file::read_dir() {
     local -n files_e8a51292
     # FIXME: 没有实现sudo的逻辑，处理完去掉 shellcheck 的注释
@@ -331,8 +352,8 @@ function file::backup_file_dir_in_same_dir() {
 }
 
 # 移动文件或者目录
-# 如果没有制定 --target-filepath 和 --target-directory 和 --target-filename ，则会在同目录下移动到随机文件
-# 如果没有制定 --target-filepath 和 --target-directory ，指定了 --target-filename ，则会在同目录下移动到 --target-filename 指定的文件名
+# 如果没有指定 --target-filepath 和 --target-directory 和 --target-filename ，则会在同目录下移动到随机文件
+# 如果没有指定 --target-filepath 和 --target-directory ，指定了 --target-filename ，则会在同目录下移动到 --target-filename 指定的文件名
 # 如果指定了 --target-filepath ，那么 --target-directory 和 --target-filename 会被忽略
 function file::mv_file_dir() {
     local -n result_388c1ebe
@@ -346,6 +367,7 @@ function file::mv_file_dir() {
     local target_filepath_388c1ebe
 
     local param_388c1ebe
+    local temp_str_388c1ebe
 
     ldebug "params=$*"
 
@@ -358,7 +380,8 @@ function file::mv_file_dir() {
             parameter::parse_string --option="$param_388c1ebe" password_388c1ebe || return "$SHELL_FALSE"
             ;;
         --target-filepath=*)
-            parameter::parse_string --option="$param_388c1ebe" result_388c1ebe || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param_388c1ebe" temp_str_388c1ebe || return "$SHELL_FALSE"
+            result_388c1ebe="$temp_str_388c1ebe"
             ;;
         --target-filename=*)
             parameter::parse_string --option="$param_388c1ebe" target_filename || return "$SHELL_FALSE"
@@ -430,7 +453,7 @@ function file::mv_file_dir() {
     # 创建父级目录
     file::create_parent_dir_recursive --sudo="$(string::print_yes_no "$is_sudo_388c1ebe")" --password="$password_388c1ebe" "$target_filepath_388c1ebe" || return "$SHELL_FALSE"
 
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo_388c1ebe")" --password="$password_388c1ebe" -- mv -f "$path_388c1ebe" "${target_filepath_388c1ebe}" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo_388c1ebe")" --password="$password_388c1ebe" -- mv -f "{{$path_388c1ebe}}" "{{${target_filepath_388c1ebe}}}" || return "$SHELL_FALSE"
 
     if [ -R result_388c1ebe ] && [ -z "${result_388c1ebe}" ]; then
         result_388c1ebe="${target_filepath_388c1ebe}"
@@ -442,7 +465,6 @@ function file::mv_file_dir() {
 # 复制文件或者目录
 # 参数说明：
 # -f, --force 是否覆盖已经存在的文件
-# -t, --create-target-directory 是否自动创建父级目录
 # <src> 原文件或目录
 # <dst> 目标文件或目录
 function file::copy_file_dir() {
@@ -539,7 +561,7 @@ function file::copy_file_dir() {
         file::mv_file_dir --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" --target-filepath=backup_filepath "$dst" || return "$SHELL_FALSE"
     fi
 
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cp -rf "$src" "$dst"
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cp -rf "{{$src}}" "{{$dst}}"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "copy file failed, src=$src, dst=$dst"
         # 恢复备份的文件

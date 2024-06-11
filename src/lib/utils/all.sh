@@ -35,3 +35,5 @@ source "${SCRIPT_DIR_cd871afe}/os.sh"
 source "${SCRIPT_DIR_cd871afe}/gsettings.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/hyprctl.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/hyprpm.sh"

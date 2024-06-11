@@ -1,0 +1,6 @@
+# hypridle 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/hyprwm/hypridle[官方文档]
+

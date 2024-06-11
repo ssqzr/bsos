@@ -1,0 +1,6 @@
+# hyprpaper 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/hyprwm/hyprpaper[官方文档]
+

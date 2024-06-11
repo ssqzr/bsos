@@ -1,0 +1,6 @@
+# hyprfocus 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/VortexCoyote/hyprfocus[官方文档]
+

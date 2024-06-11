@@ -11,47 +11,8 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
-function hyprland::settings::hyprland_config_filepath() {
-    echo "$XDG_CONFIG_HOME/hypr/hyprland.conf"
-}
-
 function hyprland::settings::base_config_filepath() {
-    echo "$XDG_CONFIG_HOME/hypr/conf.d/base.conf"
-}
-
-# 根据已有的配置进行修改
-function hyprland::settings::modify_hyprland_config() {
-    local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-
-    if [ ! -e "$config_filepath" ]; then
-        # sed 不能操作空文件
-        cmd::run_cmd_with_history -- echo '>' "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-
-    # 处理全部变量
-    grep -q "variables.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        # 全局变量必须是第一个引入的
-        cmd::run_cmd_with_history -- sed -i "'1a\\source = conf.d/variables.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-
-    # 处理基础的设置
-    grep -q "base.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- sed -i "'/variables.conf/a\\source = conf.d/base.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-
-    # 处理显示器的设置
-    hyprland::settings::monitor || return "${SHELL_FALSE}"
-
-    # 处理最小化窗口功能的设置
-    grep -q "minimized.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/minimized.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-
-    return "${SHELL_TRUE}"
+    echo "$XDG_CONFIG_HOME/hypr/conf.d/030-base.conf"
 }
 
 function hyprland::settings::cursors() {
@@ -111,113 +72,27 @@ function hyprland::settings::file_manager() {
 }
 
 function hyprland::settings::monitor() {
-    local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-    if os::is_not_vm; then
-        grep -q "monitor.conf" "$config_filepath"
-        if [ "$?" -ne "${SHELL_TRUE}" ]; then
-            cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/monitor.conf'" "$config_filepath"
-            if [ "$?" -ne "${SHELL_TRUE}" ]; then
-                lerror "hyprland setting monitor failed"
-                return "$SHELL_FALSE"
-            fi
-        fi
+    if os::is_vm; then
+        file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr/conf.d/050-monitor.conf" || return "${SHELL_FALSE}"
     fi
     linfo "hyprland setting monitor success"
     return "${SHELL_TRUE}"
 }
 
-function hyprland::settings::hypridle() {
-    local config_filepath
-    config_filepath="$(hyprland::settings::base_config_filepath)"
-    if os::is_vm; then
-        # 虚拟机里 hyprlock 会红屏，所以不启用 hypridle 以免触发 hyprlock
-        cmd::run_cmd_with_history -- sed -i "'s%^\(exec-once = hypridle\)%# \\1%g'" "$config_filepath"
-        if [ "$?" -ne "${SHELL_TRUE}" ]; then
-            lerror "hyprland setting hypridle failed"
-            return "$SHELL_FALSE"
-        fi
-    fi
-    linfo "hyprland setting hypridle success"
-    return "${SHELL_TRUE}"
-}
-
-function hyprland::plugins::clean() {
-    local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-
+function hyprland::hyprpm::install() {
     if ! hyprctl::is_can_connect; then
-        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not clean plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprpm"
         return "${SHELL_TRUE}"
     fi
-
-    linfo "start clean hyprland plugins"
-
-    # 修改配置文件
-    cmd::run_cmd_with_history -- sed -i "'s%^\(source = conf.d/hycov.conf\)%# \\1%g'" "$config_filepath" || return "${SHELL_FALSE}"
-
-    # 删除插件
-    local repository
-    local temp_str
-    local item
-    temp_str=$(hyprpm list | grep -o -E "Repository [^:]+" | awk '{print $2}')
-    array::readarray repository < <(echo "${temp_str}")
-
-    for item in "${repository[@]}"; do
-        cmd::run_cmd_with_history -- printf y '|' hyprpm -v remove "${item}" || return "${SHELL_FALSE}"
-        linfo "hyprpm remove ${item} success"
-    done
-
-    linfo "clean hyprland plugins success"
-    return "${SHELL_TRUE}"
-}
-
-function hyprland::plugins::install() {
-    # FIXME: 目前编译插件报错， https://github.com/outfoxxed/hy3/issues/109
-    local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-
-    if ! hyprctl::is_can_connect; then
-        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install plugin"
-        return "${SHELL_TRUE}"
-    fi
-
-    # 先清理
-    hyprland::plugins::clean || return "${SHELL_FALSE}"
 
     local hyprpm_state="$HOME/.local/share/hyprpm/state.toml"
     cmd::run_cmd_with_history -- rm -f "$hyprpm_state" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- echo -e '"[state]\ndont_warn_install = true"' '>' "$hyprpm_state" || return "${SHELL_FALSE}"
 
+    hyprpm::clean || return "${SHELL_FALSE}"
+
     # 先更新，安装 hyprland headers
-    cmd::run_cmd_with_history -- hyprpm update -v || return "${SHELL_FALSE}" || return "${SHELL_TRUE}"
-    linfo "hyprpm update success"
-
-    # 添加 hyprland-plugins
-    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/hyprwm/hyprland-plugins || return "${SHELL_FALSE}"
-    linfo "hyprpm add hyprland-plugins plugin success"
-
-    # 添加 hycov
-    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/DreamMaoMao/hycov || return "${SHELL_FALSE}"
-    linfo "hyprpm add hycov plugin success"
-    cmd::run_cmd_with_history -- hyprpm -v enable hycov || return "${SHELL_FALSE}"
-    # 处理hycov插件的设置
-    grep -q "hycov.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/hycov.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-    linfo "hyprpm enable hycov plugin success"
-
-    # 添加 hyprfocus
-    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/VortexCoyote/hyprfocus || return "${SHELL_FALSE}"
-    linfo "hyprpm add hyprfocus plugin success"
-    cmd::run_cmd_with_history -- hyprpm -v enable hyprfocus || return "${SHELL_FALSE}"
-    # 处理hycov插件的设置
-    grep -q "hyprfocus.conf" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- sed -i "'\$a\\source = conf.d/hyprfocus.conf'" "$config_filepath" || return "${SHELL_FALSE}"
-    fi
-    linfo "hyprpm enable hyprfocus plugin success"
+    hyprpm::update || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -256,31 +131,35 @@ function hyprland::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function hyprland::trait::post_install() {
-    local config_filepath
-    config_filepath="$(hyprland::settings::hyprland_config_filepath)"
-
-    cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    local temp_str
+    local files
+    local filename
+    local filepath
 
     # 先备份配置
-    cmd::run_cmd_with_history -- rm -rf "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
-    if [ -e "${XDG_CONFIG_HOME}/hypr" ]; then
-        cmd::run_cmd_with_history -- cp -rf "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    file::safe_delete_file_dir "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    if file::is_exists "${XDG_CONFIG_HOME}/hypr"; then
+        file::copy_file_dir --force "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
     fi
 
-    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    file::copy_file_dir --force "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
 
-    # 恢复主要的配置
-    if [ -e "${BUILD_TEMP_DIR}/hypr/hyprland.conf" ]; then
-        cmd::run_cmd_with_history -- cp -f "${BUILD_TEMP_DIR}/hypr/hyprland.conf" "${config_filepath}" || return "${SHELL_FALSE}"
-    fi
-
-    hyprland::settings::modify_hyprland_config || return "${SHELL_FALSE}"
+    file::read_dir files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
+    for temp_str in "${files[@]}"; do
+        filename="$(file::filename "$temp_str")"
+        filepath="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
+        if file::is_exists "${filepath}"; then
+            continue
+        fi
+        file::copy_file_dir --force "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
+    done
 
     hyprland::settings::terminal || return "${SHELL_FALSE}"
     hyprland::settings::file_manager || return "${SHELL_FALSE}"
     hyprland::settings::cursors || return "${SHELL_FALSE}"
-    hyprland::settings::hypridle || return "${SHELL_FALSE}"
+    hyprland::hyprpm::install || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
@@ -297,7 +176,7 @@ function hyprland::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hyprland::trait::post_uninstall() {
-    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -309,8 +188,6 @@ function hyprland::trait::post_uninstall() {
 function hyprland::trait::fixme() {
     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: TODO: Detecting real environments to generate monitor configurations"
 
-    hyprland::plugins::install || return "${SHELL_FALSE}"
-
     return "${SHELL_TRUE}"
 }
 
@@ -319,8 +196,6 @@ function hyprland::trait::fixme() {
 # 如果直接卸载也不会有残留就不用处理
 function hyprland::trait::unfixme() {
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: start undo fixme..."
-
-    hyprland::plugins::clean || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -372,14 +247,12 @@ function hyprland::trait::features() {
     # 状态栏
     apps+=("custom:anyrun" "custom:ags")
 
-    # wallust 根据图片生成颜色主题
-    apps+=("custom:wallust")
     # 壁纸
     # bing 壁纸需要解析json字符串
-    apps+=("pacman:wget" "pacman:go-yq" "pacman:hyprpaper")
+    apps+=("custom:hyprpaper")
 
     # 锁屏
-    apps+=("pacman:hyprlock")
+    apps+=("custom:hyprlock")
 
     # 截图需要的
     apps+=("custom:flameshot")
@@ -402,11 +275,17 @@ function hyprland::trait::features() {
     # logout
     apps+=("custom:wlogout")
 
-    # hypridle 会用到 brightnessctl
-    apps+=("pacman:brightnessctl" "pacman:hypridle")
+    apps+=("custom:hypridle")
 
     # 音乐舞动程序
     apps+=("custom:cavasik")
+
+    # FIXME: 目前编译插件报错， https://github.com/outfoxxed/hy3/issues/109
+    # # hycov 插件
+    # apps+=("custom:hycov")
+
+    # # hyprfocus 插件
+    # apps+=("custom:hyprfocus")
 
     array::print apps
     return "${SHELL_TRUE}"

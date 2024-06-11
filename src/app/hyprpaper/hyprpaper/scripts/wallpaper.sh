@@ -10,7 +10,7 @@ if [ -z "$HOME" ]; then
 fi
 src_dir=""
 source_filepath=""
-src_dir="${SCRIPT_DIR_154f29f7%%\/app\/hyprland*}"
+src_dir="${SCRIPT_DIR_154f29f7%%\/app\/hyprpaper*}"
 if [ -d "$src_dir" ] && [ "${src_dir}" != "${SCRIPT_DIR_154f29f7}" ]; then
     # 方便开发
     source_filepath="$src_dir/lib/utils/all.sh"
@@ -24,43 +24,55 @@ fi
 # shellcheck disable=SC1090
 source "$source_filepath" || exit 1
 
-function hyprland::wallpaper::log_dir() {
-    local log_dir="$HOME/.cache/hypr/log"
+function hyprpaper::wallpaper::log_dir() {
+    local log_dir="$HOME/.cache/hyprpaper/log"
     echo "$log_dir"
 }
 
-function hyprland::wallpaper::directory() {
-    local wallpaper_dir="$HOME/.cache/hypr/wallpapers"
+function hyprpaper::wallpaper::directory() {
+    local wallpaper_dir="$HOME/.cache/hyprpaper/wallpapers"
     echo "$wallpaper_dir"
 }
 
-function hyprland::wallpaper::today() {
+function hyprpaper::wallpaper::today() {
     date "+%Y-%m-%d"
 }
 
-function hyprland::wallpaper::bing_wallpaper_filepath() {
+function hyprpaper::wallpaper::bing_wallpaper_filepath() {
     local monitor_name="$1"
     local wallpaper_dir
     local day
 
-    wallpaper_dir="$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
+    wallpaper_dir="$(hyprpaper::wallpaper::directory)" || return "$SHELL_FALSE"
 
-    day=$(hyprland::wallpaper::today)
+    day=$(hyprpaper::wallpaper::today)
     echo "${wallpaper_dir}/bing_${day}_${monitor_name}.jpg"
 }
 
-function hyprland::wallpaper::bing_wallpaper_url() {
+function hyprpaper::wallpaper::bing_wallpaper_url() {
     local index="$1"
     local url
+    local temp_str
 
     # https://stackoverflow.com/questions/10639914/is-there-a-way-to-get-bings-photo-of-the-day
-    url=$(curl -s -k -L "https://www.bing.com/HPImageArchive.aspx?format=js&idx=${index}&n=1&mkt=zh-cn" | yq '.images[0].url') || return "$SHELL_FALSE"
+    temp_str=$(curl -s -k -L "https://www.bing.com/HPImageArchive.aspx?format=js&idx=${index}&n=1&mkt=zh-cn")
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "get bing.com wallpaper info failed"
+        return "$SHELL_FALSE"
+    fi
+
+    url=$(echo "$temp_str" | yq '.images[0].url') || return "$SHELL_FALSE"
+
+    if [ -z "$url" ] || [ "$url" == "null" ]; then
+        lerror "get bing.com wallpaper image url failed"
+        return "$SHELL_FALSE"
+    fi
 
     url="https://www.bing.com${url}"
     echo "$url"
 }
 
-function hyprland::wallpaper::bing_wallpaper_download() {
+function hyprpaper::wallpaper::bing_wallpaper_download() {
     local index="$1"
     local filepath="$2"
     local tmp_filepath="${filepath}.tmp"
@@ -68,13 +80,13 @@ function hyprland::wallpaper::bing_wallpaper_download() {
     local url
     local wallpaper_dir
 
-    url=$(hyprland::wallpaper::bing_wallpaper_url "$index") || return "$SHELL_FALSE"
+    url=$(hyprpaper::wallpaper::bing_wallpaper_url "$index") || return "$SHELL_FALSE"
 
     # 使用curl总是出现命令执行完，立即检测文件不存在的情况
     # cmd::run_cmd_with_history -- curl -s -k -L -o "$filepath" "'$url'" || return "$SHELL_FALSE"
     # wget 命令失败时可能会残留空文件，所以先保存到临时文件
-    cmd::run_cmd_with_history -- wget -q -O "$tmp_filepath" "'$url'" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- mv -f "'$tmp_filepath'" "'$filepath'" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- wget -q -O "{{$tmp_filepath}}" "{{$url}}" || return "$SHELL_FALSE"
+    file::mv_file_dir --target-filepath="filepath" "$tmp_filepath" || return "$SHELL_FALSE"
 
     if [ ! -f "$filepath" ]; then
         # 刚开始在虚拟机测试，当 curl 执行完成后，检测下载的文件并不存在
@@ -87,24 +99,21 @@ function hyprland::wallpaper::bing_wallpaper_download() {
     return "$SHELL_TRUE"
 }
 
-function hyprland::wallpaper::clean_old_file() {
+function hyprpaper::wallpaper::clean_old_file() {
     local wallpaper_dir
     local today
 
-    wallpaper_dir="$(hyprland::wallpaper::directory)" || return "$SHELL_FALSE"
-    if [ ! -e "$wallpaper_dir" ]; then
-        cmd::run_cmd_with_history -- mkdir -p "$wallpaper_dir" || return "${SHELL_FALSE}"
-        return "$SHELL_TRUE"
-    fi
+    wallpaper_dir="$(hyprpaper::wallpaper::directory)" || return "$SHELL_FALSE"
+    file::create_dir_recursive "$wallpaper_dir" || return "$SHELL_FALSE"
 
-    today="$(hyprland::wallpaper::today)" || return "$SHELL_FALSE"
+    today="$(hyprpaper::wallpaper::today)" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history -- find "$wallpaper_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
 
     return "$SHELL_TRUE"
 }
 
 # 因为当前脚本是和hyprpaper一起运行的，可能hyprpaper还没准备好，此时调用命令会报错
-function hyprland::wallpaper::check_hyprpaper_ready() {
+function hyprpaper::wallpaper::check_hyprpaper_ready() {
     local output
     while true; do
         output=$(hyprctl hyprpaper unload unused)
@@ -118,26 +127,26 @@ function hyprland::wallpaper::check_hyprpaper_ready() {
     ldebug "hyprpapre ready"
 }
 
-function hyprland::wallpaper::set_log() {
+function hyprpaper::wallpaper::set_log() {
     local log_filename="${BASH_SOURCE[0]}"
     log_filename="${log_filename##*/}"
     log::handler::file_handler::register || return "$SHELL_FALSE"
-    log::handler::file_handler::set_log_file "$(hyprland::wallpaper::log_dir)/${log_filename}.log" || return "$SHELL_FALSE"
+    log::handler::file_handler::set_log_file "$(hyprpaper::wallpaper::log_dir)/${log_filename}.log" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
-function hyprland::wallpaper::main() {
+function hyprpaper::wallpaper::main() {
     local filepath
     local monitors
     local monitor_count
     local index
     local name
 
-    hyprland::wallpaper::set_log || return "$SHELL_FALSE"
+    hyprpaper::wallpaper::set_log || return "$SHELL_FALSE"
 
-    hyprland::wallpaper::check_hyprpaper_ready
+    hyprpaper::wallpaper::check_hyprpaper_ready
 
-    hyprland::wallpaper::clean_old_file || return "$SHELL_FALSE"
+    hyprpaper::wallpaper::clean_old_file || return "$SHELL_FALSE"
 
     monitors="$(hyprctl monitors -j)" || return "$SHELL_FALSE"
 
@@ -146,10 +155,10 @@ function hyprland::wallpaper::main() {
     for ((index = 0; index < monitor_count; index++)); do
         name="$(echo "$monitors" | yq ".[${index}].name")" || return "$SHELL_FALSE"
 
-        filepath="$(hyprland::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
+        filepath="$(hyprpaper::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
 
         if [ ! -f "$filepath" ]; then
-            hyprland::wallpaper::bing_wallpaper_download "${index}" "${filepath}" || return "$SHELL_FALSE"
+            hyprpaper::wallpaper::bing_wallpaper_download "${index}" "${filepath}" || return "$SHELL_FALSE"
         else
             linfo "wallpaper $filepath exist, skip download"
         fi
@@ -165,10 +174,10 @@ function hyprland::wallpaper::main() {
 
     # 获取第一个显示器的名称
     name="$(echo "$monitors" | yq ".[0].name")" || return "$SHELL_FALSE"
-    filepath="$(hyprland::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
+    filepath="$(hyprpaper::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history -- wallust -a 80 -q "${filepath}"
 
     return "$SHELL_TRUE"
 }
 
-hyprland::wallpaper::main "$@"
+hyprpaper::wallpaper::main "$@"
