@@ -54,6 +54,8 @@ function ryujinx::trait::post_install() {
     # cmd::run_cmd_with_history -- find "${BUILD_TEMP_DIR}/Firmware" -mindepth 1 -maxdepth 1 -exec cp -rf {} "${ryujinx_config_dir}/" "\;" || return "${SHELL_FALSE}"
 
     cmd::run_cmd_with_history -- echo "vm.max_map_count=524288" "|" sudo tee "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
+
+    hyprctl::config::add "${SCRIPT_DIR_b3956090}/350-ryujinx.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -72,6 +74,8 @@ function ryujinx::trait::do_uninstall() {
 function ryujinx::trait::post_uninstall() {
     # cmd::run_cmd_with_history -- rm -rf "${HOME}/.var/app/org.ryujinx.Ryujinx"
     cmd::run_cmd_with_history -- sudo rm -f "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
+
+    hyprctl::config::remove "350-ryujinx.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

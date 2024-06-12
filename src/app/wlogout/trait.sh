@@ -50,6 +50,8 @@ function wlogout::trait::post_install() {
     cmd::run_cmd_with_history -- mkdir -p "$XDG_CONFIG_HOME"
     cmd::run_cmd_with_history -- rm -rf "$conf_filepath"
     cmd::run_cmd_with_history -- cp -rf "$SCRIPT_DIR_37160405/wlogout" "$conf_filepath" || return "$SHELL_FALSE"
+
+    hyprctl::config::add "$SCRIPT_DIR_37160405/350-wlogout.conf" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -68,6 +70,8 @@ function wlogout::trait::do_uninstall() {
 function wlogout::trait::post_uninstall() {
     local conf_filepath="$XDG_CONFIG_HOME/wlogout"
     cmd::run_cmd_with_history -- rm -rf "$conf_filepath"
+
+    hyprctl::config::remove "350-wlogout.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

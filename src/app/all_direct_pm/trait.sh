@@ -71,7 +71,6 @@ function all_direct_pm::trait::post_uninstall() {
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
 function all_direct_pm::trait::fixme() {
-    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "Steam: you should login and download games and settings"
     return "${SHELL_TRUE}"
 }
 
@@ -97,10 +96,9 @@ function all_direct_pm::trait::dependencies() {
     # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=("pacman:man-db" "pacman:man-pages" "pacman:man-pages-zh_cn")
     apps+=("flatpak:com.github.tchx84.Flatseal")
-    apps+=("flatpak:org.torproject.torbrowser-launcher" "flatpak:com.valvesoftware.Steam")
+    apps+=("flatpak:org.torproject.torbrowser-launcher")
     apps+=("flatpak:com.github.xournalpp.xournalpp" "flatpak:ch.openboard.OpenBoard")
     apps+=("flatpak:net.agalwood.Motrix")
-    apps+=("flatpak:org.kde.dolphin")
     array::print apps
     return "${SHELL_TRUE}"
 }

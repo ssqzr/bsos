@@ -48,6 +48,8 @@ function rofi::trait::do_install() {
 function rofi::trait::post_install() {
     cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/rofi" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_41bd3dd5}/rofi" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+
+    hyprctl::config::add "${SCRIPT_DIR_41bd3dd5}/350-rofi.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -65,6 +67,8 @@ function rofi::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function rofi::trait::post_uninstall() {
     cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/rofi" || return "${SHELL_FALSE}"
+
+    hyprctl::config::remove "350-rofi.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

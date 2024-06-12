@@ -42,7 +42,7 @@ function hyprland::zoom::set_log() {
 
 function hyprland::zoom::current_factor() {
     local factor
-    factor=$(hyprctl getoption misc:cursor_zoom_factor -j | yq '.float')
+    factor=$(hyprctl getoption cursor:zoom_factor -j | yq '.float')
     factor=$(string::trim "$factor")
     echo "$factor"
     return "$SHELL_TRUE"
@@ -61,7 +61,7 @@ function hyprland::zoom::in() {
     factor=$(awk "BEGIN{printf \"%.2f%%\n\",(${factor}+${__zoom_duration})}")
 
     ldebug "set cursor factor: $factor"
-    cmd::run_cmd_with_history -- hyprctl keyword misc:cursor_zoom_factor "$factor"
+    cmd::run_cmd_with_history -- hyprctl keyword cursor:zoom_factor "$factor"
     return "$SHELL_TRUE"
 }
 
@@ -77,7 +77,7 @@ function hyprland::zoom::out() {
     fi
 
     ldebug "set cursor factor: $factor"
-    cmd::run_cmd_with_history -- hyprctl keyword misc:cursor_zoom_factor "$factor"
+    cmd::run_cmd_with_history -- hyprctl keyword cursor:zoom_factor "$factor"
     return "$SHELL_TRUE"
 }
 

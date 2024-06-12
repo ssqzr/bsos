@@ -529,6 +529,13 @@ https://www.reddit.com/r/hyprland/comments/15qithj/setting_layer_of_a_window/[Se
 
 Hyprlan 支持加载一个目录下的配置文件。
 
+[#hyprland-zoom-abnormal]
+## zoom 使用异常
+
+hyprland 升级到 0.41.0 后， zoom 功能使用异常，使用鼠标放大效果消失。
+
+脚本见： src/app/hyprland/hypr/scripts/zoom.sh
+
 [#use-plugin]
 ## 插件的处理
 

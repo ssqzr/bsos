@@ -92,6 +92,11 @@ function file::read_dir() {
         return "$SHELL_FALSE"
     fi
 
+    if file::is_not_exists "$directory_e8a51292"; then
+        lerror "read directory failed, directory($directory_e8a51292) is not exists"
+        return "$SHELL_FALSE"
+    fi
+
     temp_str_e8a51292=$(find "${directory_e8a51292}" -maxdepth 1 -mindepth 1 2>&1)
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "read directory failed, call find to list files failed,output=${temp_str_e8a51292}"

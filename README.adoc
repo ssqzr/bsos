@@ -379,9 +379,10 @@ grep -- -v file
 * [ ] xref:src/app/hyprland/README.adoc#per-workspace-layer[关注 hyprland 支持不同工作空间设置不同的 layer 的特性]
 * [ ] zsh 库的 string 库怎么复用 bash 库。
 * [*] 单元测试支持测试某个文件、某个测试等细粒度操作。
-* [ ] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
+* [*] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
 * [ ] 提供命令行的帮助信息
 * [ ] xref:src/app/yazi/README.adoc#yazi-file-chooser[yazi 实现文件选择器的功能]
+* [ ] xref:src/app/hyprland/README.adoc#hyprland-zoom-abnormal[hyprland放大功能异常]
 
 ## 引用
 

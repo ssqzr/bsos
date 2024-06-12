@@ -52,7 +52,7 @@ function hypridle::trait::post_install() {
         # 虚拟机里 hyprlock 会红屏，所以不启用 hypridle 以免触发 hyprlock
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "hyprlock crash in virtual machine, disable hypridle"
     else
-        file::copy_file_dir --force "${SCRIPT_DIR_251802b6}/240-hypridle.conf" "${XDG_CONFIG_HOME}/hypr/conf.d/240-hypridle.conf" || return "${SHELL_FALSE}"
+        hyprctl::config::add "${SCRIPT_DIR_251802b6}/350-hypridle.conf" || return "${SHELL_FALSE}"
     fi
 
     return "${SHELL_TRUE}"
@@ -71,9 +71,9 @@ function hypridle::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hypridle::trait::post_uninstall() {
-    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr/conf.d/240-hypridle.conf" || return "${SHELL_FALSE}"
-
     file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypridle" || return "${SHELL_FALSE}"
+
+    hyprctl::config::remove "350-hypridle.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

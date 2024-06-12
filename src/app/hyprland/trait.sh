@@ -31,46 +31,6 @@ function hyprland::settings::cursors() {
     return "${SHELL_TRUE}"
 }
 
-function hyprland::settings::terminal() {
-    # 反复安装直接覆盖就可以了
-    local terminal
-    local config_filepath
-    config_filepath="$(hyprland::settings::base_config_filepath)"
-    if os::is_vm; then
-        terminal="terminator"
-    else
-        # 虚拟机里面不支持 wezterm
-        terminal="wezterm"
-    fi
-    cmd::run_cmd_with_history -- sed -i "'s/__terminal__/$terminal/g'" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        lerror "hyprland setting terminal failed"
-        return "$SHELL_FALSE"
-    fi
-    linfo "hyprland setting terminal success"
-    return "${SHELL_TRUE}"
-}
-
-function hyprland::settings::file_manager() {
-    # 反复安装直接覆盖就可以了
-    local file_manager
-    local config_filepath
-    config_filepath="$(hyprland::settings::base_config_filepath)"
-    if os::is_vm; then
-        file_manager="terminator -e yazi"
-    else
-        # 虚拟机里面不支持 wezterm
-        file_manager="wezterm start -- yazi"
-    fi
-    cmd::run_cmd_with_history -- sed -i "'s/__file_manager__/$file_manager/g'" "$config_filepath"
-    if [ "$?" -ne "${SHELL_TRUE}" ]; then
-        lerror "hyprland setting file manager failed"
-        return "$SHELL_FALSE"
-    fi
-    linfo "hyprland setting file manager success"
-    return "${SHELL_TRUE}"
-}
-
 function hyprland::settings::monitor() {
     if os::is_vm; then
         file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr/conf.d/050-monitor.conf" || return "${SHELL_FALSE}"
@@ -126,6 +86,8 @@ function hyprland::trait::pre_install() {
 # 安装的操作
 function hyprland::trait::do_install() {
     package_manager::install "$(hyprland::trait::package_manager)" "$(hyprland::trait::package_name)" || return "${SHELL_FALSE}"
+
+    hyprland::hyprpm::install || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -145,20 +107,19 @@ function hyprland::trait::post_install() {
     file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     file::copy_file_dir --force "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
 
-    file::read_dir files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
-    for temp_str in "${files[@]}"; do
-        filename="$(file::filename "$temp_str")"
-        filepath="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
-        if file::is_exists "${filepath}"; then
-            continue
-        fi
-        file::copy_file_dir --force "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
-    done
+    if file::is_exists "${BUILD_TEMP_DIR}/hypr/conf.d"; then
+        file::read_dir files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
+        for temp_str in "${files[@]}"; do
+            filename="$(file::filename "$temp_str")"
+            filepath="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
+            if file::is_exists "${filepath}"; then
+                continue
+            fi
+            file::copy_file_dir --force "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
+        done
+    fi
 
-    hyprland::settings::terminal || return "${SHELL_FALSE}"
-    hyprland::settings::file_manager || return "${SHELL_FALSE}"
     hyprland::settings::cursors || return "${SHELL_FALSE}"
-    hyprland::hyprpm::install || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -232,60 +193,15 @@ function hyprland::trait::dependencies() {
 function hyprland::trait::features() {
     local apps=()
 
-    # 输入法
-    apps+=("custom:fcitx5")
-
-    # 文件浏览器
-    apps+=("custom:yazi")
-
-    # 程序启动器
-    apps+=("custom:rofi")
-
-    # 通知
-    apps+=("custom:swaync")
-
     # 状态栏
     apps+=("custom:anyrun" "custom:ags")
 
-    # 壁纸
-    # bing 壁纸需要解析json字符串
-    apps+=("custom:hyprpaper")
-
-    # 锁屏
-    apps+=("custom:hyprlock")
-
-    # 截图需要的
-    apps+=("custom:flameshot")
-
-    # 邮箱
-    apps+=("pacman:thunderbird" "pacman:thunderbird-i18n-zh-cn")
-
-    # 翻译软件
-    apps+=("pacman:grim" "pacman:slurp" "custom:pot")
-
-    # 取色软件
-    apps+=("yay:hyprpicker")
-
-    # 终端软件
-    apps+=("custom:wezterm")
-    if os::is_vm; then
-        apps+=("pacman:terminator")
-    fi
-
-    # logout
-    apps+=("custom:wlogout")
-
-    apps+=("custom:hypridle")
-
-    # 音乐舞动程序
-    apps+=("custom:cavasik")
-
     # FIXME: 目前编译插件报错， https://github.com/outfoxxed/hy3/issues/109
-    # # hycov 插件
-    # apps+=("custom:hycov")
+    # hycov 插件
+    apps+=("custom:hycov")
 
-    # # hyprfocus 插件
-    # apps+=("custom:hyprfocus")
+    # hyprfocus 插件
+    apps+=("custom:hyprfocus")
 
     array::print apps
     return "${SHELL_TRUE}"
