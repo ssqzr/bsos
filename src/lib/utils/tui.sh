@@ -90,7 +90,7 @@ function tui::input_optional() {
     local prompt="$2"
     local default="$3"
     local value
-    value=$(gum input --placeholder "$placeholder" --prompt "${prompt}[Optional]" --value="${default}")
+    value=$(gum input --width=0 --placeholder "$placeholder" --prompt "${prompt}[Optional]" --value="${default}")
     local exit_code=$?
     if [ $exit_code -eq "$SHELL_TRUE" ]; then
         echo "$value"
@@ -107,7 +107,7 @@ function tui::input_required() {
     local default="$3"
     local value
     while true; do
-        value=$(gum input --placeholder "$placeholder" --prompt "${prompt}[Required]" --value="${default}")
+        value=$(gum input --width=0 --placeholder "$placeholder" --prompt "${prompt}[Required]" --value="${default}")
         local exit_code=$?
         if [ $exit_code -eq "$SHELL_TRUE" ]; then
             if [ -z "${value}" ]; then
