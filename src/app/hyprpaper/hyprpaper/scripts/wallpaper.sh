@@ -86,7 +86,7 @@ function hyprpaper::wallpaper::bing_wallpaper_download() {
     # cmd::run_cmd_with_history -- curl -s -k -L -o "$filepath" "'$url'" || return "$SHELL_FALSE"
     # wget 命令失败时可能会残留空文件，所以先保存到临时文件
     cmd::run_cmd_with_history -- wget -q -O "{{$tmp_filepath}}" "{{$url}}" || return "$SHELL_FALSE"
-    file::mv_file_dir --target-filepath="filepath" "$tmp_filepath" || return "$SHELL_FALSE"
+    fs::file::move "$tmp_filepath" "$filepath" || return "$SHELL_FALSE"
 
     if [ ! -f "$filepath" ]; then
         # 刚开始在虚拟机测试，当 curl 执行完成后，检测下载的文件并不存在
@@ -104,7 +104,7 @@ function hyprpaper::wallpaper::clean_old_file() {
     local today
 
     wallpaper_dir="$(hyprpaper::wallpaper::directory)" || return "$SHELL_FALSE"
-    file::create_dir_recursive "$wallpaper_dir" || return "$SHELL_FALSE"
+    fs::directory::create_recursive "$wallpaper_dir" || return "$SHELL_FALSE"
 
     today="$(hyprpaper::wallpaper::today)" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history -- find "$wallpaper_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"

@@ -33,7 +33,7 @@ function hyprland::settings::cursors() {
 
 function hyprland::settings::monitor() {
     if os::is_vm; then
-        file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr/conf.d/050-monitor.conf" || return "${SHELL_FALSE}"
+        fs::file::delete "${XDG_CONFIG_HOME}/hypr/conf.d/050-monitor.conf" || return "${SHELL_FALSE}"
     fi
     linfo "hyprland setting monitor success"
     return "${SHELL_TRUE}"
@@ -99,23 +99,30 @@ function hyprland::trait::post_install() {
     local filepath
 
     # 先备份配置
-    file::safe_delete_file_dir "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
-    if file::is_exists "${XDG_CONFIG_HOME}/hypr"; then
-        file::copy_file_dir --force "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    if fs::path::is_exists "${XDG_CONFIG_HOME}/hypr"; then
+        fs::directory::copy --force "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
     fi
 
-    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
-    file::copy_file_dir --force "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    fs::directory::copy --force "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
 
-    if file::is_exists "${BUILD_TEMP_DIR}/hypr/conf.d"; then
-        file::read_dir files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
+    if fs::path::is_exists "${BUILD_TEMP_DIR}/hypr/conf.d"; then
+        fs::directory::read files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
         for temp_str in "${files[@]}"; do
-            filename="$(file::filename "$temp_str")"
+            filename="$(fs::path::basename "$temp_str")"
             filepath="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
-            if file::is_exists "${filepath}"; then
+            if fs::path::is_exists "${filepath}"; then
                 continue
             fi
-            file::copy_file_dir --force "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
+            if fs::path::is_file "${temp_str}"; then
+                fs::file::copy "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
+            elif fs::path::is_directory "${temp_str}"; then
+                fs::directory::copy "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
+            else
+                lerror "file(${temp_str}) is not file and directory"
+                return "${SHELL_FALSE}"
+            fi
         done
     fi
 
@@ -137,7 +144,7 @@ function hyprland::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hyprland::trait::post_uninstall() {
-    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

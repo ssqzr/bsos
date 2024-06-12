@@ -206,7 +206,7 @@ include::doc/assets/bsos_architecture.excalidraw[]
 │                   └── parameter.sh
 │                       ├── cmd.sh
 │                       └── tui.sh
-│                           ├── file.sh
+│                           ├── fs.sh
 │                           ├── gsettings.sh
 │                           ├── systemctl.sh
 │                           ├── sed.sh

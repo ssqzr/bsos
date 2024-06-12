@@ -16,7 +16,7 @@ source "${SCRIPT_DIR_cd871afe}/log/log.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/parameter.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_cd871afe}/file.sh"
+source "${SCRIPT_DIR_cd871afe}/fs/fs.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/cmd.sh"
 # shellcheck source=/dev/null

@@ -46,7 +46,7 @@ function hyprpaper::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function hyprpaper::trait::post_install() {
-    file::copy_file_dir --force "${SCRIPT_DIR_33224798}/hyprpaper" "${XDG_CONFIG_HOME}/hyprpaper" || return "${SHELL_FALSE}"
+    fs::directory::copy --force "${SCRIPT_DIR_33224798}/hyprpaper" "${XDG_CONFIG_HOME}/hyprpaper" || return "${SHELL_FALSE}"
 
     hyprctl::config::add "${SCRIPT_DIR_33224798}/350-hyprpaper.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -65,7 +65,7 @@ function hyprpaper::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hyprpaper::trait::post_uninstall() {
-    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/hyprpaper" || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hyprpaper" || return "${SHELL_FALSE}"
 
     hyprctl::config::remove "350-hyprpaper.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

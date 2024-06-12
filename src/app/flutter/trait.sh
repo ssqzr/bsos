@@ -18,7 +18,7 @@ function flutter::settings::install_dir() {
 
 function flutter::settings::env::clean() {
     local flutter_profile="200-flutter.zsh"
-    file::safe_delete_file_dir "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
+    fs::file::delete "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -27,7 +27,7 @@ function flutter::settings::env::setup() {
     local src_dir
     src_dir="$(flutter::settings::install_dir)" || return "${SHELL_FALSE}"
 
-    file::copy_file_dir --force "${SCRIPT_DIR_2c7abf78}/${flutter_profile}" "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
+    fs::file::copy --force "${SCRIPT_DIR_2c7abf78}/${flutter_profile}" "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
 
     cmd::run_cmd_with_history -- echo "export PATH=\\\"$src_dir/bin:\\\$PATH\\\"" ">>" "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -68,7 +68,7 @@ function flutter::trait::do_install() {
     src_dir="$(flutter::settings::install_dir)"
 
     if [ ! -e "$src_dir/.git" ]; then
-        file::safe_delete_file_dir "$src_dir" || return "${SHELL_FALSE}"
+        fs::directory::safe_delete "$src_dir" || return "${SHELL_FALSE}"
         cmd::run_cmd_with_history -- git clone "https://github.com/flutter/flutter.git" "$src_dir" || return "${SHELL_FALSE}"
     fi
 
@@ -105,7 +105,7 @@ function flutter::trait::pre_uninstall() {
 # 卸载的操作
 function flutter::trait::do_uninstall() {
     # package_manager::uninstall "$(flutter::trait::package_manager)" "$(flutter::trait::package_name)" || return "${SHELL_FALSE}"
-    file::safe_delete_file_dir "$(flutter::settings::install_dir)" || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "$(flutter::settings::install_dir)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -119,7 +119,7 @@ function develop::command::update() {
     if [ ! -v app_names ]; then
         lwarn "param(--app) is not set app"
         local files=()
-        file::read_dir files "${SCRIPT_DIR_d6dc03c7}/app" || return "$SHELL_FALSE"
+        fs::directory::read files "${SCRIPT_DIR_d6dc03c7}/app" || return "$SHELL_FALSE"
 
         for file in "${files[@]}"; do
             if [ ! -d "$file" ]; then

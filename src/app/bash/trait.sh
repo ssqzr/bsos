@@ -13,13 +13,13 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function bash::settings::lib::clean() {
     local lib_dir="$HOME/.bash_lib"
-    file::safe_delete_file_dir "${lib_dir}" || return "$SHELL_FALSE"
+    fs::directory::safe_delete "${lib_dir}" || return "$SHELL_FALSE"
 }
 
 function bash::settings::lib::install() {
     # bash 脚本的封装库拷贝到 HOME 目录供其他脚本使用
     local lib_dir="$HOME/.bash_lib"
-    file::copy_file_dir --force "${SRC_ROOT_DIR}/lib/utils" "${lib_dir}/utils" || return "$SHELL_FALSE"
+    fs::directory::copy --force "${SRC_ROOT_DIR}/lib/utils" "${lib_dir}/utils" || return "$SHELL_FALSE"
 }
 
 # 指定使用的包管理器

@@ -16,23 +16,32 @@ function zsh::settings::zsh_dir() {
     local filepath
     local filename
     local files
+    local temp_str
 
     # 备份配置文件
-    file::safe_delete_file_dir "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
-    file::copy_file_dir "$XDG_CONFIG_HOME/zsh" "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
-    file::safe_delete_file_dir "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    fs::directory::safe_delete "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
+    fs::directory::copy "$XDG_CONFIG_HOME/zsh" "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
+    fs::directory::safe_delete "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
 
     # 拷贝全新的文件
-    file::copy_file_dir "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    fs::directory::copy "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
 
     # 处理 zshrc.d 目录下的配置文件，赋值不属于 zsh 内置的脚本
-    file::read_dir files "$BUILD_TEMP_DIR/zsh/zshrc.d" || return "$SHELL_FALSE"
+    fs::directory::read files "$BUILD_TEMP_DIR/zsh/zshrc.d" || return "$SHELL_FALSE"
     for filepath in "${files[@]}"; do
         filename="$(basename "$filepath")"
-        if [ -e "$XDG_CONFIG_HOME/zsh/zshrc.d/$filename" ]; then
+        temp_str="$XDG_CONFIG_HOME/zsh/zshrc.d/$filename"
+        if fs::path::is_exists "$temp_str"; then
             continue
         fi
-        file::copy_file_dir "$filepath" "$XDG_CONFIG_HOME/zsh/zshrc.d/$filename" || return "$SHELL_FALSE"
+        if fs::path::is_file "$filepath"; then
+            fs::file::copy "$filepath" "$temp_str" || return "$SHELL_FALSE"
+        elif fs::path::is_directory "$filepath"; then
+            fs::directory::copy "$filepath" "$temp_str" || return "$SHELL_FALSE"
+        else
+            lerror "file($filepath) is not file and directory"
+            return "$SHELL_FALSE"
+        fi
     done
 
     return "${SHELL_TRUE}"
@@ -73,8 +82,8 @@ function zsh::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function zsh::trait::post_install() {
 
-    file::copy_file_dir --force "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
-    file::copy_file_dir --force "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
+    fs::file::copy --force "$SCRIPT_DIR_fd204c06/zshrc" "$HOME/.zshrc" || return "$SHELL_FALSE"
+    fs::directory::copy --force "$SCRIPT_DIR_fd204c06/zkbd" "$HOME/.zkbd" || return "$SHELL_FALSE"
     zsh::settings::zsh_dir || return "$SHELL_FALSE"
 
     # 设置默认的shell为zsh
@@ -99,9 +108,9 @@ function zsh::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
-    file::safe_delete_file_dir "$HOME/.zshrc" || return "$SHELL_FALSE"
-    file::safe_delete_file_dir "$HOME/.zkbd" || return "$SHELL_FALSE"
-    file::safe_delete_file_dir "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    fs::file::delete "$HOME/.zshrc" || return "$SHELL_FALSE"
+    fs::file::delete "$HOME/.zkbd" || return "$SHELL_FALSE"
+    fs::directory::safe_delete "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
     username=$(id -un)
     cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/bash "${username}"
