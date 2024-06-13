@@ -58,10 +58,9 @@ function hyprland::hyprctl::getoption::decoration::rounding() {
     hyprland::hyprctl::getoption decoration:rounding | yq '.int' || return "$SHELL_FALSE"
 }
 
-function hyprland::hyprctl::monitors::focused::option() {
-    local name="$1"
+function hyprland::hyprctl::monitors() {
     local value
-    value=$(hyprctl -j monitors | yq ".[] | select(.focused==true) | .${name}") || return "$SHELL_FALSE"
+    value=$(hyprctl -j monitors) || return "$SHELL_FALSE"
     echo "$value"
     return "$SHELL_TRUE"
 }

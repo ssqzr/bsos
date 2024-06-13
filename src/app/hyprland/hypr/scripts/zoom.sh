@@ -58,7 +58,7 @@ function hyprland::zoom::in() {
         factor="1"
     fi
 
-    factor=$(awk "BEGIN{printf \"%.2f%%\n\",(${factor}+${__zoom_duration})}")
+    factor=$(awk "BEGIN{printf \"%.2f\n\",(${factor}+${__zoom_duration})}")
 
     ldebug "set cursor factor: $factor"
     cmd::run_cmd_with_history -- hyprctl keyword cursor:zoom_factor "$factor"
@@ -70,7 +70,7 @@ function hyprland::zoom::out() {
     factor=$(hyprland::zoom::current_factor) || return "$SHELL_FALSE"
     ldebug "current cursor factor: $factor"
 
-    factor=$(awk "BEGIN{printf \"%.2f%%\n\",(${factor}-${__zoom_duration})}")
+    factor=$(awk "BEGIN{printf \"%.2f\n\",(${factor}-${__zoom_duration})}")
     if [[ "$factor" =~ ^[0-].* ]]; then
         ldebug "computed zoom out cursor($factor) is less than 1, reset to 1"
         factor="1"

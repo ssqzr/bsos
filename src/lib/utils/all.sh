@@ -24,6 +24,8 @@ source "${SCRIPT_DIR_cd871afe}/array.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/tui.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/cfg/cfg.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/sed.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/process.sh"

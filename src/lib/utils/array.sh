@@ -53,6 +53,10 @@ function array::is_contain() {
     return "$SHELL_FALSE"
 }
 
+function array::is_not_contain() {
+    ! array::is_contain "$@"
+}
+
 # 去重
 function array::dedup() {
     # shellcheck disable=SC2178

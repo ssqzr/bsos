@@ -64,6 +64,18 @@ function fs::path::is_not_directory() {
     ! fs::path::is_directory "$@"
 }
 
+function fs::path::is_pipe() {
+    local filepath="$1"
+    if [ -p "$filepath" ]; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
+}
+
+function fs::path::is_not_pipe() {
+    ! fs::path::is_pipe "$@"
+}
+
 function fs::path::basename() {
     local filepath="$1"
     local filename
