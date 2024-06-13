@@ -50,7 +50,7 @@ function swaync::trait::post_install() {
     cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/swaync" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- cp -rf "${SCRIPT_DIR_27026406}/swaync" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
 
-    hyprctl::config::add "${SCRIPT_DIR_27026406}/350-swaync.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "${SCRIPT_DIR_27026406}/350-swaync.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -69,7 +69,7 @@ function swaync::trait::do_uninstall() {
 function swaync::trait::post_uninstall() {
     cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/swaync" || return "${SHELL_FALSE}"
 
-    hyprctl::config::remove "350-swaync.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350-swaync.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

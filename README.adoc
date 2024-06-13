@@ -211,7 +211,7 @@ include::doc/assets/bsos_architecture.excalidraw[]
 │                           ├── systemctl.sh
 │                           ├── sed.sh
 │                           ├── os.sh
-│                           ├── hyprctl.sh
+│                           ├── hyprland.sh
 │                           └── process.sh
 
 ----
@@ -351,7 +351,7 @@ grep -- -v file
 * [*] pywal 的使用
 * [*] hypridle 的使用
 * [*] hyprlock 的使用
-* [ ] hyprcursor 的使用
+* [*] hyprcursor 的使用
 * [*] wlogout 的使用
 * [ ] ags 的使用
 * [*] grub 主题美化

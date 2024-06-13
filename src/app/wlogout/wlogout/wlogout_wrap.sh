@@ -59,8 +59,8 @@ function wlogout_wrap::style_filepath() {
 function wlogout_wrap::font_size() {
     local focused_monitor_width
     local focused_monitor_height
-    focused_monitor_width=$(hyprctl::monitors::focused::option "width")
-    focused_monitor_height=$(hyprctl::monitors::focused::option "height")
+    focused_monitor_width=$(hyprland::hyprctl::monitors::focused::option "width")
+    focused_monitor_height=$(hyprland::hyprctl::monitors::focused::option "height")
     if [ "$focused_monitor_width" -ge "$focused_monitor_height" ]; then
         export font_size=$((focused_monitor_height * 4 / 100))
     else
@@ -121,7 +121,7 @@ function wlogout_wrap::button_reboot_image_filepath() {
 
 function wlogout_wrap::button_radius() {
     local hyprland_rounding
-    hyprland_rounding=$(hyprctl::decoration::rounding::value)
+    hyprland_rounding=$(hyprland::hyprctl::getoption::decoration::rounding)
 
     # eval hypr border radius
     export active_radius=$((hyprland_rounding * 5))
@@ -133,10 +133,10 @@ function wlogout_wrap::margin() {
     local focused_monitor_height
     local focused_monitor_scale_persent
     local temp
-    focused_monitor_width=$(hyprctl::monitors::focused::option "width")
-    focused_monitor_height=$(hyprctl::monitors::focused::option "height")
-    focused_monitor_transform=$(hyprctl::monitors::focused::option "transform")
-    focused_monitor_scale_persent=$(hyprctl::monitors::focused::option "scale" | sed 's/\.//')
+    focused_monitor_width=$(hyprland::hyprctl::monitors::focused::option "width")
+    focused_monitor_height=$(hyprland::hyprctl::monitors::focused::option "height")
+    focused_monitor_transform=$(hyprland::hyprctl::monitors::focused::option "transform")
+    focused_monitor_scale_persent=$(hyprland::hyprctl::monitors::focused::option "scale" | sed 's/\.//')
 
     # https://wiki.hyprland.org/Configuring/Monitors/#rotating
     local transform_90deg=(1 3 5 7)

@@ -42,7 +42,7 @@ function hycov::trait::pre_install() {
 # 安装的操作
 function hycov::trait::do_install() {
     # FIXME: 安装失败
-    # if ! hyprctl::is_can_connect; then
+    # if ! hyprland::hyprctl::is_can_connect; then
     #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hycov plugin"
     #     return "${SHELL_TRUE}"
     # fi
@@ -66,14 +66,14 @@ function hycov::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function hycov::trait::post_install() {
     # FIXME: 安装失败
-    # if ! hyprctl::is_can_connect; then
+    # if ! hyprland::hyprctl::is_can_connect; then
     #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_install hycov plugin"
     #     return "${SHELL_TRUE}"
     # fi
 
     # hyprpm::plugin::enable "hycov" || return "${SHELL_FALSE}"
 
-    # hyprctl::config::add "${SCRIPT_DIR_cf53b83d}/350-hycov.conf" || return "${SHELL_FALSE}"
+    # hyprland::config::add "${SCRIPT_DIR_cf53b83d}/350-hycov.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -84,7 +84,7 @@ function hycov::trait::pre_uninstall() {
 
 # 卸载的操作
 function hycov::trait::do_uninstall() {
-    if ! hyprctl::is_can_connect; then
+    if ! hyprland::hyprctl::is_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not uninstall hycov plugin"
         return "${SHELL_TRUE}"
     fi
@@ -96,12 +96,12 @@ function hycov::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hycov::trait::post_uninstall() {
-    if ! hyprctl::is_can_connect; then
+    if ! hyprland::hyprctl::is_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_uninstall hycov plugin"
         return "${SHELL_TRUE}"
     fi
 
-    hyprctl::config::remove "350-hycov.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350-hycov.conf" || return "${SHELL_FALSE}"
     linfo "delete hycov config success"
     return "${SHELL_TRUE}"
 }

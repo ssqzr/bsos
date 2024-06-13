@@ -40,7 +40,7 @@ function hyprland::settings::monitor() {
 }
 
 function hyprland::hyprpm::install() {
-    if ! hyprctl::is_can_connect; then
+    if ! hyprland::hyprctl::is_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprpm"
         return "${SHELL_TRUE}"
     fi

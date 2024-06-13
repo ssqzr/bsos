@@ -51,7 +51,7 @@ function cavasik::trait::post_install() {
     cmd::run_cmd_with_history -- mkdir -p "$(dirname "$config_path")" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- cp -rf "${SCRIPT_DIR_a35d2bad}/config" "$config_path" || return "${SHELL_FALSE}"
 
-    hyprctl::config::add "${SCRIPT_DIR_a35d2bad}/350-cavasik.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "${SCRIPT_DIR_a35d2bad}/350-cavasik.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -71,7 +71,7 @@ function cavasik::trait::post_uninstall() {
     local config_path="$HOME/.var/app/io.github.TheWisker.Cavasik/config"
     cmd::run_cmd_with_history -- rm -rf "$config_path" || return "${SHELL_FALSE}"
 
-    hyprctl::config::remove "350-cavasik.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350-cavasik.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -110,6 +110,7 @@ function rust::trait::dependencies() {
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function rust::trait::features() {
     local apps=()
+    apps+=("pacman:lldb")
     array::print apps
     return "${SHELL_TRUE}"
 }

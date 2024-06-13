@@ -45,7 +45,7 @@ function pot::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function pot::trait::post_install() {
-    hyprctl::config::add "${SCRIPT_DIR_727abb2f}/350-pot.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "${SCRIPT_DIR_727abb2f}/350-pot.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -62,7 +62,7 @@ function pot::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function pot::trait::post_uninstall() {
-    hyprctl::config::remove "350-pot.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350-pot.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

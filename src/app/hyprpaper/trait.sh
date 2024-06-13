@@ -48,7 +48,7 @@ function hyprpaper::trait::do_install() {
 function hyprpaper::trait::post_install() {
     fs::directory::copy --force "${SCRIPT_DIR_33224798}/hyprpaper" "${XDG_CONFIG_HOME}/hyprpaper" || return "${SHELL_FALSE}"
 
-    hyprctl::config::add "${SCRIPT_DIR_33224798}/350-hyprpaper.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "${SCRIPT_DIR_33224798}/350-hyprpaper.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -67,7 +67,7 @@ function hyprpaper::trait::do_uninstall() {
 function hyprpaper::trait::post_uninstall() {
     fs::directory::safe_delete "${XDG_CONFIG_HOME}/hyprpaper" || return "${SHELL_FALSE}"
 
-    hyprctl::config::remove "350-hyprpaper.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350-hyprpaper.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -67,7 +67,7 @@ function google_chrome::trait::post_install() {
     # 修改浏览器为默认浏览器
     google_chrome::set_xdg_mime || return "${SHELL_FALSE}"
 
-    hyprctl::config::add "${SCRIPT_DIR_8474d0ef}/350-chrome.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "${SCRIPT_DIR_8474d0ef}/350-chrome.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -86,7 +86,7 @@ function google_chrome::trait::do_uninstall() {
 function google_chrome::trait::post_uninstall() {
     google_chrome::undo_set_xdg_mime || return "${SHELL_FALSE}"
 
-    hyprctl::config::remove "350-chrome.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350-chrome.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
