@@ -15,10 +15,6 @@ source "${SCRIPT_DIR_b5b83ba6}/../lib/utils/all.sh"
 # gum 是安装脚本为了更好的终端交互需要安装的，运行安装向导等交互场景需要用到
 # fzf 是安装脚本为了更好的终端交互需要安装的，当选项比较多时搜索比较方便
 __CORE_APPS=("custom:systemd_resolved" "custom:pacman" "custom:sudo" "pacman:go-yq" "pacman:gum" "pacman:fzf")
-# __PRE_INSTALL_APPS=()
-# __PRE_INSTALL_APPS+=("${__CORE_APPS[@]}")
-# __PRE_INSTALL_APPS+=("pacman:gum" "pacman:base-devel")
-# __PRE_INSTALL_APPS+=("pacman:git" "custom:yay" "custom:pamac")
 
 # 优先安装的应用
 # system_setting 系统设置
@@ -41,6 +37,11 @@ function base::core_apps::is_contain() {
 function base::prior_install_apps::list() {
 
     array::print __PRIOR_INSTALL_APPS
+}
+
+function base::prior_install_apps::is_contain() {
+    local pm_app="$1"
+    array::is_contain __PRIOR_INSTALL_APPS "$pm_app"
 }
 
 # NOTE: 不要打印日志，因为一般调用这个函数在日志初始化前

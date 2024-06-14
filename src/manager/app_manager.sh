@@ -7,6 +7,8 @@ SCRIPT_DIR_612d794c="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "${SCRIPT_DIR_612d794c}/../lib/utils/all.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_612d794c}/../lib/utils/utest.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_612d794c}/base.sh"
 
 function manager::app::is_package_name_valid() {
     local package_name="$1"
@@ -547,6 +549,12 @@ function manager::app::do_uninstall() {
         lerror "pm_app is empty"
         return "$SHELL_FALSE"
     fi
+
+    if base::core_apps::is_contain "$pm_app"; then
+        ldebug "app(${pm_app}) is core app, can not uninstall"
+        return "$SHELL_TRUE"
+    fi
+
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: uninstalling..."
 
     if array::is_contain "${!uninstalled_apps_03c55110}" "${pm_app}"; then

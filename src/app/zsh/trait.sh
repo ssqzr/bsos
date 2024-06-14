@@ -109,7 +109,7 @@ function zsh::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function zsh::trait::post_uninstall() {
     fs::file::delete "$HOME/.zshrc" || return "$SHELL_FALSE"
-    fs::file::delete "$HOME/.zkbd" || return "$SHELL_FALSE"
+    fs::directory::safe_delete "$HOME/.zkbd" || return "$SHELL_FALSE"
     fs::directory::safe_delete "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
     username=$(id -un)

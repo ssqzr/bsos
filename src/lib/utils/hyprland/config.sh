@@ -48,7 +48,7 @@ function hyprland::config::remove() {
         lerror "filename is empty"
         return "$SHELL_FALSE"
     fi
-    file::remove_file_dir --force "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/conf.d/$filename" || return "$SHELL_FALSE"
+    fs::file::delete "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/conf.d/$filename" || return "$SHELL_FALSE"
 
     if hyprland::hyprctl::is_can_connect; then
         hyprland::hyprctl::reload || return "$SHELL_FALSE"
