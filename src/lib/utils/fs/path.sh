@@ -98,6 +98,7 @@ function fs::path::random_path() {
     local parent
     local name
     local random_name
+    local suffix
 
     ldebug "params=$*"
 
@@ -111,6 +112,9 @@ function fs::path::random_path() {
             ;;
         --name=*)
             parameter::parse_string --option="$param" name || return "$SHELL_FALSE"
+            ;;
+        --suffix=*)
+            parameter::parse_string --option="$param" suffix || return "$SHELL_FALSE"
             ;;
         -*)
             lerror "unknown parameter $param"
@@ -151,7 +155,7 @@ function fs::path::random_path() {
         parent=$(fs::path::realpath "$parent") || return "$SHELL_FALSE"
     fi
 
-    random_name=$(string::gen_random "$name" "" "") || return "$SHELL_FALSE"
+    random_name=$(string::gen_random "$name" "" "$suffix") || return "$SHELL_FALSE"
     path="$parent/$random_name"
     echo "$path"
     return "$SHELL_TRUE"

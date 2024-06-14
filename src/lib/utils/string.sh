@@ -20,10 +20,14 @@ function string::random() {
     echo "${RANDOM}"
 }
 
+# [${prefix}-]${now}-${random}[${suffix}]
 function string::gen_random() {
     local prefix="$1"
-    local random="$2"
-    local suffix="$2"
+    shift
+    local random="$1"
+    shift
+    local suffix="$1"
+    shift
     local now
     local data
 
@@ -39,7 +43,7 @@ function string::gen_random() {
     data+="${now}-${random}"
 
     if [ -n "${suffix}" ]; then
-        data+="-${suffix}"
+        data+="${suffix}"
     fi
     echo "$data"
 }

@@ -213,6 +213,7 @@ include::doc/assets/bsos_architecture.excalidraw[]
 │                           ├── sed.sh
 │                           ├── os.sh
 │                           ├── hyprland.sh
+│                           ├── zsh.sh
 │                           └── process.sh
 
 ----

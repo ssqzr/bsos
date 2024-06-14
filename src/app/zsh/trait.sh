@@ -13,33 +13,31 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 处理 .config/zsh 目录下的配置文件
 function zsh::settings::zsh_dir() {
-    local filepath
+    local src
+    local dst
     local filename
     local files
-    local temp_str
 
     # 备份配置文件
-    fs::directory::safe_delete "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
-    fs::directory::copy "$XDG_CONFIG_HOME/zsh" "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
-    fs::directory::safe_delete "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
+    fs::directory::move --force "$XDG_CONFIG_HOME/zsh" "$BUILD_TEMP_DIR/zsh" || return "$SHELL_FALSE"
 
     # 拷贝全新的文件
     fs::directory::copy "$SCRIPT_DIR_fd204c06/zsh" "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
 
     # 处理 zshrc.d 目录下的配置文件，赋值不属于 zsh 内置的脚本
     fs::directory::read files "$BUILD_TEMP_DIR/zsh/zshrc.d" || return "$SHELL_FALSE"
-    for filepath in "${files[@]}"; do
-        filename="$(basename "$filepath")"
-        temp_str="$XDG_CONFIG_HOME/zsh/zshrc.d/$filename"
-        if fs::path::is_exists "$temp_str"; then
+    for src in "${files[@]}"; do
+        filename="$(basename "$src")"
+        dst="$XDG_CONFIG_HOME/zsh/zshrc.d/$filename"
+        if fs::path::is_exists "$dst"; then
             continue
         fi
-        if fs::path::is_file "$filepath"; then
-            fs::file::copy "$filepath" "$temp_str" || return "$SHELL_FALSE"
-        elif fs::path::is_directory "$filepath"; then
-            fs::directory::copy "$filepath" "$temp_str" || return "$SHELL_FALSE"
+        if fs::path::is_file "$src"; then
+            fs::file::copy "$src" "$dst" || return "$SHELL_FALSE"
+        elif fs::path::is_directory "$src"; then
+            fs::directory::copy "$src" "$dst" || return "$SHELL_FALSE"
         else
-            lerror "file($filepath) is not file and directory"
+            lerror "file($src) is not file and directory"
             return "$SHELL_FALSE"
         fi
     done
@@ -152,9 +150,9 @@ function zsh::trait::dependencies() {
 function zsh::trait::features() {
     local apps=()
     apps+=("custom:fonts")
-    apps+=("custom:pkgfile" "pacman:zsh-completions" "pacman:zsh-autosuggestions")
-    apps+=("custom:fzf" "custom:pywal" "yay:zsh-theme-powerlevel10k-git")
-    apps+=("custom:nvm")
+    apps+=("pacman:zsh-completions" "pacman:zsh-autosuggestions")
+    apps+=("yay:zsh-theme-powerlevel10k-git")
+
     # 如果有特殊处理，zsh-syntax-highlighting 的配置一定要放到最后
     # 虽然目前的依赖顺序没有影响，但是为了后续忘记这个限制，特意放到最后做标注
     # https://github.com/zsh-users/zsh-syntax-highlighting?tab=readme-ov-file#why-must-zsh-syntax-highlightingzsh-be-sourced-at-the-end-of-the-zshrc-file

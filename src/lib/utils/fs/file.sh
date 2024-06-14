@@ -188,7 +188,7 @@ function fs::file::move() {
 
     # 如果目的文件存在，先保存到临时文件
     if fs::path::is_exists "$dst"; then
-        backup_filepath="$(fs::path::random_path --path="$dst")" || return "$SHELL_FALSE"
+        backup_filepath="$(fs::path::random_path --path="$dst" --suffix="-backup")" || return "$SHELL_FALSE"
 
         ldebug "backup file($dst) to($backup_filepath)"
         cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv "{{$dst}}" "{{$backup_filepath}}" || return "$SHELL_FALSE"
@@ -329,7 +329,7 @@ function fs::file::copy() {
 
     # 如果目的文件存在，先保存到临时文件
     if fs::path::is_exists "$dst"; then
-        backup_filepath="$(fs::path::random_path --path="$dst")" || return "$SHELL_FALSE"
+        backup_filepath="$(fs::path::random_path --path="$dst" --suffix="-backup")" || return "$SHELL_FALSE"
 
         ldebug "backup file($dst) to($backup_filepath)"
         cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv "{{$dst}}" "{{$backup_filepath}}" || return "$SHELL_FALSE"

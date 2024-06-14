@@ -327,6 +327,7 @@ function main::run() {
     log_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/main.log"
     log::handler::file_handler::register || return "$SHELL_FALSE"
     log::handler::file_handler::set_log_file "${log_filepath}" || return "$SHELL_FALSE"
+    log::level::set "$LOG_LEVEL_DEBUG" || return "$SHELL_FALSE"
 
     # 单例
     base::lock || return "$SHELL_FALSE"

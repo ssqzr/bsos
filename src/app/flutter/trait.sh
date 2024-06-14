@@ -17,19 +17,19 @@ function flutter::settings::install_dir() {
 }
 
 function flutter::settings::env::clean() {
-    local flutter_profile="200-flutter.zsh"
-    fs::file::delete "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
+    zsh::config::remove "350" "flutter.zsh" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 function flutter::settings::env::setup() {
-    local flutter_profile="200-flutter.zsh"
+    local filepath
     local src_dir
     src_dir="$(flutter::settings::install_dir)" || return "${SHELL_FALSE}"
 
-    fs::file::copy --force "${SCRIPT_DIR_2c7abf78}/${flutter_profile}" "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
+    zsh::config::add "350" "${SCRIPT_DIR_2c7abf78}/flutter.zsh" || return "${SHELL_FALSE}"
+    filepath="$(zsh::config::filepath "350" "flutter.zsh")" || return "${SHELL_FALSE}"
 
-    cmd::run_cmd_with_history -- echo "export PATH=\\\"$src_dir/bin:\\\$PATH\\\"" ">>" "${XDG_CONFIG_HOME}/zsh/zshrc.d/${flutter_profile}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- echo "export PATH=\\\"$src_dir/bin:\\\$PATH\\\"" ">>" "$filepath" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

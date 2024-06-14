@@ -91,10 +91,10 @@ function hyprland::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function hyprland::trait::post_install() {
-    local temp_str
+    local src
+    local dst
     local files
     local filename
-    local filepath
 
     # 先备份配置
     fs::directory::safe_delete "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
@@ -107,18 +107,18 @@ function hyprland::trait::post_install() {
 
     if fs::path::is_exists "${BUILD_TEMP_DIR}/hypr/conf.d"; then
         fs::directory::read files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
-        for temp_str in "${files[@]}"; do
-            filename="$(fs::path::basename "$temp_str")"
-            filepath="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
-            if fs::path::is_exists "${filepath}"; then
+        for src in "${files[@]}"; do
+            filename="$(fs::path::basename "$src")"
+            dst="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
+            if fs::path::is_exists "${dst}"; then
                 continue
             fi
-            if fs::path::is_file "${temp_str}"; then
-                fs::file::copy "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
-            elif fs::path::is_directory "${temp_str}"; then
-                fs::directory::copy "${temp_str}" "${filepath}" || return "${SHELL_FALSE}"
+            if fs::path::is_file "${src}"; then
+                fs::file::copy "${src}" "${dst}" || return "${SHELL_FALSE}"
+            elif fs::path::is_directory "${src}"; then
+                fs::directory::copy "${src}" "${dst}" || return "${SHELL_FALSE}"
             else
-                lerror "file(${temp_str}) is not file and directory"
+                lerror "file(${src}) is not file and directory"
                 return "${SHELL_FALSE}"
             fi
         done
