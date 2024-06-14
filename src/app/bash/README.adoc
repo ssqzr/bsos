@@ -2,5 +2,26 @@
 include::../../../doc/base.adoc[]
 
 
-official_document_url[官方文档]
+https://www.gnu.org/software/bash/manual/bash.html[官方文档]
+
+## 问题记录
+
+### 命令行中“--”的含义
+
+在使用zsh的bindkey的时候发现有使用"bindkey --"的代码，查看 https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Zle-Builtins[bindkey]的文档，也没有查到其含义。
+
+其实以前也在其他命令看到过类似的用法，只是没特别在意而已。
+
+https://unix.stackexchange.com/questions/11376/what-does-double-dash-mean[What does "--" (double-dash) mean?]
+
+看上面这个解答就可以了。
+
+大多数 Bash 内置命令和许多其他命令中使用双破折号 ( -- ) 来表示命令选项的结束，之后仅接受位置参数。
+
+使用示例：假设您要在文件中查找字符串 -v 。通常 -v 将被视为反转匹配含义的选项（仅显示不匹配的行），但使用 -- 您可以 grep 查找字符串 -v 像这样：
+
+[source,console]
+----
+grep -- -v file
+----
 
