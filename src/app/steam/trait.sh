@@ -46,7 +46,7 @@ function steam::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function steam::trait::post_install() {
-    hyprland::config::add "${SCRIPT_DIR_859108c3}/350-steam.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_859108c3}/steam.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -63,7 +63,7 @@ function steam::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function steam::trait::post_uninstall() {
-    hyprland::config::remove "350-steam.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "steam.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

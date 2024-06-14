@@ -48,7 +48,7 @@ function hyprlock::trait::do_install() {
 function hyprlock::trait::post_install() {
     fs::directory::copy --force "${SCRIPT_DIR_b8483b18}/hyprlock" "${XDG_CONFIG_HOME}/hyprlock" || return "${SHELL_FALSE}"
 
-    hyprland::config::add "${SCRIPT_DIR_b8483b18}/350-hyprlock.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_b8483b18}/hyprlock.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -67,7 +67,7 @@ function hyprlock::trait::do_uninstall() {
 function hyprlock::trait::post_uninstall() {
     fs::directory::safe_delete "${XDG_CONFIG_HOME}/hyprlock" || return "${SHELL_FALSE}"
 
-    hyprland::config::remove "350-hyprlock.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "hyprlock.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

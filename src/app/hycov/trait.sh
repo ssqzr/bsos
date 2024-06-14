@@ -71,7 +71,7 @@ function hycov::trait::post_install() {
 
     hyprland::hyprpm::plugin::enable "hycov" || return "${SHELL_FALSE}"
 
-    hyprland::config::add "${SCRIPT_DIR_cf53b83d}/350-hycov.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_cf53b83d}/hycov.conf" || return "${SHELL_FALSE}"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -101,7 +101,7 @@ function hycov::trait::post_uninstall() {
         return "${SHELL_TRUE}"
     fi
 
-    hyprland::config::remove "350-hycov.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "hycov.conf" || return "${SHELL_FALSE}"
     linfo "delete hycov config success"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"

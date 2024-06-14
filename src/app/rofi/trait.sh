@@ -49,7 +49,7 @@ function rofi::trait::post_install() {
     cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/rofi" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_41bd3dd5}/rofi" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
 
-    hyprland::config::add "${SCRIPT_DIR_41bd3dd5}/350-rofi.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_41bd3dd5}/rofi.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -68,7 +68,7 @@ function rofi::trait::do_uninstall() {
 function rofi::trait::post_uninstall() {
     cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/rofi" || return "${SHELL_FALSE}"
 
-    hyprland::config::remove "350-rofi.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "rofi.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

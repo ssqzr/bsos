@@ -145,7 +145,7 @@ function flutter::trait::dependencies() {
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
-    apps+=("custom:google_chrome")
+    apps+=("custom:chrome")
     apps+=("custom:android_develop")
     # 编译 linux 的桌面程序需要 clang
     apps+=("pacman:clang")

@@ -18,23 +18,54 @@ source "${SCRIPT_DIR_a1329057}/../cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_a1329057}/../fs/fs.sh"
 
+function hyprland::config::filepath() {
+    local index="$1"
+    shift
+    local filename="$1"
+    shift
+
+    local xdg_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+    if string::is_empty "$index"; then
+        lerror "get hyprland config failed, index is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$filename"; then
+        lerror "get hyprland config failed, filename is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    echo "${xdg_config_home}/hypr/conf.d/${index}-${filename}"
+}
+
 function hyprland::config::add() {
+    local index="$1"
+    shift
     local filepath="$1"
+    shift
+
     local xdg_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
     local filename
+    local dst
 
+    if string::is_empty "$index"; then
+        lerror "add hyprland config failed, index is empty"
+        return "$SHELL_FALSE"
+    fi
     if string::is_empty "$filepath"; then
-        lerror "filepath is empty"
+        lerror "add hyprland config failed, filepath is empty"
         return "$SHELL_FALSE"
     fi
     if fs::path::is_not_exists "$filepath"; then
-        lerror "filepath($filepath) not exist"
+        lerror "add hyprland config failed, filepath($filepath) not exist"
         return "$SHELL_FALSE"
     fi
 
-    filename=$(fs::path::basename "$filepath")
+    filename=$(fs::path::basename "$filepath") || return "$SHELL_FALSE"
+    dst=$(hyprland::config::filepath "$index" "$filename") || return "$SHELL_FALSE"
 
-    fs::file::copy --force "$filepath" "${xdg_config_home}/hypr/conf.d/$filename" || return "$SHELL_FALSE"
+    fs::file::copy --force "$filepath" "${dst}" || return "$SHELL_FALSE"
 
     if hyprland::hyprctl::is_can_connect; then
         hyprland::hyprctl::reload || return "$SHELL_FALSE"
@@ -43,12 +74,25 @@ function hyprland::config::add() {
 }
 
 function hyprland::config::remove() {
+    local index="$1"
+    shift
     local filename="$1"
-    if string::is_empty "$filename"; then
-        lerror "filename is empty"
+    shift
+
+    local xdg_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+    local filepath
+
+    if string::is_empty "$index"; then
+        lerror "remove hyprland config failed, index is empty"
         return "$SHELL_FALSE"
     fi
-    fs::file::delete "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/conf.d/$filename" || return "$SHELL_FALSE"
+    if string::is_empty "$filename"; then
+        lerror "remove hyprland config failed, filename is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    filepath=$(hyprland::config::filepath "$index" "$filename") || return "$SHELL_FALSE"
+    fs::file::delete "${filepath}" || return "$SHELL_FALSE"
 
     if hyprland::hyprctl::is_can_connect; then
         hyprland::hyprctl::reload || return "$SHELL_FALSE"

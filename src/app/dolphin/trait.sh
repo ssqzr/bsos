@@ -46,7 +46,7 @@ function dolphin::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function dolphin::trait::post_install() {
-    hyprland::config::add "${SCRIPT_DIR_953879b6}/350-dolphin.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_953879b6}/dolphin.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -63,7 +63,7 @@ function dolphin::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function dolphin::trait::post_uninstall() {
-    hyprland::config::remove "350-dolphin.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "dolphin.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

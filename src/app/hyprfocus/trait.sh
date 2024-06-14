@@ -71,7 +71,7 @@ function hyprfocus::trait::post_install() {
 
     hyprland::hyprpm::plugin::enable hyprfocus || return "${SHELL_FALSE}"
 
-    hyprland::config::add "${SCRIPT_DIR_fdb555da}/350-hyprfocus.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_fdb555da}/hyprfocus.conf" || return "${SHELL_FALSE}"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"
 
@@ -102,7 +102,7 @@ function hyprfocus::trait::post_uninstall() {
         return "${SHELL_TRUE}"
     fi
 
-    hyprland::config::remove 350-hyprfocus.conf || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" hyprfocus.conf || return "${SHELL_FALSE}"
     linfo "delete hyprfocus config success"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"

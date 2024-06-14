@@ -47,7 +47,7 @@ function terminator::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function terminator::trait::post_install() {
     if os::is_vm; then
-        hyprland::config::add "${SCRIPT_DIR_de3ec7e7}/350-terminator.conf" || return "${SHELL_FALSE}"
+        hyprland::config::add "350" "${SCRIPT_DIR_de3ec7e7}/terminator.conf" || return "${SHELL_FALSE}"
     fi
     return "${SHELL_TRUE}"
 }
@@ -65,7 +65,7 @@ function terminator::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function terminator::trait::post_uninstall() {
-    hyprland::config::remove "350-terminator.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "terminator.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

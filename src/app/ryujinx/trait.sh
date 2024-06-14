@@ -55,7 +55,7 @@ function ryujinx::trait::post_install() {
 
     cmd::run_cmd_with_history -- echo "vm.max_map_count=524288" "|" sudo tee "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
 
-    hyprland::config::add "${SCRIPT_DIR_b3956090}/350-ryujinx.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_b3956090}/ryujinx.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -75,7 +75,7 @@ function ryujinx::trait::post_uninstall() {
     # cmd::run_cmd_with_history -- rm -rf "${HOME}/.var/app/org.ryujinx.Ryujinx"
     cmd::run_cmd_with_history -- sudo rm -f "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
 
-    hyprland::config::remove "350-ryujinx.conf" || return "${SHELL_FALSE}"
+    hyprland::config::remove "350" "ryujinx.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
