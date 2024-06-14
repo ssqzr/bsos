@@ -40,38 +40,40 @@ function hyprfocus::trait::pre_install() {
 
 # 安装的操作
 function hyprfocus::trait::do_install() {
-    # FIXME: 安装失败
-    # if ! hyprland::hyprctl::is_can_connect; then
-    #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
-    #     return "${SHELL_TRUE}"
-    # fi
+    if ! hyprland::hyprctl::is_can_connect; then
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
+        return "${SHELL_TRUE}"
+    fi
 
-    # # 先更新，安装 hyprland headers
-    # hyprpm::update || return "${SHELL_FALSE}"
+    # 先更新，安装 hyprland headers
+    hyprland::hyprpm::update || return "${SHELL_FALSE}"
 
-    # if hyprpm::repository::is_exists "hyprfocus"; then
-    #     # 如果存在， hyprpm update 会更新到最新版本，所以不需要再次安装
-    #     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "hyprfocus already exists"
-    #     return "${SHELL_TRUE}"
-    # fi
+    if hyprland::hyprpm::repository::is_exists "hyprfocus"; then
+        # 如果存在， hyprpm update 会更新到最新版本，所以不需要再次安装
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "hyprfocus already exists"
+        return "${SHELL_TRUE}"
+    fi
 
+    # https://github.com/VortexCoyote/hyprfocus 是原始的仓库，但是长时间没更新，目前不可用
     # cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/VortexCoyote/hyprfocus || return "${SHELL_FALSE}"
-    # linfo "hyprpm add hyprfocus plugin success"
+    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/pyt0xic/hyprfocus || return "${SHELL_FALSE}"
+    linfo "hyprpm add hyprfocus plugin success"
 
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
 function hyprfocus::trait::post_install() {
-    # FIXME: 安装失败
-    # if ! hyprland::hyprctl::is_can_connect; then
-    #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
-    #     return "${SHELL_TRUE}"
-    # fi
+    if ! hyprland::hyprctl::is_can_connect; then
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
+        return "${SHELL_TRUE}"
+    fi
 
-    # hyprpm::plugin::enable hyprfocus || return "${SHELL_FALSE}"
+    hyprland::hyprpm::plugin::enable hyprfocus || return "${SHELL_FALSE}"
 
-    # hyprland::config::add "${SCRIPT_DIR_fdb555da}/350-hyprfocus.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "${SCRIPT_DIR_fdb555da}/350-hyprfocus.conf" || return "${SHELL_FALSE}"
+
+    hyprland::hyprpm::reload || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -88,7 +90,7 @@ function hyprfocus::trait::do_uninstall() {
         return "${SHELL_TRUE}"
     fi
 
-    hyprpm::repository::remove hyprfocus || return "${SHELL_FALSE}"
+    hyprland::hyprpm::repository::remove hyprfocus || return "${SHELL_FALSE}"
     linfo "hyprpm remove hyprfocus plugin success"
     return "${SHELL_TRUE}"
 }
@@ -102,6 +104,9 @@ function hyprfocus::trait::post_uninstall() {
 
     hyprland::config::remove 350-hyprfocus.conf || return "${SHELL_FALSE}"
     linfo "delete hyprfocus config success"
+
+    hyprland::hyprpm::reload || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 

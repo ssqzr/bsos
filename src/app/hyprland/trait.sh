@@ -49,10 +49,8 @@ function hyprland::hyprpm::install() {
     cmd::run_cmd_with_history -- rm -f "$hyprpm_state" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- echo -e '"[state]\ndont_warn_install = true"' '>' "$hyprpm_state" || return "${SHELL_FALSE}"
 
-    hyprpm::clean || return "${SHELL_FALSE}"
-
     # 先更新，安装 hyprland headers
-    hyprpm::update || return "${SHELL_FALSE}"
+    hyprland::hyprpm::update || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -188,6 +186,7 @@ function hyprland::trait::dependencies() {
 
     # 插件hyprpm需要的
     apps+=("pacman:cpio")
+    apps+=("pacman:hyprwayland-scanner")
 
     array::print apps
     return "${SHELL_TRUE}"

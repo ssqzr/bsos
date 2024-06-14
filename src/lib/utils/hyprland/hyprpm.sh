@@ -8,15 +8,15 @@ fi
 SCRIPT_DIR_35cc3ba9="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_35cc3ba9}/constant.sh"
+source "${SCRIPT_DIR_35cc3ba9}/../constant.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_35cc3ba9}/log/log.sh"
+source "${SCRIPT_DIR_35cc3ba9}/../log/log.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_35cc3ba9}/string.sh"
+source "${SCRIPT_DIR_35cc3ba9}/../string.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_35cc3ba9}/cmd.sh"
+source "${SCRIPT_DIR_35cc3ba9}/../cmd.sh"
 
-function hyprpm::repository::is_exists() {
+function hyprland::hyprpm::repository::is_exists() {
     local name="$1"
     hyprpm list | grep -q -E "Repository ${name}"
     if [ $? -eq "$SHELL_TRUE" ]; then
@@ -26,14 +26,14 @@ function hyprpm::repository::is_exists() {
     return "$SHELL_FALSE"
 }
 
-function hyprpm::repository::is_not_exists() {
-    ! hyprpm::repository::is_exists "$@"
+function hyprland::hyprpm::repository::is_not_exists() {
+    ! hyprland::hyprpm::repository::is_exists "$@"
 }
 
-function hyprpm::repository::remove() {
+function hyprland::hyprpm::repository::remove() {
     local name="$1"
 
-    if hyprpm::repository::is_not_exists "$name"; then
+    if hyprland::hyprpm::repository::is_not_exists "$name"; then
         linfo "repository ${name} is not exists, remove success."
         return "${SHELL_TRUE}"
     fi
@@ -48,7 +48,7 @@ function hyprpm::repository::remove() {
     return "${SHELL_TRUE}"
 }
 
-function hyprpm::repository::list() {
+function hyprland::hyprpm::repository::list() {
     # shellcheck disable=SC2034
     local -n repository_12ec5245="$1"
     local temp_str_12ec5245
@@ -58,7 +58,7 @@ function hyprpm::repository::list() {
     return "${SHELL_TRUE}"
 }
 
-function hyprpm::plugin::enable() {
+function hyprland::hyprpm::plugin::enable() {
     local name="$1"
 
     cmd::run_cmd_with_history -- hyprpm -v enable "$name"
@@ -70,20 +70,20 @@ function hyprpm::plugin::enable() {
     return "${SHELL_TRUE}"
 }
 
-function hyprpm::clean() {
+function hyprland::hyprpm::clean() {
     # 删除插件
     local repository
     local item
-    hyprpm::repository::list repository || return "${SHELL_FALSE}"
+    hyprland::hyprpm::repository::list repository || return "${SHELL_FALSE}"
 
     for item in "${repository[@]}"; do
-        hyprpm::repository::remove "${item}" || return "${SHELL_FALSE}"
+        hyprland::hyprpm::repository::remove "${item}" || return "${SHELL_FALSE}"
     done
 
     linfo "clean all hyprland plugins success"
 }
 
-function hyprpm::update() {
+function hyprland::hyprpm::update() {
     cmd::run_cmd_with_history -- hyprpm update -v
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "hyprpm update failed"
@@ -91,5 +91,16 @@ function hyprpm::update() {
     fi
 
     linfo "hyprpm update success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::hyprpm::reload() {
+    cmd::run_cmd_with_history -- hyprpm reload -v
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "hyprpm reload failed"
+        return "${SHELL_FALSE}"
+    fi
+
+    linfo "hyprpm reload success"
     return "${SHELL_TRUE}"
 }

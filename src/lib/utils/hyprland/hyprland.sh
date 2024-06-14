@@ -21,3 +21,5 @@ source "${SCRIPT_DIR_8cc6ad8f}/../fs/fs.sh"
 source "${SCRIPT_DIR_8cc6ad8f}/hyprctl.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8cc6ad8f}/config.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_8cc6ad8f}/hyprpm.sh"
