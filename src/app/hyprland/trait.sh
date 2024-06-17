@@ -125,6 +125,7 @@ function hyprland::trait::post_install() {
     fi
 
     hyprland::settings::cursors || return "${SHELL_FALSE}"
+    hyprland::hyprctl::reload || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }

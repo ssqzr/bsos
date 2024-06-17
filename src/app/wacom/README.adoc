@@ -1,0 +1,14 @@
+# wacom 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinux.org/title/Graphics_tablet[官方文档]
+
+
+## 说明
+
+`Arch Linux` 内核包括 https://linuxwacom.github.io/[`linux-wacom`] 和 https://digimend.github.io/[`DIGImend`] 项目的驱动程序。 https://linuxwacom.github.io/[`linux-wacom`] 支持 `Wacom` 设备，而 https://digimend.github.io/[`DIGImend`] 支持其他制造商的设备。这两个项目都发布了支持的设备列表： https://github.com/linuxwacom/input-wacom/wiki/Device-IDs[`linux-wacom`] 、 https://digimend.github.io/tablets/[`DIGImend`]。
+
+
+需要安装 `libwacom` 模块，这个模块被 `libinput` 依赖， `libinput` 系统默认安装，所以 `libwacom` 也是默认安装。
+
