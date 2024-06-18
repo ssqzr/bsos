@@ -1,0 +1,6 @@
+# localsend 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/localsend/localsend[官方文档]
+
