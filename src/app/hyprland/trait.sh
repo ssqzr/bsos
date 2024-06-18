@@ -125,7 +125,9 @@ function hyprland::trait::post_install() {
     fi
 
     hyprland::settings::cursors || return "${SHELL_FALSE}"
-    hyprland::hyprctl::reload || return "${SHELL_FALSE}"
+    if hyprland::hyprctl::is_can_connect; then
+        hyprland::hyprctl::reload || return "$SHELL_FALSE"
+    fi
 
     return "${SHELL_TRUE}"
 }
