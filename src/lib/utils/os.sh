@@ -27,3 +27,26 @@ function os::is_not_vm() {
     os::is_vm && return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
+
+function os::nodename() {
+    uname -n
+}
+
+function os::user::name() {
+    id -un
+}
+
+function os::user::group() {
+    id -gn
+}
+
+function os::user::is_root() {
+    if [ "$(id -u)" -eq 0 ]; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
+}
+
+function os::user::is_not_root() {
+    ! os::user::is_root
+}

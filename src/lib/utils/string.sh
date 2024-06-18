@@ -163,6 +163,12 @@ function string::is_not_integer() {
     return "$SHELL_TRUE"
 }
 
+function string::quote() {
+    local data="$1"
+
+    printf "%s" "${data@Q}"
+}
+
 function string::split_with() {
     local -n array_5c9e7642="$1"
     local data_5c9e7642="$2"

@@ -86,7 +86,7 @@ function main::must_do() {
     main::install_core_dependencies || return "$SHELL_FALSE"
 
     # 将当前用户添加到wheel组
-    cmd::run_cmd_with_history -- sudo usermod -aG wheel "$(id -un)" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- sudo usermod -aG wheel "$(os::user::name)" || return "$SHELL_FALSE"
 }
 
 function main::check() {

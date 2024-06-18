@@ -46,7 +46,7 @@ function base::prior_install_apps::is_contain() {
 
 # NOTE: 不要打印日志，因为一般调用这个函数在日志初始化前
 function base::check_root_user() {
-    if [ "$(id -u)" -eq 0 ]; then
+    if os::user::is_root; then
         # 此时还没初始化日志，所以不能使用日志接口
         println_error "this script cannot be run as root."
         return "$SHELL_FALSE"
@@ -106,7 +106,7 @@ function base::enable_no_password() {
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "enable no password..."
 
     local username
-    username=$(id -un)
+    username=$(os::user::name)
     local filepath="/etc/sudoers.d/10-${username}"
     linfo "enable user(${username}) no password to run sudo"
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
@@ -115,7 +115,7 @@ function base::enable_no_password() {
 
     # 设置当前组内的用户执行pamac不需要输入密码
     local group_name
-    group_name="$(id -ng)"
+    group_name="$(os::user::group)"
     linfo "enable no password for group(${group_name}) to run pamac"
     local src_filepath="${SRC_ROOT_DIR}/assets/polkit/10-pamac.rules"
     filepath="/etc/polkit-1/rules.d/10-pamac.rules"
@@ -136,7 +136,7 @@ function base::disable_no_password() {
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "disable no password..."
 
     local username
-    username=$(id -un)
+    username=$(os::user::name)
     local filepath="/etc/sudoers.d/10-${username}"
     linfo "disable no password for user(${username})"
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"

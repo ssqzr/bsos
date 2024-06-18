@@ -138,7 +138,7 @@ function cmd::run_cmd() {
         temp_str="${cmds[$index]}"
         if [ "${#temp_str}" -ge 4 ] && [ "${temp_str:0:2}" == "{{" ] && [ "${temp_str: -2}" == "}}" ]; then
             temp_str="${temp_str:2:-2}"
-            cmds[index]="${temp_str@Q}"
+            cmds[index]="$(string::quote "${temp_str}")"
             continue
         fi
     done
@@ -271,7 +271,7 @@ function TEST::cmd::run_cmd::bracket() {
     output=$(cmd::run_cmd -- printf "{{%s}}")
     utest::assert_equal "$output" ""
     test_str="%s"
-    output=$(cmd::run_cmd -- printf "{{${test_str@Q}}}")
+    output=$(cmd::run_cmd -- printf "{{$(string::quote "$test_str")}}")
     utest::assert_equal "$output" "''"
     test_str="%%s"
     output=$(cmd::run_cmd -- printf "{{${test_str}}}")

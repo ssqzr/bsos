@@ -87,7 +87,7 @@ function zsh::trait::post_install() {
     # 设置默认的shell为zsh
     # https://wiki.archlinux.org/title/zsh#Making_Zsh_your_default_shell
     local username
-    username=$(id -un)
+    username=$(os::user::name)
     cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/zsh "${username}"
 
     return "${SHELL_TRUE}"
@@ -110,7 +110,7 @@ function zsh::trait::post_uninstall() {
     fs::directory::safe_delete "$HOME/.zkbd" || return "$SHELL_FALSE"
     fs::directory::safe_delete "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
-    username=$(id -un)
+    username=$(os::user::name)
     cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/bash "${username}"
     return "${SHELL_TRUE}"
 }

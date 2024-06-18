@@ -26,7 +26,7 @@ function git::trait::description() {
 # 后续安装的时候会用到的配置
 function git::trait::install_guide() {
     local username
-    username=$(id -un)
+    username=$(os::user::name)
     username=$(tui::input_required "used to git config --global user.name" "config git username: " "${username}") || return "$SHELL_FALSE"
 
     local email
