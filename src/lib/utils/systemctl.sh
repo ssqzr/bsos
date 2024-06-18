@@ -24,10 +24,14 @@ function systemctl::is_exists() {
     return "$SHELL_TRUE"
 }
 
+function systemctl::is_not_exists() {
+    ! systemctl::is_exists "$@"
+}
+
 function systemctl::is_active() {
     local unit="$1"
     # systemctl -q is-active 的退出码如果是 4 表示 unit 不存在，这里还是通过封装函数判断
-    if ! systemctl::is_exists "$unit"; then
+    if systemctl::is_not_exists "$unit"; then
         return "$SHELL_FALSE"
     fi
     systemctl -q is-active "$unit"
@@ -40,7 +44,7 @@ function systemctl::is_active() {
 function systemctl::is_enabled() {
     local unit="$1"
     # systemctl -q is-enabled 的退出码如果是 4 表示 unit 不存在，这里还是通过封装函数判断
-    if ! systemctl::is_exists "$unit"; then
+    if systemctl::is_not_exists "$unit"; then
         return "$SHELL_FALSE"
     fi
     systemctl -q is-enabled "$unit"
