@@ -45,6 +45,7 @@ function pot::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function pot::trait::post_install() {
+    fs::directory::copy --force "${SCRIPT_DIR_727abb2f}/com.pot-app.desktop" "${XDG_CONFIG_HOME}/com.pot-app.desktop" || return "${SHELL_FALSE}"
     hyprland::config::add "350" "${SCRIPT_DIR_727abb2f}/pot.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -63,6 +64,8 @@ function pot::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function pot::trait::post_uninstall() {
     hyprland::config::remove "350" "pot.conf" || return "${SHELL_FALSE}"
+
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/com.pot-app.desktop" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

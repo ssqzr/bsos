@@ -1,0 +1,17 @@
+{
+    "translate_service_list": [
+        "deepl",
+        "bing",
+        "google",
+        "yandex"
+    ],
+    "translate_target_language": "zh_cn",
+    "translate_second_language": "en",
+    "app_language": "zh_cn",
+    "translate_window_width": 500,
+    "translate_window_position": "mouse",
+    "recognize_delete_newline": true,
+    "translate_delete_newline": true,
+    "recognize_close_on_blur": true,
+    "translate_close_on_blur": true
+}
