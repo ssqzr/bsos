@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Ardour>
+  <UI>
+    <Option name="font-scale" value="125000"/>
+  </UI>
+</Ardour>
