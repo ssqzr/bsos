@@ -1,0 +1,6 @@
+# onlyoffice 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://www.onlyoffice.com/zh/[官方文档]
+
