@@ -21,6 +21,16 @@ tab.config(config)
 -- config.font = wezterm.font 'JetBrains Mono'
 config.font_size = 10;
 
+-- https://wezfurlong.org/wezterm/config/lua/config/adjust_window_size_when_changing_font_size.html
+-- 通过 CTRL + -/= 调整字体大小时不调整窗口大小，否则在平铺窗口管理器下体验不佳
+-- https://wezfurlong.org/wezterm/config/lua/keyassignment/DecreaseFontSize.html
+-- CTRL + - DecreaseFontSize
+-- https://wezfurlong.org/wezterm/config/lua/keyassignment/IncreaseFontSize.html
+-- CTRL + = IncreaseFontSize
+-- https://wezfurlong.org/wezterm/config/lua/keyassignment/ResetFontSize.html
+-- CTRL + 0 ResetFontSize
+config.adjust_window_size_when_changing_font_size = false
+
 config.default_prog = { '/usr/bin/zsh' }
 -- 背景透明度
 config.window_background_opacity = 1
