@@ -11,3 +11,5 @@ SCRIPT_DIR_0dfb9771="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 source "${SCRIPT_DIR_0dfb9771}/../constant.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_0dfb9771}/override.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_0dfb9771}/info.sh"

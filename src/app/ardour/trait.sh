@@ -13,12 +13,12 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function ardour::trait::package_manager() {
-    echo "flatpak"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
 function ardour::trait::package_name() {
-    echo "org.ardour.Ardour"
+    echo "ardour"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
@@ -46,16 +46,11 @@ function ardour::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function ardour::trait::post_install() {
-    local config_dir="$HOME/.var/app/org.ardour.Ardour/config"
+    local config_dir="$XDG_CONFIG_HOME"
     fs::directory::copy --force "$SCRIPT_DIR_37c4d2dd/ardour" "$config_dir/ardour8" || return "${SHELL_FALSE}"
     # .a8 文件不存在时 ardour 会重新运行向导生成配置
     # .a8 应该是 ardour8 的缩写，为了不和版本有关联，这个文件通过代码生成，防止后续需要重命名文件。
     cmd::run_cmd_with_history -- touch "$config_dir/ardour8/.a8" || return "${SHELL_FALSE}"
-
-    # 修改权限
-    flatpak::override::reset --scope=user --app="$(ardour::trait::package_name)" || return "${SHELL_FALSE}"
-    flatpak::override::filesystem::allow --scope=user --app="$(ardour::trait::package_name)" "host-os" || return "${SHELL_FALSE}"
-    flatpak::override::environment::set --scope=user --app=org.ardour.Ardour "LV2_PATH" "/var/run/host/usr/lib/lv2" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -72,9 +67,8 @@ function ardour::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function ardour::trait::post_uninstall() {
-    local config_dir="$HOME/.var/app/org.ardour.Ardour/config"
+    local config_dir="$XDG_CONFIG_HOME"
     fs::directory::safe_delete "$config_dir/ardour8" || return "${SHELL_FALSE}"
-    flatpak::override::reset --scope=user --app="$(ardour::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -119,7 +113,7 @@ function ardour::trait::dependencies() {
 function ardour::trait::features() {
     local apps=()
     # LSP 插件
-    apps+=("flatpak:org.freedesktop.LinuxAudio.Plugins.LSP")
+    apps+=("pacman:lsp-plugins")
     array::print apps
     return "${SHELL_TRUE}"
 }
