@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Ardour>
+  <Config>
+    <Option name="plugin-path-lxvst" value="/var/run/host/usr/lib/lxvst:/var/run/host/usr/lib/vst:/app/extensions/Plugins/vst"/>
+    <Option name="plugin-path-vst3" value="/var/run/host/usr/lib/vst3:/app/extensions/Plugins/vst3"/>
+  </Config>
   <Extra>
     <AudioMIDISetup>
       <EngineStates>

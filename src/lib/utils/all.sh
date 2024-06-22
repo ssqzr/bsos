@@ -39,3 +39,5 @@ source "${SCRIPT_DIR_cd871afe}/gsettings.sh"
 source "${SCRIPT_DIR_cd871afe}/hyprland/hyprland.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/zsh/zsh.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/flatpak/flatpak.sh"

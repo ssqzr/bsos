@@ -10,11 +10,27 @@ https://ardour.org/[官方文档]
 
 如果通过 pacman 安装 LSP 插件，那么应用里会出现很多 LSP 的应用，太臃肿了，所以我想通过 flatpak 安装 LSP 插件。
 
-那么 LSP 插件的文件目录是： `/var/li/f/ru/org.freedesktop.LinuxAudio.Plugins.LSP/x86_64/23.08/active/files` 。
+那么 LSP 插件的文件目录是： `/var/lib/flatpak/runtime/org.freedesktop.LinuxAudio.Plugins.LSP/x86_64/23.08/active/files` 。
 
 那么 ardour 使用 LSP 插件时就需要添加 LSP 插件的目录，而这个目录是在 flatpak 目录下。
 
 为了 ardour 可以直接搜索到 LSP 的插件，于是就想通过 flatpak 安装 ardour 。并且 flatpak 安装 ardour 并没有什么问题。
+
+
+### flatpak 的 ardour 不能访问 /usr/lib/vst 目录
+
+即使给 ardour 分配了 faltpak 的 host-os 的权限， 在添加插件目录时还是不能访问 `/usr/lib/vst` 目录。
+
+* https://unix.stackexchange.com/questions/738515/flatpak-program-cant-see-all-directories[Flatpak program can't see all directories]
+* https://unix.stackexchange.com/questions/462408/absolute-paths-added-to-flatpak-are-skipped?rq=1[Absolute paths added to flatpak are skipped]
+* https://docs.flatpak.org/en/latest/sandbox-permissions.html#filesystem-access[Filesystem access]
+
+宿主的 `/usr` 目录是保留的目录， `/usr` 目录被挂载到 `/var/run/host/usr` 。
+
+注意：
+
+* 宿主是没有 `/var/run/host/usr` 目录的
+* 当前应用程序才可以访问  `/var/run/host/usr` 目录
 
 ### 第一次运行向导结束后程序闪退
 

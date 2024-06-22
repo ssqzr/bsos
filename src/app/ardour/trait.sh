@@ -51,6 +51,11 @@ function ardour::trait::post_install() {
     # .a8 文件不存在时 ardour 会重新运行向导生成配置
     # .a8 应该是 ardour8 的缩写，为了不和版本有关联，这个文件通过代码生成，防止后续需要重命名文件。
     cmd::run_cmd_with_history -- touch "$config_dir/ardour8/.a8" || return "${SHELL_FALSE}"
+
+    # 修改权限
+    flatpak::override::reset --scope=user --app="$(ardour::trait::package_name)" || return "${SHELL_FALSE}"
+    flatpak::override::filesystem::allow --scope=user --app="$(ardour::trait::package_name)" "host-os" || return "${SHELL_FALSE}"
+    flatpak::override::environment::set --scope=user --app=org.ardour.Ardour "LV2_PATH" "/var/run/host/usr/lib/lv2" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -69,6 +74,7 @@ function ardour::trait::do_uninstall() {
 function ardour::trait::post_uninstall() {
     local config_dir="$HOME/.var/app/org.ardour.Ardour/config"
     fs::directory::safe_delete "$config_dir/ardour8" || return "${SHELL_FALSE}"
+    flatpak::override::reset --scope=user --app="$(ardour::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
