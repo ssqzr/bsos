@@ -1,0 +1,23 @@
+# peazip 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/peazip/PeaZip[官方文档]
+
+
+## 问题记录
+
+### wayland 下 鼠标失灵
+
+通过 flatpak 安装，flatpak 应该是使用 QT5 的 GUI 库。或者通过 AUR 安装 peazip-qt-bin 包，也是使用 QT5 的 GUI 库。
+
+通过 wayland 方式启动，最开始鼠标可以使用，但是操作一段时间鼠标可能就不可用了。
+
+
+### 配置文件
+
+测试如果配置文件仅仅保存部分配置项，程序运行会覆写配置文件。
+
+需要保存整个配置文件，不建议这么处理。暂时不处理配置文件了。
+
+
