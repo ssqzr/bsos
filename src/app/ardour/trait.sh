@@ -114,6 +114,15 @@ function ardour::trait::features() {
     local apps=()
     # LSP 插件
     apps+=("pacman:lsp-plugins")
+    # DPF 插件
+    apps+=("pacman:dpf-plugins")
+    # 噪音消除的插件
+    apps+=("pacman:noise-repellent")
+    # 混响插件
+    apps+=("yay:tal-reverb4-vst3-bin")
+
+    # calf 插件
+    apps+=("pacman:calf")
     array::print apps
     return "${SHELL_TRUE}"
 }

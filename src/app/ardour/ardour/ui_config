@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Ardour>
   <UI>
+    <!-- Appearance -> Size and Scale  -->
     <Option name="font-scale" value="125000"/>
+    <!-- Plugin -> GUI Mixer Strip Inline Display -> Show Plugin Inline Display on Mixer Strip by default -->
+    <Option name="show-inline-display-by-default" value="0"/>
+    <!-- 外观 -> 混音器 -->
+    <Option name="mixer-element-visibility" value="Input,RecMon,SoloIsoLock,Output,Comments"/>
+    <!-- 外观 -> 图形加速 -->
+    <Option name="cairo-image-surface" value="1"/>
   </UI>
 </Ardour>
