@@ -13,12 +13,12 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function obs::trait::package_manager() {
-    echo "flatpak"
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
 function obs::trait::package_name() {
-    echo "com.obsproject.Studio"
+    echo "obs-studio"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
@@ -49,12 +49,12 @@ function obs::trait::post_install() {
     local username
     username=$(os::user::name) || return "${SHELL_FALSE}"
 
-    fs::directory::copy --force "$SCRIPT_DIR_743e254c/obs-studio" "$HOME/.var/app/com.obsproject.Studio/config/obs-studio" || return "${SHELL_FALSE}"
+    fs::directory::copy --force "$SCRIPT_DIR_743e254c/obs-studio" "$XDG_CONFIG_HOME/obs-studio" || return "${SHELL_FALSE}"
 
     # 更改配置
-    cmd::run_cmd_with_history -- sed -i -e "'s/__username__/${username}/g'" "$HOME/.var/app/com.obsproject.Studio/config/obs-studio/global.ini" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- sed -i -e "'s/__username__/${username}/g'" "$XDG_CONFIG_HOME/obs-studio/global.ini" || return "${SHELL_FALSE}"
 
-    fs::directory::move --force "$HOME/.var/app/com.obsproject.Studio/config/obs-studio/basic/profiles/username" "$HOME/.var/app/com.obsproject.Studio/config/obs-studio/basic/profiles/${username}" || return "${SHELL_FALSE}"
+    fs::directory::move --force "$XDG_CONFIG_HOME/obs-studio/basic/profiles/username" "$XDG_CONFIG_HOME/obs-studio/basic/profiles/${username}" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -71,6 +71,7 @@ function obs::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function obs::trait::post_uninstall() {
+    fs::directory::safe_delete "$XDG_CONFIG_HOME/obs-studio" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -123,12 +124,13 @@ function obs::trait::features() {
     # obs-ndi 插件需要这个
     apps+=(custom:avahi)
     # obs-ndi 插件
-    apps+=("flatpak:com.obsproject.Studio.Plugin.NDI")
+    apps+=("yay:obs-ndi-bin")
 
     # 可以使用 Game Capture
-    apps+=("flatpak:com.obsproject.Studio.Plugin.OBSVkCapture")
+    apps+=("yay:obs-vkcapture")
 
-    apps+=("flatpak:com.obsproject.Studio.Plugin.Gstreamer")
+    apps+=("yay:obs-gstreamer")
+    apps+=("yay:obs-vnc")
 
     array::print apps
     return "${SHELL_TRUE}"
