@@ -1,0 +1,41 @@
+# rpcs3 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://rpcs3.net/[官方文档]
+
+
+## 部署
+
+### 安装程序后安装固件
+
+* https://www.playstation.com/en-us/support/hardware/ps3/system-software/[PS3 system software update]
+* https://drivers.softpedia.com/get/gaming-consoles/Sony/Sony-PlayStation-3-Firmware-4-91.shtml[Sony PlayStation 3 Firmware 4.91]
+
+### 配置手柄
+
+在配置手柄的页面，如果没有看到你的手柄，可以修改手柄的 handlers 试试，我的手柄将 handlers 切换为 SDL 就可以看到了。
+
+每个手柄的 handlers 不同，所以我没有将手柄的配置静态化，安装后手动配置手柄。
+
+
+### ISO 格式的游戏
+
+ISO 格式的游戏最好下载解密后的 ISO 文件，不然还需要下载密钥和解密程序进行解密。
+
+如果是解密的 ISO 文件，需要先解压后，然后在 RPCS3 上添加游戏。
+
+### 音爆的问题
+
+运行游戏后声音会爆，呲呲的声音。
+
+关闭声音缓存可以解决这个问题。相关配置：
+
+`config` --> `Audio` --> `Buffering` --> `Enable Buffering`
+
+### 游戏列表
+
+* https://romsfun.com/roms/playstation-3/tekken-6-3-2.html[Tekken 6]
+* https://romsfun.com/roms/playstation-3/ultra-street-fighter-iv.html[Ultra Street Fighter IV]
+* https://romsfun.com/roms/playstation-3/street-fighter-x-tekken-2.html[Street Fighter X Tekken 支持中文]
+* https://romsfun.com/roms/playstation-3/god-of-war-iii.html[God of War III 支持中文]
