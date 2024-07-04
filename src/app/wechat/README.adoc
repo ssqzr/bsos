@@ -1,0 +1,6 @@
+# wechat 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://flathub.org/apps/com.tencent.WeChat[官方文档]
+
