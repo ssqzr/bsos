@@ -1,0 +1,6 @@
+# okular 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://okular.kde.org/zh-cn/[官方文档]
+
