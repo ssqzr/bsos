@@ -1,0 +1,122 @@
+# storage 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+official_document_url[官方文档]
+
+## 说明
+
+磁盘管理的场景太复杂了，需要处理的功能点也很多。
+
+* 磁盘位置变更
+* 磁盘被拔除
+* 新增磁盘
+* 手动修改磁盘
+* NFS 存储挂载
+* LVM 卷
+* MSDOS 的主分区、扩展分区、逻辑分区的处理
+* 移动硬盘
+* U盘
+* 等等
+
+磁盘管理可以单独作为一个功能复杂的模块进行开发，需要花费很多的时间。
+
+我短期内不能完成，所以暂时先不开发了。
+
+
+## 问题记录
+
+### 4K 对齐
+
+https://www.diskgenius.cn/exp/about-4k-alignment.php[分区4K对齐那些事，你想知道的都在这里]
+
+.分区4K对齐那些事，你想知道的都在这里
+[quote]
+____
+Windows系统默认对齐的扇区数是2048。这个数值基本上能满足几乎所有磁盘的4K对齐要求了。
+____
+
+4K 对齐是针对物理扇区大小是 4096 字节的磁盘而言的。
+
+[.red]#磁盘对齐不一定是 4K 对齐，而是应该根据磁盘的物理扇区大小来定。#
+
+### lsblk 输出 UUID 、 PTUUID 、 PARTUUID 的理解
+
+https://unix.stackexchange.com/questions/375548/what-is-uuid-partuuid-and-ptuuid[What is UUID, PARTUUID and PTUUID?]
+
+.What is UUID, PARTUUID and PTUUID?
+[quote]
+____
+UUID is a filesystem-level UUID, which is retrieved from the filesystem metadata inside the partition. It can only be read if the filesystem type is known and readable.
+UUID 是文件系统级 UUID，从分区内的文件系统元数据中检索。仅当文件系统类型已知且可读时才能读取它。
+
+PARTUUID is a partition-table-level UUID for the partition, a standard feature for all partitions on GPT-partitioned disks. Since it is retrieved from the partition table, it is accessible without making any assumptions at all about the actual contents of the partition. If the partition is encrypted using some unknown encryption method, this might be the only accessible unique identifier for that particular partition.
+PARTUUID 是分区的分区表级 UUID，是 GPT 分区磁盘上所有分区的标准功能。由于它是从分区表中检索的，因此无需对分区的实际内容做出任何假设即可访问它。如果使用某种未知的加密方法对分区进行加密，则这可能是该特定分区的唯一可访问的唯一标识符。
+
+PTUUID is the UUID of the partition table itself, a unique identifier for the entire disk assigned at the time the disk was partitioned. It is the equivalent of the disk signature on MBR-partitioned disks but with more bits and a standardized procedure for its generation.
+PTUUID 是分区表本身的UUID，是在磁盘分区时分配的整个磁盘的唯一标识符。它相当于 MBR 分区磁盘上的磁盘签名，但具有更多位和标准化的生成过程。
+
+On MBR-partitioned disks, there are no UUIDs in the partition table. The 32-bit disk signature is used in place of a PTUUID, and PARTUUIDs are created by adding a dash and a two-digit partition number to the end of the disk signature.
+在 MBR 分区磁盘上，分区表中没有 UUID。 32 位磁盘签名用于代替 PTUUID ，并且 PARTUUID 是通过在磁盘签名末尾添加破折号和两位数分区号来创建的。
+____
+
+* UUID      是文件系统的标识
+* PTUUID    是分区表的标识
+* PARTUUID  是分区的标识
+
+如果一个磁盘有多个分区，那么每个分区的 PARTUUID 是不一样的， PTUUID 是一样的。
+
+.各个磁盘的ID
+[example]
+====
+
+[source,shell]
+----
+❯ lsblk  -o NAME,UUID,PARTUUID,PTUUID
+NAME   UUID                                 PARTUUID                             PTUUID
+sda                                                                              14c697bd-24d7-954a-bf59-bbcad6f1b6d3
+└─sda1 7c2dfa42-aa10-42eb-a68d-1d789caef1da 4e86ce01-c0c4-b44f-ab1a-c67869855f88 14c697bd-24d7-954a-bf59-bbcad6f1b6d3
+sdb                                                                              38ae2d61-54e0-4031-9beb-883305b335b4
+├─sdb1 87A8-F61D                            df945cba-4203-4f43-a7dc-f9d81fa5dbe4 38ae2d61-54e0-4031-9beb-883305b335b4
+└─sdb2 759801f1-c8b8-474f-a1ed-4785bd2f6ae2 059d21c0-9e3b-4da6-a929-e7c61281f4bc 38ae2d61-54e0-4031-9beb-883305b335b4
+sdc                                                                              171634bb-b56f-4525-92ef-2650efc27d75
+└─sdc1 d64c7eb2-516a-414f-873b-1ce4b5e7f3cc 242ad697-4866-481a-a9ac-42df1d6229bf 171634bb-b56f-4525-92ef-2650efc27d75
+sdd                                                                              8e404b63-ede8-b742-8be2-346e28eb30b7
+├─sdd1 2C8B-8F76                            57e5f699-b20e-0740-bd3c-ea01f59ddd4a 8e404b63-ede8-b742-8be2-346e28eb30b7
+└─sdd2 2d413801-2172-412f-a5d0-261d24f06d07 04759ba5-d177-c84e-aaee-b370f504ff1e 8e404b63-ede8-b742-8be2-346e28eb30b7
+sde                                                                              332e1284
+├─sde1 61EF-0010                            332e1284-01                          332e1284
+└─sde2 B2C8-40D2                            332e1284-02                          332e1284
+----
+
+
+* sda 和 sdc 两个磁盘只有一个分区
+* sdb 是 archlinux 的系统盘， sdb1 是 efi 分区， sdb2 是根分区，两个分区的 PTUUID 都一样，但是 PARTUUID 是不一样的。
+* sdd 和 sdb 一样
+* sda、sdb、sdc、sdd 都是 GPT 分区
+* sde 是一个 U盘，是 MBR 分区， MBR 分区没有 PARTUUID ，它是 PTUUID 加序号组成。
+
+====
+
+
+### 磁盘管理工具
+
+https://wiki.archlinux.org/title/partitioning[Partitioning]
+
+* 推荐使用 parted 命令行工具
+* 查看 fdisk 的 man 手册。不推荐使用 fdisk 工具，可以使用 cfdisk TUI 工具
+* gparted 在 wayland 下不能运行，报错： `Gtk-WARNING **: cannot open display: :0`
+* GUI 可以使用 https://apps.kde.org/zh-cn/partitionmanager/[KDE Partition Manager]
+
+.fdisk 的 man 手册
+[quote]
+____
+臭虫
+
+    在 Linux 中有很多版本的 *fdisk 类程序。 每一个都有自己的强项和缺点。分别试着使用 cfdisk，  fdisk，  sfdisk．
+    （特别是， cfdisk 是一个漂亮的程序，它只接受最严谨的分区表， 而且它能生成高质量的分区表。 如果可能，你最好使
+    用这个程序。 fdisk 是一个有很多臭虫的分区工具软件， 它所做的操作是模糊不清的，通常在碰巧的情况下它才会正常的
+    运行。 它唯一值得使用的地方是它对 BSD 的磁盘标签和非 DOS 的分区表有所支持， 尽量少用这个程序。 sfdisk 是一个
+    专为黑客提供的程序，它的用户界面很不友善，  但它更精确，也比 fdisk 和 cfdisk 更有效。 另外，它只能以非交互的
+    方式运行。
+____

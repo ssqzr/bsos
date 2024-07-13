@@ -41,3 +41,7 @@ source "${SCRIPT_DIR_cd871afe}/hyprland/hyprland.sh"
 source "${SCRIPT_DIR_cd871afe}/zsh/zsh.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/flatpak/flatpak.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/storage/storage.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/float.sh"

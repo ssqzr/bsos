@@ -57,6 +57,43 @@ function array::is_not_contain() {
     ! array::is_contain "$@"
 }
 
+function array::index() {
+    local -n array_0181bda3=$1
+    shift
+    local index=$1
+    shift
+
+    local length
+    local min_index
+
+    length=$(array::length "${!array_0181bda3}") || return "$SHELL_FALSE"
+
+    ((min_index = 0 - length))
+
+    if array::is_empty "${!array_0181bda3}"; then
+        return "$SHELL_FALSE"
+    fi
+
+    if [ "${index}" -lt "${min_index}" ] || [ "${index}" -ge "${length}" ]; then
+        return "$SHELL_FALSE"
+    fi
+
+    echo "${array_0181bda3[${index}]}"
+    return "$SHELL_TRUE"
+}
+
+function array::first() {
+    local -n array_89220a75=$1
+    array::index "${!array_89220a75}" 0 || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function array::last() {
+    local -n array_b8bc739b=$1
+    array::index "${!array_b8bc739b}" -1 || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 # 去重
 function array::dedup() {
     # shellcheck disable=SC2178
@@ -298,6 +335,58 @@ function TEST::array::is_empty() {
     array::lpush arr 2
     array::is_empty arr
     utest::assert_fail $?
+}
+
+function TEST::array::index() {
+    local arr
+
+    array::index arr 0
+    utest::assert_fail $?
+
+    array::index arr -0
+    utest::assert_fail $?
+
+    array::index arr 1
+    utest::assert_fail $?
+
+    arr=(1 2 3 4 5)
+
+    utest::assert_equal "$(array::index arr -0)" 1
+    utest::assert_equal "$(array::index arr -1)" 5
+    utest::assert_equal "$(array::index arr -2)" 4
+    utest::assert_equal "$(array::index arr -3)" 3
+    utest::assert_equal "$(array::index arr -4)" 2
+    utest::assert_equal "$(array::index arr -5)" 1
+    array::index arr -6
+    utest::assert_fail $?
+
+    utest::assert_equal "$(array::index arr 0)" 1
+    utest::assert_equal "$(array::index arr 1)" 2
+    utest::assert_equal "$(array::index arr 2)" 3
+    utest::assert_equal "$(array::index arr 3)" 4
+    utest::assert_equal "$(array::index arr 4)" 5
+    array::index arr 5
+    utest::assert_fail $?
+}
+
+function TEST::array::first() {
+    local arr
+
+    array::first arr
+    utest::assert_fail $?
+
+    arr=(1 2 3 4 5)
+    utest::assert_equal "$(array::first arr)" 1
+}
+
+function TEST::array::last() {
+    local arr
+
+    array::last arr
+    utest::assert_fail $?
+
+    arr=(1 2 3 4 5)
+    utest::assert_equal "$(array::last arr)" 5
 }
 
 function TEST::array::reverse_new() {

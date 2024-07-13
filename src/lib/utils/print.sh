@@ -218,6 +218,9 @@ function _println_wrap() {
         --name=*)
             name="${param#*=}"
             ;;
+        --format=*)
+            message_format="${param#*=}"
+            ;;
         -*)
             options+=("$param")
             ;;
@@ -226,11 +229,6 @@ function _println_wrap() {
             ;;
         esac
     done
-
-    if [ "${#other_params[@]}" -gt 1 ]; then
-        message_format="${other_params[0]}"
-        other_params=("${other_params[@]:1}")
-    fi
 
     "printf_${name}" "${options[@]}" --format="${message_format}\n" -- "${other_params[@]}" || return "$SHELL_FALSE"
 
