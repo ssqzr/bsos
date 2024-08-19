@@ -1,6 +1,0 @@
-# hycov 安装说明文档
-include::../../../doc/base.adoc[]
-
-
-https://github.com/DreamMaoMao/hycov[官方文档]
-
