@@ -1,0 +1,6 @@
+# remmina 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://www.remmina.org/[官方文档]
+
