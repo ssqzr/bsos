@@ -543,9 +543,11 @@ https://wiki.hyprland.org/Plugins/Using-Plugins/[Using Plugins]
 
 https://github.com/hyprland-community/awesome-hyprland#plugins[awesome-hyprland plugins]
 
-### https://github.com/DreamMaoMao/hycov[hycov]
+### [.line-through]#https://github.com/DreamMaoMao/hycov[hycov]#
 
-已经处理
+已经处理。
+
+项目已经封库，不再维护了。
 
 ### https://github.com/CMurtagh-LGTM/grab-workspace[grab-workspace]
 

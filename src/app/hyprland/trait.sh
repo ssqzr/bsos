@@ -205,10 +205,6 @@ function hyprland::trait::features() {
     # 状态栏
     apps+=("custom:anyrun" "custom:ags")
 
-    # FIXME: 目前编译插件报错， https://github.com/outfoxxed/hy3/issues/109
-    # hycov 插件
-    apps+=("custom:hycov")
-
     # hyprfocus 插件
     apps+=("custom:hyprfocus")
 
