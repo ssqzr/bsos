@@ -22,4 +22,15 @@ https://github.com/vmware/open-vm-tools[官方文档]
 - https://kb.vmware.com/s/article/74650[Enabling HGFS Shared Folders] [.green]#测试可行#
 
 
+### 安装后系统启动提示挂载失败
+
+我配置的挂载目录是 `/mnt/hgfs` ，虚拟机启动后提示挂载 `/mnt/hgfs` 失败。并且没有正常进入系统，原因就是因为 `mount` 失败， `mount` 其他分区失败也会导致类似的问题。
+
+这个是因为虚拟机配置的共享文件夹是禁用的，所以挂载失败。
+
+编辑虚拟机将共享文件夹开启就可以了，及时没有添加任何的文件夹也可以。具体的配置路径：
+
+虚拟机设置 --> 选项 --> 共享文件夹 --> 总是启用
+
+
 
