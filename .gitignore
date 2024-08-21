@@ -2,4 +2,4 @@
 *.history
 /test.*
 build
-config.yml
+/config.yml

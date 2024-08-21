@@ -46,6 +46,7 @@ function rpcs3::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function rpcs3::trait::post_install() {
+    # 目录下还有其他文件，所以不拷贝目录而是拷贝具体的文件
     fs::file::copy --force "${SCRIPT_DIR_66854dca}/rpcs3/config.yml" "$HOME/.var/app/net.rpcs3.RPCS3/config/rpcs3/config.yml" || return "${SHELL_FALSE}"
     hyprland::config::add 350 "${SCRIPT_DIR_66854dca}/rpcs3.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
