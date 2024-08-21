@@ -156,4 +156,6 @@ function cfg::trait::json::array::filter_by_key_value() {
     return "${SHELL_TRUE}"
 }
 
-cfg::trait::json::init
+# FIXME: 不能在 source 引用的时候检测，source 的时候未必满足条件，依赖可能会在程序运行后进行安装
+# 还没想好最佳的解决办法，先不进行检测
+# cfg::trait::json::init
