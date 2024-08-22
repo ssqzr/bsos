@@ -35,3 +35,36 @@ windowrulev2 = forceinput,class:^(Rofi)$
 使用 `rofi-wayland` 包后，焦点的问题解决了。应该是 `rofi` 在 `xwayland` 上有问题。
 
 还是期望官方可以早日支持 `wayland` 。
+
+### `'calc.so' does not match`
+
+更新 `rofi` 后运行 `rofi` 失败，在终端运行 `rofi` 报错：`ABI version of plugin: 'calc.so' does not match: 00000006 expecting: 00000007`。
+
+这个是因为使用的是 https://archlinux.org/packages/extra/x86_64/rofi-wayland/[rofi-wayland] 包，而 `rofi-calc` 是官方仓库的包，它是适配官方仓库的 `rofi` 的。
+
+官方仓库的 `rofi` 是不支持 `wayland` 的。
+
+https://github.com/svenstaro/rofi-calc/issues?q=abi+version+of+plugin[rofi-calc] 仓库里可以看到类似的问题。
+
+大部分的提到的解决方式是重新源码编译 `rofi-calc` 包。
+
+但是官方仓库的 `rofi-calc` 是二进制包，所以只能使用 `rofi-calc-git` 包。
+
+后面我发现报这个报错并不是导致 `rofi` 启动失败的原因，这个报错只会导致不能使用 `rofi-calc` 的功能， `rofi` 是可以正常启动的。
+
+[source,console]
+====
+❯ rofi -show calc -modi calc -no-show-match -no-sort
+
+(process:2443): Rofi-WARNING **: 16:40:34.434: ABI version of plugin: 'calc.so' does not match: 00000006 expecting: 00000007
+❯ rofi -show-icons -show combi -combi-modes "drun,window,run,ssh" -modes combi
+
+(process:2503): Rofi-WARNING **: 16:41:10.464: ABI version of plugin: 'calc.so' does not match: 00000006 expecting: 00000007
+====
+
+第一个命令可以运行 `rofi` ，但是提示错误： `Mode calc is not found` 。
+第二各命令可以运行 `rofi` ，并且可以运行程序。
+
+安装 `rofi-calc-git` 包后，再次运行 `rofi` 就没有这个报错了。
+
+考虑到我没怎么使用 `rofi-calc` 的功能，所以后面我也就没有部署它。

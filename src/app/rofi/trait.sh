@@ -113,7 +113,7 @@ function rofi::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function rofi::trait::features() {
-    local apps=("pacman:rofi-calc")
+    local apps=()
     array::print apps
     return "${SHELL_TRUE}"
 }
