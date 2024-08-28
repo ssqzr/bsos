@@ -68,3 +68,16 @@ https://github.com/svenstaro/rofi-calc/issues?q=abi+version+of+plugin[rofi-calc]
 安装 `rofi-calc-git` 包后，再次运行 `rofi` 就没有这个报错了。
 
 考虑到我没怎么使用 `rofi-calc` 的功能，所以后面我也就没有部署它。
+
+
+### rofi 运行异常 `bus error`
+
+[source,console]
+====
+
+❯ rofi -show-icons -show combi -combi-modes "drun,window,run,ssh" -modes combi
+zsh: bus error (core dumped)  rofi -show-icons -show combi -combi-modes "drun,window,run,ssh" -modes combi
+
+====
+
+目前不知道具体原因，重启电脑可以解决。
