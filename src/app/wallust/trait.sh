@@ -48,8 +48,6 @@ function wallust::trait::do_install() {
 function wallust::trait::post_install() {
 
     fs::directory::copy --force "${SCRIPT_DIR_68b89e81}/wallust" "${XDG_CONFIG_HOME}/wallust" || return "${SHELL_FALSE}"
-    # cache 目录不存在导致执行命令 wallust theme random 失败
-    fs::directory::create_recursive "${XDG_CACHE_HOME}/wallust" || return "${SHELL_FALSE}"
 
     zsh::config::add "350" "${SCRIPT_DIR_68b89e81}/wallust.zsh" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -68,7 +66,6 @@ function wallust::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function wallust::trait::post_uninstall() {
-    fs::directory::safe_delete "${XDG_CACHE_HOME}/wallust" || return "${SHELL_FALSE}"
     fs::directory::safe_delete "${XDG_CONFIG_HOME}/wallust" || return "${SHELL_FALSE}"
     zsh::config::remove "350" "wallust.zsh" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
