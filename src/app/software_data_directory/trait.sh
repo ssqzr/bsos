@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# NOTE: 这个并不是具体的包，而是一个集合，用于集中配置系统设置的集合包
-# 如果设置复杂，可以单独一个包，然后通过依赖包含进来。
-
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 # shellcheck disable=SC2034
-SCRIPT_DIR_5a8e68fc="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
+SCRIPT_DIR_4bf2ac1a="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
@@ -15,56 +12,77 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
-function system_setting::trait::package_manager() {
+function software_data_directory::trait::package_manager() {
     echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
-function system_setting::trait::package_name() {
-    echo "system_setting"
+function software_data_directory::trait::package_name() {
+    echo ""
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
-function system_setting::trait::description() {
-    echo "a group of system settings"
+function software_data_directory::trait::description() {
+    # package_manager::package_description "$(software_data_directory::trait::package_manager)" "$(software_data_directory::trait::package_name)" || return "$SHELL_FALSE"
+    echo "Define all sofeware root data directory."
     return "$SHELL_TRUE"
 }
 
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
-function system_setting::trait::install_guide() {
+function software_data_directory::trait::install_guide() {
+    local data_root
+
+    lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "You should format the disk and mount it first" || return "${SHELL_FALSE}"
+
+    data_root=$(tui::input_optional "directory path" "The data root directory for all software: ") || return "$SHELL_FALSE"
+
+    data_root=$(string::trim "${data_root}")
+
+    if string::is_empty "${data_root}"; then
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "The data root directory for all software is not set"
+        return "${SHELL_TRUE}"
+    fi
+
+    data_root=$(fs::path::realpath "${data_root}") || return "${SHELL_FALSE}"
+
+    fs::directory::create_recursive "${data_root}" || return "${SHELL_FALSE}"
+
+    # 写入配置文件
+    config::global::data_root_directory::set "${data_root}" || return "$SHELL_FALSE"
+
     return "${SHELL_TRUE}"
 }
 
 # 安装的前置操作，比如下载源代码
-function system_setting::trait::pre_install() {
+function software_data_directory::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的操作
-function system_setting::trait::do_install() {
-    # package_manager::install "$(system_setting::trait::package_manager)" "$(system_setting::trait::package_name)" || return "${SHELL_FALSE}"
+function software_data_directory::trait::do_install() {
+    # package_manager::install "$(software_data_directory::trait::package_manager)" "$(software_data_directory::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
-function system_setting::trait::post_install() {
+function software_data_directory::trait::post_install() {
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
-function system_setting::trait::pre_uninstall() {
+function software_data_directory::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
 # 卸载的操作
-function system_setting::trait::do_uninstall() {
-    # package_manager::uninstall "$(system_setting::trait::package_manager)" "$(system_setting::trait::package_name)" || return "${SHELL_FALSE}"
+function software_data_directory::trait::do_uninstall() {
+    # package_manager::uninstall "$(software_data_directory::trait::package_manager)" "$(software_data_directory::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的后置操作，比如删除临时文件
-function system_setting::trait::post_uninstall() {
+function software_data_directory::trait::post_uninstall() {
     return "${SHELL_TRUE}"
 }
 
@@ -73,14 +91,14 @@ function system_setting::trait::post_uninstall() {
 # 1. Hyprland 的插件需要在Hyprland运行时才可以启动
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
-function system_setting::trait::fixme() {
+function software_data_directory::trait::fixme() {
     return "${SHELL_TRUE}"
 }
 
 # fixme 的逆操作
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
-function system_setting::trait::unfixme() {
+function software_data_directory::trait::unfixme() {
     return "${SHELL_TRUE}"
 }
 
@@ -90,7 +108,7 @@ function system_setting::trait::unfixme() {
 # 或者有一些依赖的包不仅安装就可以了，它自身也需要进行额外的配置。
 # 因此还是需要为一些特殊场景添加依赖
 # NOTE: 这里的依赖包是必须安装的，并且在安装本程序前进行安装
-function system_setting::trait::dependencies() {
+function software_data_directory::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
     # "pacman:vim"
@@ -98,10 +116,6 @@ function system_setting::trait::dependencies() {
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
-    apps+=("custom:software_data_directory")
-    apps+=("custom:locale")
-    apps+=("custom:ntp")
-    apps+=("custom:timezone")
     array::print apps
     return "${SHELL_TRUE}"
 }
@@ -110,14 +124,14 @@ function system_setting::trait::dependencies() {
 # 例如程序的插件、主题等。
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
-function system_setting::trait::features() {
+function software_data_directory::trait::features() {
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"
 }
 
-function system_setting::trait::main() {
+function software_data_directory::trait::main() {
     return "${SHELL_TRUE}"
 }
 
-system_setting::trait::main
+software_data_directory::trait::main

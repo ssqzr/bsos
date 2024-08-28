@@ -31,3 +31,15 @@ function config::global::has_pre_installed::get() {
     fi
     return "$SHELL_FALSE"
 }
+
+function config::global::data_root_directory::set() {
+    local data_root_directory="$1"
+    config::map::set ".global" "data_root_directory" "${data_root_directory}" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
+function config::global::data_root_directory::get() {
+    local value
+    value=$(config::map::get ".global" "data_root_directory" "${__config_filepath}") || return "$SHELL_FALSE"
+    echo "$value"
+    return "$SHELL_FALSE"
+}

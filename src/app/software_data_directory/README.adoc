@@ -1,0 +1,18 @@
+# software_data_directory 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+official_document_url[官方文档]
+
+## 说明
+
+这个 APP 并不是具体的某个应用，而是定义所有软件自定义目录的根目录。
+
+例如：
+
+* docker 的 `data-root` 的位置
+* 下载软件的下载目录
+* 等等其他软件可以自定义的目录
+
+所有的软件定义的目录都可以定义在当前设定的根目录下。
+
