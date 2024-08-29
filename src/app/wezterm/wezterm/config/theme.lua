@@ -115,7 +115,7 @@ end
 
 function theme.config(config)
     theme.colors(config)
-    theme.window_background_gradient(config)
+    -- theme.window_background_gradient(config)
 end
 
 return theme
