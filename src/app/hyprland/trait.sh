@@ -11,17 +11,12 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
-function hyprland::settings::base_config_filepath() {
-    echo "$XDG_CONFIG_HOME/hypr/conf.d/030-base.conf"
-}
-
 function hyprland::settings::cursors() {
     # 反复安装直接覆盖就可以了
-    local config_filepath
-    config_filepath="$(hyprland::settings::base_config_filepath)"
+    local config_filepath="$XDG_CONFIG_HOME/hypr/conf.d/020-cursor.conf"
 
     if os::is_vm; then
-        cmd::run_cmd_with_history -- sed -i "'s/^# \(env = WLR_NO_HARDWARE_CURSORS, 1\)/\\1/g'" "$config_filepath"
+        cmd::run_cmd_with_history -- sed -i "'s/no_hardware_cursors = .*/no_hardware_cursors = true/g'" "$config_filepath"
         if [ "$?" -ne "${SHELL_TRUE}" ]; then
             lerror "hyprland setting cursors failed"
             return "$SHELL_FALSE"
