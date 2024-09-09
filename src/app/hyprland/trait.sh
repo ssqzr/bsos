@@ -203,6 +203,8 @@ function hyprland::trait::features() {
     # hyprfocus 插件
     apps+=("custom:hyprfocus")
 
+    apps+=("custom:audio")
+
     array::print apps
     return "${SHELL_TRUE}"
 }

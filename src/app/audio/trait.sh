@@ -45,11 +45,15 @@ function audio::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function audio::trait::post_install() {
+    hyprland::config::add "350" "${SCRIPT_DIR_e6b700fc}/audio.conf" || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
 function audio::trait::pre_uninstall() {
+    hyprland::config::remove "350" "audio.conf" || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
@@ -112,6 +116,10 @@ function audio::trait::features() {
     # NOTE: 不要通过flatpak安装carla，测试发现使用插件时打不开插件的自定义UI
     local apps=("pacman:pipewire-alsa" "pacman:pipewire-jack" "pacman:pipewire-pulse" "pacman:carla")
     apps+=("pacman:pavucontrol")
+
+    # 媒体控制需要 playerctl
+    apps+=("pacman:playerctl")
+
     array::print apps
     return "${SHELL_TRUE}"
 }
