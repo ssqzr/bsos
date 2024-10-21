@@ -55,7 +55,7 @@ function chrome::trait::pre_install() {
 }
 
 # 安装的操作
-function chrome::trait::do_install() {
+function chrome::trait::install() {
     package_manager::install "$(chrome::trait::package_manager)" "$(chrome::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -77,7 +77,7 @@ function chrome::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function chrome::trait::do_uninstall() {
+function chrome::trait::uninstall() {
     package_manager::uninstall "$(chrome::trait::package_manager)" "$(chrome::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -87,6 +87,18 @@ function chrome::trait::post_uninstall() {
     chrome::undo_set_xdg_mime || return "${SHELL_FALSE}"
 
     hyprland::config::remove "350" "chrome.conf" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function chrome::trait::upgrade() {
+    package_manager::upgrade "$(chrome::trait::package_manager)" "$(chrome::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -68,7 +68,13 @@ function package_manager::yay::package_description() {
 }
 
 function package_manager::yay::upgrade() {
-    cmd::run_cmd_with_history -- yay -Syu --noconfirm || return "$SHELL_FALSE"
+    local app="$1"
+
+    if [ -z "$app" ]; then
+        cmd::run_cmd_with_history -- yay -Su --noconfirm || return "$SHELL_FALSE"
+    else
+        cmd::run_cmd_with_history -- yay -S --needed --noconfirm "$app" || return "$SHELL_FALSE"
+    fi
     return "$SHELL_TRUE"
 }
 

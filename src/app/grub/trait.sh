@@ -95,7 +95,7 @@ function grub::trait::pre_install() {
 }
 
 # 安装的操作
-function grub::trait::do_install() {
+function grub::trait::install() {
     # 安装系统已经安装了
     # package_manager::install "$(grub::trait::package_manager)" "$(grub::trait::package_name)" || return "${SHELL_FALSE}"
 
@@ -120,7 +120,7 @@ function grub::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function grub::trait::do_uninstall() {
+function grub::trait::uninstall() {
     # 不卸载，卸载系统就引导不了了
     return "${SHELL_TRUE}"
 }
@@ -130,6 +130,18 @@ function grub::trait::post_uninstall() {
     cmd::run_cmd_with_history -- sudo sed -i "'s/^GRUB_DISABLE_OS_PROBER/#GRUB_DISABLE_OS_PROBER/g'" "/etc/default/grub" || return "${SHELL_FALSE}"
     grub::theme::unset "whitesur-whitesur-1080p" || return "${SHELL_FALSE}"
     grub::mkconfig || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function grub::trait::upgrade() {
+    package_manager::upgrade "$(grub::trait::package_manager)" "$(grub::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

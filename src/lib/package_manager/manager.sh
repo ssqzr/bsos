@@ -152,13 +152,16 @@ function package_manager::package_description() {
 
 function package_manager::upgrade() {
     local package_manager="$1"
+    shift
+    local app="$1"
+    shift
 
     if [ -z "$package_manager" ]; then
         lerror "param package_manager is empty"
         lexit "$CODE_USAGE"
     fi
 
-    package_manager::_run_command "$package_manager" upgrade || return "$SHELL_FALSE"
+    package_manager::_run_command "$package_manager" upgrade "$app" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -166,12 +169,15 @@ function package_manager::upgrade() {
 function package_manager::upgrade_all_pm() {
 
     if package_manager::is_installed "pacman" "yay"; then
+        package_manager::update "yay" || return "$SHELL_FALSE"
         package_manager::upgrade "yay" || return "$SHELL_FALSE"
     else
+        package_manager::update "pacman" || return "$SHELL_FALSE"
         package_manager::upgrade "pacman" || return "$SHELL_FALSE"
     fi
 
     if package_manager::is_installed "pacman" "flatpak"; then
+        package_manager::update "flatpak" || return "$SHELL_FALSE"
         package_manager::upgrade "flatpak" || return "$SHELL_FALSE"
     fi
 

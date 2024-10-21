@@ -66,7 +66,13 @@ function package_manager::pamac::package_description() {
 }
 
 function package_manager::pamac::upgrade() {
-    cmd::run_cmd_with_history -- pamac upgrade --no-confirm --aur || return "$SHELL_FALSE"
+    local app="$1"
+
+    if [ -z "$app" ]; then
+        cmd::run_cmd_with_history -- pamac upgrade --no-refresh --no-confirm --aur || return "$SHELL_FALSE"
+    else
+        cmd::run_cmd_with_history -- pamac upgrade --no-refresh --no-confirm "$app" || return "$SHELL_FALSE"
+    fi
     return "$SHELL_TRUE"
 }
 

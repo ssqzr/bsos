@@ -64,7 +64,13 @@ function package_manager::pacman::package_description() {
 }
 
 function package_manager::pacman::upgrade() {
-    cmd::run_cmd_with_history -- sudo pacman -Syu --noconfirm || return "$SHELL_FALSE"
+    local app="$1"
+
+    if [ -z "$app" ]; then
+        cmd::run_cmd_with_history -- sudo pacman -Su --noconfirm || return "$SHELL_FALSE"
+    else
+        cmd::run_cmd_with_history -- sudo pacman -S --needed --noconfirm "$app" || return "$SHELL_FALSE"
+    fi
     return "$SHELL_TRUE"
 }
 

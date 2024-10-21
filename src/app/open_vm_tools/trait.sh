@@ -45,7 +45,7 @@ function open_vm_tools::trait::pre_install() {
 }
 
 # 安装的操作
-function open_vm_tools::trait::do_install() {
+function open_vm_tools::trait::install() {
     if ! os::is_vmware; then
         return "$SHELL_TRUE"
     fi
@@ -81,7 +81,7 @@ function open_vm_tools::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function open_vm_tools::trait::do_uninstall() {
+function open_vm_tools::trait::uninstall() {
     if ! os::is_vmware; then
         return "$SHELL_TRUE"
     fi
@@ -95,6 +95,21 @@ function open_vm_tools::trait::post_uninstall() {
         return "$SHELL_TRUE"
     fi
     cmd::run_cmd_with_history -- sudo sed -i '/vmhgfs-fuse/d' "/etc/fstab"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function open_vm_tools::trait::upgrade() {
+    if ! os::is_vmware; then
+        return "$SHELL_TRUE"
+    fi
+    package_manager::upgrade "$(open_vm_tools::trait::package_manager)" "$(open_vm_tools::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

@@ -14,7 +14,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 # 指定使用的包管理器
 function yay::trait::package_manager() {
     # yay 是全局的前置依赖，是包管理器，所以使用 makepkg 进行安装
-    echo "pacman"
+    echo "yay"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
@@ -45,7 +45,7 @@ function yay::trait::pre_install() {
 }
 
 # 安装的操作
-function yay::trait::do_install() {
+function yay::trait::install() {
     cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(yay::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(yay::trait::package_name) failed."
@@ -65,13 +65,25 @@ function yay::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function yay::trait::do_uninstall() {
+function yay::trait::uninstall() {
     package_manager::uninstall "$(yay::trait::package_manager)" "$(yay::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的后置操作，比如删除临时文件
 function yay::trait::post_uninstall() {
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function yay::trait::upgrade() {
+    package_manager::upgrade "$(yay::trait::package_manager)" "$(yay::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

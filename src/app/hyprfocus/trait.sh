@@ -39,7 +39,7 @@ function hyprfocus::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprfocus::trait::do_install() {
+function hyprfocus::trait::install() {
     if ! hyprland::hyprctl::is_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
         return "${SHELL_TRUE}"
@@ -84,7 +84,7 @@ function hyprfocus::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprfocus::trait::do_uninstall() {
+function hyprfocus::trait::uninstall() {
     if ! hyprland::hyprctl::is_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not uninstall hyprfocus plugin"
         return "${SHELL_TRUE}"
@@ -106,6 +106,29 @@ function hyprfocus::trait::post_uninstall() {
     linfo "delete hyprfocus config success"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"
+
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function hyprfocus::trait::upgrade() {
+    # FIXME: 现在更新总是失败，因为和 hyprland 的版本不配套
+    # if ! hyprland::hyprctl::is_can_connect; then
+    #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not upgrade hyprfocus plugin"
+    #     return "${SHELL_TRUE}"
+    # fi
+
+    # if hyprland::hyprpm::repository::is_not_exists "hyprfocus"; then
+    #     return "${SHELL_TRUE}"
+    # fi
+
+    # hyprland::hyprpm::update || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }

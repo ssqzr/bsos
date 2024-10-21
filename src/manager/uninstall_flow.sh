@@ -7,7 +7,7 @@ SCRIPT_DIR_b2e4a0ea="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR_b2e4a0ea}/base.sh"
 
-function uninstall_flow::app::do_uninstall() {
+function uninstall_flow::app::uninstall() {
     local top_apps=()
     local temp_str
     linfo "start run apps uninstall..."
@@ -23,7 +23,7 @@ function uninstall_flow::app::do_uninstall() {
     local pm_app
     local _532b27d8_uninstall_apps=()
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_uninstall _532b27d8_uninstall_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::uninstall _532b27d8_uninstall_apps "${pm_app}" || return "$SHELL_FALSE"
     done
     return "$SHELL_TRUE"
 }
@@ -44,7 +44,7 @@ function uninstall_flow::app::do_unfixme() {
 
     local pm_app
     for pm_app in "${top_apps[@]}"; do
-        manager::app::do_unfixme _691b5ab9_cache_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::unfixme _691b5ab9_cache_apps "${pm_app}" || return "$SHELL_FALSE"
     done
     return "$SHELL_TRUE"
 }
@@ -53,9 +53,9 @@ function uninstall_flow::pre_uninstall() {
     return "$SHELL_TRUE"
 }
 
-function uninstall_flow::do_uninstall() {
+function uninstall_flow::uninstall() {
     # 运行卸载
-    uninstall_flow::app::do_uninstall || return "$SHELL_FALSE"
+    uninstall_flow::app::uninstall || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -71,7 +71,7 @@ function uninstall_flow::do_unfixme() {
 function uninstall_flow::main_flow() {
     uninstall_flow::do_unfixme || return "$SHELL_FALSE"
     uninstall_flow::pre_uninstall || return "$SHELL_FALSE"
-    uninstall_flow::do_uninstall || return "$SHELL_FALSE"
+    uninstall_flow::uninstall || return "$SHELL_FALSE"
     uninstall_flow::post_uninstall || return "$SHELL_FALSE"
     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "you should reboot you system."
 

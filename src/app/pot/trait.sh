@@ -38,7 +38,7 @@ function pot::trait::pre_install() {
 }
 
 # 安装的操作
-function pot::trait::do_install() {
+function pot::trait::install() {
     package_manager::install "$(pot::trait::package_manager)" "$(pot::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function pot::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function pot::trait::do_uninstall() {
+function pot::trait::uninstall() {
     package_manager::uninstall "$(pot::trait::package_manager)" "$(pot::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -66,6 +66,18 @@ function pot::trait::post_uninstall() {
     hyprland::config::remove "350" "pot.conf" || return "${SHELL_FALSE}"
 
     fs::directory::safe_delete "${XDG_CONFIG_HOME}/com.pot-app.desktop" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function pot::trait::upgrade() {
+    package_manager::upgrade "$(pot::trait::package_manager)" "$(pot::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

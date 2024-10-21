@@ -64,7 +64,13 @@ function package_manager::flatpak::package_description() {
 }
 
 function package_manager::flatpak::upgrade() {
-    cmd::run_cmd_with_history -- sudo flatpak update -y || return "$SHELL_FALSE"
+    local app="$1"
+
+    if [ -z "$app" ]; then
+        cmd::run_cmd_with_history -- sudo flatpak update -y || return "$SHELL_FALSE"
+    else
+        cmd::run_cmd_with_history -- sudo flatpak update -y "$app" || return "$SHELL_FALSE"
+    fi
     return "$SHELL_TRUE"
 }
 

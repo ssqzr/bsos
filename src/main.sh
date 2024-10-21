@@ -64,12 +64,12 @@ function main::install_core_dependencies() {
     for pm_app in "${core_apps[@]}"; do
         linfo "core app(${pm_app}) install..."
         if ! manager::app::is_custom "$pm_app"; then
-            manager::app::do_install_use_pm "$pm_app" || return "$SHELL_FALSE"
+            manager::app::do_command_use_pm "install" "$pm_app" || return "$SHELL_FALSE"
         else
             linfo "app(${pm_app}) run pre_install..."
             manager::app::run_custom_manager "${pm_app}" "pre_install" || return "$SHELL_FALSE"
-            linfo "app(${pm_app}) run do_install..."
-            manager::app::run_custom_manager "${pm_app}" "do_install" || return "$SHELL_FALSE"
+            linfo "app(${pm_app}) run install..."
+            manager::app::run_custom_manager "${pm_app}" "install" || return "$SHELL_FALSE"
             linfo "app(${pm_app}) run post_install..."
             manager::app::run_custom_manager "${pm_app}" "post_install" || return "$SHELL_FALSE"
         fi
@@ -182,6 +182,44 @@ function main::command::uninstall() {
     return "$SHELL_TRUE"
 }
 
+function main::command::upgrade() {
+    local app_names
+    local temp_str
+    local pm_apps=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --app=*)
+            parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ -v app_names ]; then
+        array::remove_empty app_names || return "$SHELL_FALSE"
+        array::dedup app_names || return "$SHELL_FALSE"
+    fi
+
+    for temp_str in "${app_names[@]}"; do
+        pm_apps+=("custom:$temp_str")
+    done
+
+    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
+
+    install_flow::upgrade_flow || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
 function main::command::fixme() {
     local app_names
     local temp_str
@@ -270,7 +308,7 @@ function main::_do_main() {
     main::check || return "$SHELL_FALSE"
 
     case "${command}" in
-    "install" | "uninstall" | "fixme" | "unfixme")
+    "install" | "uninstall" | "upgrade" | "fixme" | "unfixme")
         "main::command::${command}" "${command_params[@]}" || return "$SHELL_FALSE"
         ;;
     *)

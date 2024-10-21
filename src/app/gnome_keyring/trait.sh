@@ -40,7 +40,7 @@ function gnome_keyring::trait::pre_install() {
 }
 
 # 安装的操作
-function gnome_keyring::trait::do_install() {
+function gnome_keyring::trait::install() {
     package_manager::install "$(gnome_keyring::trait::package_manager)" "$(gnome_keyring::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -91,7 +91,7 @@ function gnome_keyring::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function gnome_keyring::trait::do_uninstall() {
+function gnome_keyring::trait::uninstall() {
     package_manager::uninstall "$(gnome_keyring::trait::package_manager)" "$(gnome_keyring::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -99,6 +99,18 @@ function gnome_keyring::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function gnome_keyring::trait::post_uninstall() {
     cmd::run_cmd_with_history -- sudo sed -i -e "'/pam_gnome_keyring.so/d'" /etc/pam.d/login || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function gnome_keyring::trait::upgrade() {
+    package_manager::upgrade "$(gnome_keyring::trait::package_manager)" "$(gnome_keyring::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

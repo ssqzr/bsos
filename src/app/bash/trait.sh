@@ -50,7 +50,7 @@ function bash::trait::pre_install() {
 }
 
 # 安装的操作
-function bash::trait::do_install() {
+function bash::trait::install() {
     # 内置有，不用重复安装
     # package_manager::install "$(bash::trait::package_manager)" "$(bash::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -68,7 +68,7 @@ function bash::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function bash::trait::do_uninstall() {
+function bash::trait::uninstall() {
     # 内置的就不卸载了
     # package_manager::uninstall "$(bash::trait::package_manager)" "$(bash::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -77,6 +77,18 @@ function bash::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function bash::trait::post_uninstall() {
     bash::settings::lib::clean || return "$SHELL_FALSE"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function bash::trait::upgrade() {
+    # package_manager::upgrade "$(bash::trait::package_manager)" "$(bash::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

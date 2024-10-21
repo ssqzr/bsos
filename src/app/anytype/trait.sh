@@ -38,7 +38,7 @@ function anytype::trait::pre_install() {
 }
 
 # 安装的操作
-function anytype::trait::do_install() {
+function anytype::trait::install() {
     package_manager::install "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -54,13 +54,25 @@ function anytype::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function anytype::trait::do_uninstall() {
+function anytype::trait::uninstall() {
     package_manager::uninstall "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的后置操作，比如删除临时文件
 function anytype::trait::post_uninstall() {
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function anytype::trait::upgrade() {
+    package_manager::upgrade "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

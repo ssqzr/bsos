@@ -39,7 +39,7 @@ function sudo::trait::pre_install() {
 }
 
 # 安装的操作
-function sudo::trait::do_install() {
+function sudo::trait::install() {
     # 执行 su 需要输入密码
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -S --needed --noconfirm  $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -56,7 +56,7 @@ function sudo::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function sudo::trait::do_uninstall() {
+function sudo::trait::uninstall() {
     # 判断 sudo 是否安装
     # which "$(sudo::trait::package_name)" >/dev/null 2>&1 # which 命令可能没有安装
     if [ -f "/usr/bin/$(sudo::trait::package_name)" ]; then
@@ -71,6 +71,18 @@ function sudo::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function sudo::trait::post_uninstall() {
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function sudo::trait::upgrade() {
+    package_manager::upgrade "$(sudo::trait::package_manager)" "$(sudo::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

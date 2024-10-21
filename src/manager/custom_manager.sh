@@ -142,7 +142,7 @@ function custom_manager::main() {
         custom_manager::command::pre_install || return "$SHELL_FALSE"
         ;;
 
-    "description" | "do_install" | "post_install" | "pre_uninstall" | "do_uninstall" | "post_uninstall" | "fixme" | "unfixme" | "dependencies" | "features")
+    "description" | "install" | "post_install" | "pre_uninstall" | "uninstall" | "post_uninstall" | "upgrade" | "fixme" | "unfixme" | "dependencies" | "features")
         "${app_name}::trait::${command}"
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "run ${app_name}::trait::${command} failed"

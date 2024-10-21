@@ -39,7 +39,7 @@ function rpcs3::trait::pre_install() {
 }
 
 # 安装的操作
-function rpcs3::trait::do_install() {
+function rpcs3::trait::install() {
     package_manager::install "$(rpcs3::trait::package_manager)" "$(rpcs3::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function rpcs3::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function rpcs3::trait::do_uninstall() {
+function rpcs3::trait::uninstall() {
     package_manager::uninstall "$(rpcs3::trait::package_manager)" "$(rpcs3::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -67,6 +67,18 @@ function rpcs3::trait::do_uninstall() {
 function rpcs3::trait::post_uninstall() {
     fs::file::delete "$HOME/.var/app/net.rpcs3.RPCS3/config/rpcs3/config.yml" || return "${SHELL_FALSE}"
     hyprland::config::remove 350 "rpcs3.conf" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function rpcs3::trait::upgrade() {
+    package_manager::upgrade "$(rpcs3::trait::package_manager)" "$(rpcs3::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

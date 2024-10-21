@@ -39,17 +39,20 @@ function rust::trait::pre_install() {
 }
 
 # 安装的操作
-function rust::trait::do_install() {
+function rust::trait::install() {
     package_manager::install "$(rust::trait::package_manager)" "$(rust::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
 function rust::trait::post_install() {
-    fs::directory::safe_delete "${HOME}/.cargo" || return "${SHELL_FALSE}"
-    fs::directory::copy "${SCRIPT_DIR_fd47d50e}/cargo" "${HOME}/.cargo" || return "${SHELL_FALSE}"
+
+    fs::file::copy --force "${SCRIPT_DIR_fd47d50e}/cargo/config.toml" "${HOME}/.cargo/config.toml" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- rustup default stable || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- rustup update || return "${SHELL_FALSE}"
+
+    zsh::config::add "350" "${SCRIPT_DIR_fd47d50e}/rust.zsh" || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
@@ -59,7 +62,7 @@ function rust::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function rust::trait::do_uninstall() {
+function rust::trait::uninstall() {
     package_manager::uninstall "$(rust::trait::package_manager)" "$(rust::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -67,7 +70,20 @@ function rust::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function rust::trait::post_uninstall() {
     fs::directory::safe_delete "${HOME}/.cargo" || return "${SHELL_FALSE}"
+    zsh::config::remove "350" "rust.zsh" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
 
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function rust::trait::upgrade() {
+    package_manager::upgrade "$(rust::trait::package_manager)" "$(rust::trait::package_name)" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- rustup update || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

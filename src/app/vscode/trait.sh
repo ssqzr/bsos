@@ -52,7 +52,7 @@ function vscode::trait::pre_install() {
 }
 
 # 安装的操作
-function vscode::trait::do_install() {
+function vscode::trait::install() {
     package_manager::install "$(vscode::trait::package_manager)" "$(vscode::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -72,7 +72,7 @@ function vscode::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function vscode::trait::do_uninstall() {
+function vscode::trait::uninstall() {
     package_manager::uninstall "$(vscode::trait::package_manager)" "$(vscode::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -81,6 +81,18 @@ function vscode::trait::do_uninstall() {
 function vscode::trait::post_uninstall() {
     cmd::run_cmd_with_history -- rm -f "$XDG_CONFIG_HOME/code-flags.conf" || return "${SHELL_FALSE}"
     vscode::undo_set_xdg_mime || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function vscode::trait::upgrade() {
+    package_manager::upgrade "$(vscode::trait::package_manager)" "$(vscode::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

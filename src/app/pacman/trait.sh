@@ -45,16 +45,16 @@ function pacman::trait::pre_install() {
         cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"sed -i '0,/^[# ]*Server/s@@Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/\\\$repo/os/\\\$arch\n&@' /etc/pacman.d/mirrorlist\"" || return "${SHELL_FALSE}"
     fi
 
-    # 先升级系统
-    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start upgrade system..."
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Syu --noconfirm"\" || return "${SHELL_FALSE}"
-    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system success."
+    # 更新软件数据库
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start update pacman database..."
+    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Sy --noconfirm"\" || return "${SHELL_FALSE}"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "update pacman database success."
 
     return "${SHELL_TRUE}"
 }
 
 # 安装的操作
-function pacman::trait::do_install() {
+function pacman::trait::install() {
     # 系统自带了，不用安装
     # package_manager::install "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -71,7 +71,7 @@ function pacman::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function pacman::trait::do_uninstall() {
+function pacman::trait::uninstall() {
     # 系统自带的，不卸载
     # package_manager::uninstall "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -79,6 +79,18 @@ function pacman::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function pacman::trait::post_uninstall() {
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function pacman::trait::upgrade() {
+    package_manager::upgrade "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

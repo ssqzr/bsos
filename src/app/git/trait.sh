@@ -56,7 +56,7 @@ function git::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
-function git::trait::do_install() {
+function git::trait::install() {
     # 全局已经安装了，这里不安装了
     # package_manager::install "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
@@ -103,7 +103,7 @@ function git::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-function git::trait::do_uninstall() {
+function git::trait::uninstall() {
     # 全局安装的，这里不处理卸载。
     # package_manager::uninstall "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
@@ -111,6 +111,18 @@ function git::trait::do_uninstall() {
 
 function git::trait::post_uninstall() {
     cmd::run_cmd_with_history -- rm -f "$HOME/.gitconfig"
+    return "${SHELL_TRUE}"
+}
+
+# 更新应用
+# 绝大部分应用都是通过包管理器进行更新
+# 但是有部分自己安装的应用需要手动更新，比如通过源码进行安装的
+# 说明：
+# - 更新的操作和版本无关，也就是说所有版本更新方法都一样
+# - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
+# - 更新的指责和包管理器类似，只负责更新
+function git::trait::upgrade() {
+    package_manager::upgrade "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
