@@ -13,12 +13,16 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
 function wezterm::trait::package_manager() {
-    echo "pacman"
+    echo "yay"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
 function wezterm::trait::package_name() {
-    echo "wezterm"
+    # FIXME: 正式版本没有问题再切换到正式版本
+    # https://github.com/wez/wezterm/issues/5103
+    # https://github.com/wez/wezterm/issues/5258#issuecomment-2035693830
+    # 目前正式版本使用 wayland + hyprland 的环境，在空工作空间下运行 wezterm 不会显示窗口
+    echo "wezterm-git"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
