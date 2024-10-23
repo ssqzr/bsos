@@ -217,6 +217,9 @@ function hyprland::trait::features() {
 
     apps+=("custom:audio")
 
+    # 截图
+    apps+=("pacman:grim" "pacman:slurp")
+
     array::print apps
     return "${SHELL_TRUE}"
 }
