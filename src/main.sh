@@ -8,6 +8,8 @@ source "${SCRIPT_DIR_8dac019e}/lib/utils/all.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/lib/config/config.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_8dac019e}/lib/config/cache.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/lib/package_manager/manager.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/base.sh"
@@ -26,25 +28,19 @@ source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
 function main::ask() {
     local code
-    if ! manager::flags::check_loop::is_exists; then
-        tui::builtin::confirm "check apps loop dependencies ?" "y"
-        code=$?
-        if [ $code -eq 130 ]; then
-            return "$SHELL_FALSE"
-        elif [ $code -eq "$SHELL_TRUE" ]; then
-            manager::flags::check_loop::add || return "$SHELL_FALSE"
+
+    if config::cache::is_exists; then
+        if ! manager::flags::reuse_cache::is_exists; then
+            tui::builtin::confirm "reuse cache?" "y"
+            code=$?
+            if [ $code -eq 130 ]; then
+                return "$SHELL_FALSE"
+            elif [ $code -eq "$SHELL_TRUE" ]; then
+                manager::flags::reuse_cache::add || return "$SHELL_FALSE"
+            fi
         fi
     fi
 
-    if ! manager::flags::reuse_cache::is_exists; then
-        tui::builtin::confirm "reuse cache if exists ?" "y"
-        code=$?
-        if [ $code -eq 130 ]; then
-            return "$SHELL_FALSE"
-        elif [ $code -eq "$SHELL_TRUE" ]; then
-            manager::flags::reuse_cache::add || return "$SHELL_FALSE"
-        fi
-    fi
     return "$SHELL_TRUE"
 }
 
@@ -90,17 +86,6 @@ function main::must_do() {
 }
 
 function main::check() {
-
-    if ! manager::flags::check_loop::is_exists; then
-        linfo "no need check loop dependencies"
-    else
-        manager::app::check_loop_relationships
-        if [ $? -ne "$SHELL_TRUE" ]; then
-            lerror "check_loop_dependencies failed"
-            return "$SHELL_FALSE"
-        fi
-    fi
-
     # 其他检查
 
     return "$SHELL_TRUE"
@@ -300,11 +285,10 @@ function main::_do_main() {
     local command="$1"
     local command_params=("${@:2}")
 
-    main::ask || return "$SHELL_FALSE"
-
     main::must_do || return "$SHELL_FALSE"
     # NOTE: 在执行 main::must_do 之后才可以使用 yq 操作配置文件
 
+    main::ask || return "$SHELL_FALSE"
     main::check || return "$SHELL_FALSE"
 
     case "${command}" in

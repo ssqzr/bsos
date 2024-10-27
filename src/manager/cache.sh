@@ -162,6 +162,9 @@ function manager::cache::generate_app_dependencies() {
 # 每个APP的依赖关系图
 function manager::cache::generate_apps_relation() {
     local temp_str
+
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate apps relation infomation, it take a long time..."
+
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         local app_name
         app_name=$(basename "${app_path}")

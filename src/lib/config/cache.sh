@@ -24,6 +24,10 @@ function config::cache::is_exists() {
     config::map::has_key "." "cache" "${__config_filepath}"
 }
 
+function config::cache::is_not_exists() {
+    ! config::cache::is_exists
+}
+
 ################################################### global 相关 ############################################
 
 function config::cache::top_apps::is_exists() {
