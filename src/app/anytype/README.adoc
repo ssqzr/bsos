@@ -3,3 +3,44 @@ include::../../../doc/base.adoc[]
 
 https://anytype.io/[官方文档]
 
+## 问题记录
+
+### flatpak 使用
+
+目前测试 flatpak 安装 anytype 0.43.1 版本。
+
+默认运行失败，提示错误：
+
+[source, console]
+----
+❯ flatpak run io.anytype.anytype
+[2 zypak-helper] Wait found events, but sd-event found none
+[2:1028/113210.291746:ERROR:bus.cc(407)] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: 没有那个文件或目录
+Checking for beta autoupdate feature for deb/rpm distributions
+Found package-type: deb
+LaunchProcess: failed to execvp:
+xdg-settings
+[2:1028/113210.522223:ERROR:bus.cc(407)] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: 没有那个文件或目录
+[2:1028/113210.522269:ERROR:bus.cc(407)] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: 没有那个文件或目录
+[2:1028/113210.522287:ERROR:bus.cc(407)] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: 没有那个文件或目录
+[2:1028/113210.522304:ERROR:bus.cc(407)] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: 没有那个文件或目录
+[2:1028/113210.522319:ERROR:bus.cc(407)] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: 没有那个文件或目录
+[2:1028/113210.523266:ERROR:wayland_connection.cc(197)] Failed to connect to Wayland display: 没有那个文件或目录 (2)
+[2:1028/113210.523278:ERROR:ozone_platform_wayland.cc(264)] Failed to initialize Wayland platform
+[2:1028/113210.523282:ERROR:env.cc(258)] The platform failed to initialize.  Exiting.
+----
+
+修改 flatpak 配置文件，启用 wayland 窗口系统
+
+[source, console]
+----
+❯ flatpak override io.anytype.anytype --socket=wayland
+----
+
+再次运行 flatpak，成功启动，但是界面花屏。[.red]#暂时没搜到解决方案#。
+
+### AppImage 使用
+
+AUR 的软件包 anytype-bin 就是使用 AppImage 打包的，安装后直接运行即可。
+
+[.red]#但是运行后会花屏，暂时没搜到解决方案。#
