@@ -171,6 +171,11 @@ function manager::app::do_command_use_pm() {
     local level_indent="$1"
     shift
 
+    local package_manager
+    local package
+    # shellcheck disable=SC2034
+    local ignore_command=("install_guide" "fixme" "unfixme")
+
     if [ -z "$command" ]; then
         lerror "command is empty"
         return "$SHELL_FALSE"
@@ -186,8 +191,10 @@ function manager::app::do_command_use_pm() {
         return "$SHELL_FALSE"
     fi
 
-    local package_manager
-    local package
+    if array::is_contain ignore_command "$command"; then
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: system package manager can not do it, ignore command($command)"
+        return "$SHELL_TRUE"
+    fi
 
     package_manager=$(manager::app::parse_package_manager "$pm_app")
     package=$(manager::app::parse_app_name "$pm_app")
