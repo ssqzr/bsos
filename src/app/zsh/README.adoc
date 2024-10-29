@@ -16,3 +16,74 @@ https://www.zsh.org[官方文档]
 
 因此在 `zshrc` 文件中检测是否是 `vtty` ，如果是就设置 `LANG="C.UTF-8"` 。
 
+## zkbd 使用 `$DISPLAY` 的问题
+
+运行 `zkbd` 后生成的按键映射文件的文件名的命名规则是 `$HOME/.zkbd/$TERM-${${DISPLAY:t}:-$VENDOR-$OSTYPE}`。
+
+[sidebar]
+.说明
+****
+- ${DISPLAY:t} 类似 basename(${DISPLAY})，获取文件名，即去掉路径部分。
+- ${${DISPLAY:t}:-$VENDOR-$OSTYPE} 如果 ${DISPLAY:t} 为空，则使用 $VENDOR-$OSTYPE。
+- https://github.com/zsh-users/zsh/commits/master/Functions/Misc/zkbd[zkbd的改动历史]
+- https://github.com/zsh-users/zsh/commit/bda53dc6d5135750c52f59b9cfbab39b161c0919[zkbd 使用 $DISPLAY 的改动记录]
+- https://github.com/zsh-users/zsh/commit/915766c624880ead34a80796a80f014822db3d96[zkbd 使用 ${${DISPLAY:t} 的改动记录]
+****
+
+
+.https://www.zsh.org/mla/users/2012/msg00044.html[为什么使用 $DISPLAY ]
+[quote]
+____
+
+Why does zkbd use $DISPLAY at all?
+
+为什么 zkbd 要使用 $DISPLAY 呢？
+
+The problem with using only $TERM-$VENDOR-$OSTYPE is that with remote
+display, you may be either (a) running $TERM on host Q but displaying
+on host P, or (b) running $TERM on host Q but with the shell in ssh on
+host P.  In either of these cases $VENDOR-$OSTYPE will refer to the
+local machine where zsh has started, but the keybindings you want are
+for the keyboard attached to the remote machine.
+
+只使用 $TERM-$VENDOR-$OSTYPE 的问题是，对于远程显示，您可能(a)在主机 Q 上运行 $TERM 但在主机 P 上显示，或者(b)在主机 Q 上运行 $TERM 但在主机 P 上使用 ssh 中的 shell。在这两种情况下，$VENDOR-$OSTYPE 都将引用 zsh 已经启动的本地计算机，但是您需要的键绑定是连接到远程计算机的键盘。
+
+The only obvious way to identify the remote keyboard is to use $DISPLAY.
+
+识别远程键盘的唯一显而易见的方法是使用 $DISPLAY。
+
+Why would I be getting different sequences for urxvt in :1 than in :0?
+
+:0 is presumably the console with a physically attached keyboard, whereas
+:1 is most likely a VNC or NX device with a virtual keyboard.  Once again
+the keystrokes may be different; e.g., DEL on the physical keyboard might
+send ^? but on the virtual keyboard it sends ^[[3~ .  So you need separate
+zkbd files for those cases.
+
+:0 可能是带有物理连接键盘的控制台，而 :1 很可能是带有虚拟键盘的 VNC 或 NX 设备。同样地，按键可能是不同的; 例如，物理键盘上的 DEL 可能发送 ^？ 但是在虚拟键盘上它发送 ^[[3~ 。所以这些场景需要单独的 zkbd 文件。
+
+have to set everything up separately when the display number changes?
+
+当显示器号码改变时，必须把所有东西分开放置吗？
+
+The assumption is that the display number is pretty closely tied to the
+source from which that display originates.  That assumption isn't always
+going to be correct, but zkbd can't cover all possible cases; the user
+is assumed to be intelligent enough to rename some files and change the
+corresponding "source" commands if she has special cases.
+
+假设显示编号与显示的来源密切相关。  这种假设并不总是正确的，但 zkbd 无法涵盖所有​​可能的情况；如果用户有特殊情况，则假定用户足够聪明，可以重命名某些文件并更改相应的 "source" 命令。
+____
+
+.https://www.zsh.org/mla/users/2012/msg00003.html[为什么使用 ${DISPLAY:t}]
+[quote]
+____
+On MacOS, it's a Unix-domain socket, used by launchd to dynamically
+start up the X11 server when a client opens the socket, and hand off to
+the running server.  From an X point of view, this should still have
+been exposed as ":0" and the local transport could have been chosen
+behind the scenes to be via a Unix-domain socket which triggers the
+launchd behaviour.  Alas, Mac's are gratuitously different here.
+
+在 MacOS 上，它是一个 Unix 域套接字，用于在客户端打开套接字时启动 X11 服务器，并将其传递给正在运行的 X11 服务器。从 X 的角度来看，这仍然应该被暴露为 ":0"，本地传输可以在幕后选择通过 Unix 域套接字进行，该套接字触发 launchd 行为。遗憾的是，Mac 在这里过于慷慨。
+____
