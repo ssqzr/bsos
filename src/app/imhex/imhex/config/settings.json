@@ -1,0 +1,17 @@
+{
+    "hex.builtin.setting.font": {
+        "hex.builtin.setting.font.custom_font_enable": true,
+        "hex.builtin.setting.font.custom_font_info": null,
+        "hex.builtin.setting.font.font_antialias": true,
+        "hex.builtin.setting.font.font_bold": false,
+        "hex.builtin.setting.font.font_italic": false,
+        "hex.builtin.setting.font.font_path": "/usr/share/fonts/noto/NotoSerif-Regular.ttf",
+        "hex.builtin.setting.font.font_size": 16,
+        "hex.builtin.setting.font.load_all_unicode_chars": true
+    },
+    "hex.builtin.setting.interface": {
+        "hex.builtin.setting.interface.achievement_popup": false,
+        "hex.builtin.setting.interface.color": "Light",
+        "hex.builtin.setting.interface.language": "zh-CN"
+    }
+}
