@@ -1,0 +1,6 @@
+patch:
+  # https://github.com/rime/home/wiki/CustomizationGuide#%E4%B8%80%E4%BE%8B%E5%AE%9A%E8%A3%BD%E6%A8%99%E9%BB%9E%E7%AC%A6%E8%99%9F
+  punctuator/full_shape:
+    "/": "/"
+  punctuator/half_shape:
+    "/": "/"

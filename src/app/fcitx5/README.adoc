@@ -1,7 +1,13 @@
 # fcitx5 安装说明文档
 include::../../../doc/base.adoc[]
 
-official_document_url[官方文档]
+https://wiki.archlinux.org/title/Fcitx5[官方文档]
+
+## Rime
+
+https://wiki.archlinuxcn.org/wiki/Rime[Archlinux Rime 文档]
+
+https://blog.einverne.info/post/2021/10/rime-shortcut.html[Rime 输入法中的快捷键]
 
 ## 问题记录
 

@@ -1,0 +1,10 @@
+patch:
+  "menu/page_size": 9
+  key_binder:
+    bindings:
+      - { when: composing, accept: Control+c, send: Escape } # ctrl-c 清屏
+      - { when: composing, accept: Alt+i, send: Up } # 候选词向上选择
+      - { when: composing, accept: Alt+k, send: Down } # 候选词向下选择
+      - { when: composing, accept: Alt+j, send: Page_Up } # 候选词向前分页
+      - { when: composing, accept: Alt+l, send: Page_Down } # 候选词向后分页
+      - { when: always, accept: Control+period, toggle: ascii_punct } # 切换西文/中文标点 Ctrl + .

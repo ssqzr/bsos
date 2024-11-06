@@ -1,20 +1,21 @@
 [Hotkey]
 # 反复按切换键时进行轮换
 EnumerateWithTriggerKeys=True
-# 向前切换输入法
-EnumerateForwardKeys=
-# 向后切换输入法
-EnumerateBackwardKeys=
 # 轮换输入法时跳过第一个输入法
 EnumerateSkipFirst=False
 
 [Hotkey/TriggerKeys]
 0=Control+Shift+Shift_L
 1=Zenkaku_Hankaku
-2=Hangul
 
 [Hotkey/AltTriggerKeys]
-0=Shift_L
+0=Shift+Shift_L
+
+[Hotkey/EnumerateForwardKeys]
+0=Shift+Shift_R
+
+[Hotkey/EnumerateBackwardKeys]
+0=
 
 [Hotkey/EnumerateGroupForwardKeys]
 0=Super+space
@@ -46,6 +47,8 @@ EnumerateSkipFirst=False
 [Behavior]
 # 默认状态为激活
 ActiveByDefault=False
+# 重新聚焦时重置状态
+resetStateWhenFocusIn=No
 # 共享输入状态
 ShareInputState=No
 # 在程序中显示预编辑文本
@@ -76,4 +79,3 @@ AllowInputMethodForPassword=False
 ShowPreeditForPassword=False
 # 保存用户数据的时间间隔（以分钟为单位）
 AutoSavePeriod=30
-

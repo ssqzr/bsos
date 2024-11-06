@@ -47,9 +47,11 @@ function fcitx5::trait::install() {
 function fcitx5::trait::post_install() {
     # 拷贝配置文件前先结束掉 fcitx5 进程，不然当前运行的 fcitx5 会回写配置，一般开发环境会出现这个问题，导致配置不符合预期
     process::kill_by_name "fcitx5" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- cp -r "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
+    fs::directory::copy --force "${SCRIPT_DIR_3ce25d5f}/fcitx5" "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
+
+    # 不用删除整个目录，保留历史文件，支持重复安装
+    fs::file::copy --force "${SCRIPT_DIR_3ce25d5f}/root/home/__user__/.local/share/fcitx5/default.custom.yaml" "$XDG_DATA_HOME/fcitx5/rime/default.custom.yaml" || return "${SHELL_FALSE}"
+    fs::file::copy --force "${SCRIPT_DIR_3ce25d5f}/root/home/__user__/.local/share/fcitx5/luna_pinyin.custom.yaml" "$XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml" || return "${SHELL_FALSE}"
 
     hyprland::config::add "350" "${SCRIPT_DIR_3ce25d5f}/fcitx5.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -68,7 +70,9 @@ function fcitx5::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function fcitx5::trait::post_uninstall() {
-    cmd::run_cmd_with_history -- rm -rf "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
+
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/fcitx5" || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "$XDG_DATA_HOME/fcitx5" || return "${SHELL_FALSE}"
 
     hyprland::config::remove "350" "fcitx5.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -125,7 +129,9 @@ function fcitx5::trait::dependencies() {
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function fcitx5::trait::features() {
-    local apps=("pacman:fcitx5-material-color" "pacman:fcitx5-chinese-addons")
+    local apps=()
+    apps+=("pacman:fcitx5-material-color" "pacman:fcitx5-chinese-addons")
+    apps+=("pacman:fcitx5-rime")
     array::print apps
     return "${SHELL_TRUE}"
 }
