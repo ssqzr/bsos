@@ -84,7 +84,7 @@ function hyprland::hyprpm::clean() {
 }
 
 function hyprland::hyprpm::update() {
-    cmd::run_cmd_with_history -- hyprpm update -v
+    cmd::run_cmd_with_history -- hyprpm update -v --no-shallow
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "hyprpm update failed"
         return "${SHELL_FALSE}"

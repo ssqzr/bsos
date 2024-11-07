@@ -546,6 +546,43 @@ hyprland 升级到 0.41.0 后， zoom 功能使用异常，使用鼠标放大效
 
 已经没有问题了。
 
+### hyprpm 更新提示版本不匹配
+
+[source,console]
+----
+❯ hyprpm update -v
+[v] version returned: Hyprland, built from branch  at commit 4520b30d498daca8079365bdb909a8dea38e8d55  (version: bump to 0.44.1).
+Date: Wed Oct 9 12:54:39 2024
+Tag: v0.44.1, commits: 5309
+built against aquamarine 0.4.3
+
+
+flags: (if any)
+
+
+[v] parsed commit 4520b30d498daca8079365bdb909a8dea38e8d55 at branch  on Wed Oct 9 12:54:39 2024, commits 5309
+
+! Cloning https://github.com/hyprwm/hyprland, this might take a moment.
+[v] will shallow since: Wed Oct 02 12:54:39 2024
+
+✔ cloned
+[v] will run: cd /tmp/hyprpm/hyprland-lzw && git checkout 4520b30d498daca8079365bdb909a8dea38e8d55 2>&1
+[v] git returned (co): 致命错误：无法读取树（4520b30d498daca8079365bdb909a8dea38e8d55）
+
+......
+
+Headers version mismatch. Please run hyprpm update to fix those.
+----
+
+这个是因为克隆 `Hyprland` 仓库时使用的是 `shallow cloning` ， `Archlinux` 下的 `Hyprland` 包版本落后仓库的版本，所以当前的提交记录 `4520b30d498daca8079365bdb909a8dea38e8d55` 找不到。
+
+解决办法是克隆 `Hyprland` 仓库时不使用 `shallow cloning` ，即使用 `--no-shallow` 参数。
+
+[source,console]
+----
+hyprpm update -v --no-shallow
+----
+
 [#use-plugin]
 ## 插件的处理
 
