@@ -2,6 +2,7 @@ local wezterm = require 'wezterm'
 local theme = require('config.theme')
 local tab = require('config.tab')
 local keys = require('config.keys')
+local mouse = require('config.mouse')
 local mux = wezterm.mux
 
 local config = wezterm.config_builder()
@@ -9,11 +10,11 @@ local config = wezterm.config_builder()
 
 -- 默认光标的样式
 config.default_cursor_style = 'BlinkingBlock'
-config.hide_mouse_cursor_when_typing = true
 
 theme.config(config)
 tab.config(config)
 keys.config(config)
+mouse.config(config)
 
 -- 字体
 -- wezterm 捆绑了 JetBrains Mono
