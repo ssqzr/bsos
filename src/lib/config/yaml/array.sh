@@ -216,7 +216,7 @@ function config::array::dedup() {
     fi
 }
 
-function config::array::get() {
+function config::array::all() {
     local path="$1"
     local filepath="$2"
     local value

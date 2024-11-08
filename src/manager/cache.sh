@@ -132,7 +132,7 @@ function manager::cache::generate_app_dependencies() {
         fi
         manager::cache::generate_app_dependencies "$item" || return "$SHELL_FALSE"
         local item_dependencies=()
-        temp_str="$(config::cache::app::dependencies::get "$item")"
+        temp_str="$(config::cache::app::dependencies::all "$item")"
         array::readarray item_dependencies < <(echo "$temp_str")
         array::extend all_dependencies item_dependencies
     done
@@ -148,7 +148,7 @@ function manager::cache::generate_app_dependencies() {
         fi
         manager::cache::generate_app_dependencies "$item" || return "$SHELL_FALSE"
         local item_dependencies=()
-        temp_str="$(config::cache::app::dependencies::get "$item")"
+        temp_str="$(config::cache::app::dependencies::all "$item")"
         array::readarray item_dependencies < <(echo "$temp_str")
         array::extend all_dependencies item_dependencies
     done
@@ -189,7 +189,7 @@ function manager::cache::generate_apps_relation() {
         local pm_app="custom:$app_name"
 
         local item_dependencies=()
-        temp_str="$(config::cache::app::dependencies::get "$pm_app")"
+        temp_str="$(config::cache::app::dependencies::all "$pm_app")"
         array::readarray item_dependencies < <(echo "$temp_str")
 
         for item in "${item_dependencies[@]}"; do

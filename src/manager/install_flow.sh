@@ -14,7 +14,7 @@ function install_flow::app::do_guide() {
     local temp_str
     local _36317254_cache_apps=()
 
-    temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
+    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
     ldebug "top_apps=${top_apps[*]}"
@@ -31,7 +31,7 @@ function install_flow::app::install() {
     local temp_str
     linfo "start run apps install..."
 
-    temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
+    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
     ldebug "top_apps=${top_apps[*]}"
@@ -49,7 +49,7 @@ function install_flow::app::upgrade() {
     local temp_str
     linfo "start run apps upgrade..."
 
-    temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
+    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
     ldebug "top_apps=${top_apps[*]}"
@@ -69,7 +69,7 @@ function install_flow::app::do_fixme() {
     local _b81225cf_cache_apps=()
     linfo "start run all apps install fixme..."
 
-    temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
+    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
     ldebug "top_apps=${top_apps[*]}"

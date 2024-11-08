@@ -12,7 +12,7 @@ function uninstall_flow::app::uninstall() {
     local temp_str
     linfo "start run apps uninstall..."
 
-    temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
+    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
     ldebug "top_apps=${top_apps[*]}"
 
@@ -34,7 +34,7 @@ function uninstall_flow::app::do_unfixme() {
     local _691b5ab9_cache_apps=()
     linfo "start run apps unfixme..."
 
-    temp_str="$(config::cache::top_apps::get)" || return "$SHELL_FALSE"
+    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
     ldebug "top_apps=${top_apps[*]}"
 

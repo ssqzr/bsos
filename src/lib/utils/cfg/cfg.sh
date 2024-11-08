@@ -286,7 +286,7 @@ function cfg::array::last() {
     return "$SHELL_TRUE"
 }
 
-function cfg::array::index() {
+function cfg::array::get() {
     local type="json"
     local index
     local data
@@ -355,7 +355,7 @@ function cfg::array::index() {
 
     cfg::_check_type "$type" || return "$SHELL_FALSE"
 
-    "cfg::trait::$type::array::index" "$index" "$data" || return "$SHELL_FALSE"
+    "cfg::trait::$type::array::get" "$index" "$data" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

@@ -97,7 +97,7 @@ function cfg::trait::json::array::last() {
     return "${SHELL_TRUE}"
 }
 
-function cfg::trait::json::array::index() {
+function cfg::trait::json::array::get() {
     local index="$1"
     shift
     local data="$1"

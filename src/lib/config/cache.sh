@@ -38,8 +38,8 @@ function config::cache::top_apps::delete() {
     config::map::delete_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
-function config::cache::top_apps::get() {
-    config::array::get ".cache.top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+function config::cache::top_apps::all() {
+    config::array::all ".cache.top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
 function config::cache::top_apps::clean() {
@@ -92,9 +92,9 @@ function config::cache::app::dependencies::rpush_unique() {
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::dependencies::get() {
+function config::cache::app::dependencies::all() {
     local pm_app="$1"
-    config::array::get ".cache.apps.[\"${pm_app}\"].dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::all ".cache.apps.[\"${pm_app}\"].dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -130,8 +130,8 @@ function config::cache::app::required_by::rpush_unique() {
     return "$SHELL_TRUE"
 }
 
-function config::cache::app::required_by::get() {
+function config::cache::app::required_by::all() {
     local pm_app="$1"
-    config::array::get ".cache.apps.[\"${pm_app}\"].required_by" "${__config_filepath}" || return "$SHELL_FALSE"
+    config::array::all ".cache.apps.[\"${pm_app}\"].required_by" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
