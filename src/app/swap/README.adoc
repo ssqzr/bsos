@@ -1,0 +1,71 @@
+# swap 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinux.org/title/Swap[官方文档]
+
+## 说明
+
+其实我现在的内存够用，之前也一直没有使用 swap 空间，没有必要。
+
+[.red]#现在需要使用休眠的功能，这个是必须使用 swap 空间的。#
+
+相比 swap 分区，swap 文件更灵活，可以随时调整大小。
+
+https://www.kernel.org/doc/gorman/html/understand/understand014.html[Swap Management]
+
+https://serverfault.com/questions/25653/swap-partition-vs-file-for-performance[swap partition vs file for performance?]
+
+但是 swap 分区是连续的空间，而 swap 文件可以分散在磁盘的各个角落，所以 swap 文件的速度会慢一些。
+
+## swap 的推荐大小
+
+https://wiki.archlinux.org/title/Partitioning#Swap[Swap]
+
+
+[quote]
+____
+Since computers have gained memory capacities superior to a gibibit, the previous "twice the amount of physical RAM" rule has become outdated. A sane default size is 4 GiB.
+
+由于计算机的内存容量已经超过了GB，以前的“物理 RAM 数量的两倍”规则已经过时了。正常的默认大小是 4 GiB。
+
+To use hibernation (a.k.a suspend to disk) it is advised to create the swap partition at the size of RAM. Although the kernel will try to compress the suspend-to-disk image to fit the swap space there is no guarantee it will succeed if the used swap space is significantly smaller than RAM.
+
+要使用休眠（又名挂起到磁盘），建议创建 RAM 大小的交换分区。尽管内核会尝试压缩挂起到磁盘映像以适应交换空间，但如果使用的交换空间明显小于 RAM，则不能保证它会成功。
+____
+
+所以我选择将 swap 文件的大小设置为内存大小。
+
+## 问题记录
+
+### swapon 查看 swap 大小偏小
+
+[source,bash]
+----
+# 创建交换文件
+# 34359738368 = 32GB
+mkswap -U clear --size 34359738368 --file "/swapfile"
+
+❯ swapon --show --bytes
+NAME      TYPE        SIZE USED PRIO
+/swapfile file 34359734272    0   -2
+
+# 看到 swapon 查看的 swap 大小是比交换文件大小偏小的
+----
+
+看到 `swapon` 查看的 `swap` 大小是比创建的交换文件大小偏小的。
+
+[.red]#目前没搜到相关介绍。#
+
+
+### swap 文件的碎片问题
+
+swap 分区是连续的一块磁盘空间，不存在碎片的问题。
+
+swap 文件是文件系统里的一个文件，就会存在碎片的问题，导致性能下降。
+
+碎片化对 SSD 磁盘影响比较小。
+
+那怎么让 swap 文件是连续的？？
+
+[.red]#目前没搜到解决办法。#

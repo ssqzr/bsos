@@ -20,6 +20,62 @@ source "${SCRIPT_DIR_dc1ea0de}/../parameter.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_dc1ea0de}/path.sh"
 
+function fs::file::size_byte() {
+    local path
+    local is_sudo
+    local password
+    local param
+
+    ldebug "params=$*"
+
+    for param in "$@"; do
+        case "$param" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param" is_sudo || return "$SHELL_FALSE"
+            ;;
+        -p=* | --password=*)
+            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v path ]; then
+                path="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v path ]; then
+        lerror "get file size failed, param path is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$path"; then
+        lerror "get file size failed, param path is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_not_exists "$path"; then
+        lerror "get file($path) size failed, it is not exists"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_not_file "$path"; then
+        lerror "get file($path) size failed, it is not file"
+        return "$SHELL_FALSE"
+    fi
+
+    stat -c "%s" "$path"
+    return "$SHELL_TRUE"
+}
+
 function fs::file::delete() {
     local path
     local is_sudo

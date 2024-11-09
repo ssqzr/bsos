@@ -65,7 +65,7 @@ function storage::trait::_print_partitions_info() {
 
         length="$(array::length mount_points)" || return "${SHELL_FALSE}"
         for ((index = 0; index < length; index++)); do
-            mount_point="$(array::index mount_points "${index}")" || return "${SHELL_FALSE}"
+            mount_point="$(array::get mount_points "${index}")" || return "${SHELL_FALSE}"
             if [ "$index" -eq 0 ]; then
                 println_info --format="${format}" "$number" "$first_sector" "$last_sector" "$sectors" "$size_gb_base_1000" "$size_gb_base_1024" "$filesystem_id" "$filesystem_type" "${mount_point}" || return "${SHELL_FALSE}"
                 continue
@@ -110,14 +110,14 @@ function storage::trait::_print_free_spaces_info() {
         ((sectors = last_sector - first_sector + 1))
         ((size_byte = sectors * logical_sector_size_byte))
 
-        size_kb_1000="$(float::div "${size_byte}" 1000)" || return "${SHELL_FALSE}"
-        size_kb_1024="$(float::div "${size_byte}" 1024)" || return "${SHELL_FALSE}"
+        size_kb_1000="$(math::div "${size_byte}" 1000 2)" || return "${SHELL_FALSE}"
+        size_kb_1024="$(math::div "${size_byte}" 1024 2)" || return "${SHELL_FALSE}"
 
-        size_mb_1000="$(float::div "${size_byte}" $((1000 * 1000)))" || return "${SHELL_FALSE}"
-        size_mb_1024="$(float::div "${size_byte}" $((1024 * 1024)))" || return "${SHELL_FALSE}"
+        size_mb_1000="$(math::div "${size_byte}" $((1000 * 1000)) 2)" || return "${SHELL_FALSE}"
+        size_mb_1024="$(math::div "${size_byte}" $((1024 * 1024)) 2)" || return "${SHELL_FALSE}"
 
-        size_gb_base_1000="$(float::div "${size_byte}" $((1000 * 1000 * 1000)))" || return "${SHELL_FALSE}"
-        size_gb_base_1024="$(float::div "${size_byte}" $((1024 * 1024 * 1024)))" || return "${SHELL_FALSE}"
+        size_gb_base_1000="$(math::div "${size_byte}" $((1000 * 1000 * 1000)) 2)" || return "${SHELL_FALSE}"
+        size_gb_base_1024="$(math::div "${size_byte}" $((1024 * 1024 * 1024)) 2)" || return "${SHELL_FALSE}"
 
         println_info --format="${format}" "$first_sector" "$last_sector" "$sectors" "$size_byte" "$size_kb_1000" "$size_kb_1024" "$size_mb_1000" "$size_mb_1024" "$size_gb_base_1000" "$size_gb_base_1024" || return "${SHELL_FALSE}"
     done

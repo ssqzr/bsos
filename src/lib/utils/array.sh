@@ -57,7 +57,9 @@ function array::is_not_contain() {
     ! array::is_contain "$@"
 }
 
-function array::index() {
+# 通过下标获取数组元素
+# 下标支持负数
+function array::get() {
     local -n array_0181bda3=$1
     shift
     local index=$1
@@ -82,15 +84,49 @@ function array::index() {
     return "$SHELL_TRUE"
 }
 
+# 查找元素，返回找到的第一个下标
+# 没有找到输出 -1
+function array::find() {
+    local -n array_5866a273=$1
+    shift
+    local item_5866a273=$1
+    shift
+    local length_5866a273
+    local index_5866a273
+
+    length_5866a273=$(array::length "${!array_5866a273}") || return "$SHELL_FALSE"
+
+    for ((index_5866a273 = 0; index_5866a273 < length_5866a273; index_5866a273++)); do
+        if [ "${array_5866a273[${index_5866a273}]}" = "${item_5866a273}" ]; then
+            echo "${index_5866a273}"
+            return "$SHELL_TRUE"
+        fi
+    done
+    echo "-1"
+    return "$SHELL_TRUE"
+}
+
+# 查找元素，返回找到的第一个下标
+# 没有找到返回 $SHELL_FALSE
+function array::index() {
+    local index
+    index=$(array::find "$@")
+    if [ "$index" -eq "-1" ]; then
+        return "$SHELL_FALSE"
+    fi
+    echo "$index"
+    return "$SHELL_TRUE"
+}
+
 function array::first() {
     local -n array_89220a75=$1
-    array::index "${!array_89220a75}" 0 || return "$SHELL_FALSE"
+    array::get "${!array_89220a75}" 0 || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
 function array::last() {
     local -n array_b8bc739b=$1
-    array::index "${!array_b8bc739b}" -1 || return "$SHELL_FALSE"
+    array::get "${!array_b8bc739b}" -1 || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -303,6 +339,36 @@ function array::join_with() {
     return "$SHELL_TRUE"
 }
 
+function array::insert() {
+    local -n array_7a7653c6="$1"
+    shift
+    local index_7a7653c6="$1"
+    shift
+    local item_7a7653c6="$1"
+    shift
+    local length_7a7653c6
+
+    length_7a7653c6="$(array::length "${!array_7a7653c6}")"
+    if [ "$index_7a7653c6" -lt "0" ] || [ "$index_7a7653c6" -gt "${length_7a7653c6}" ]; then
+        lerror "index is out of range, index=${index_7a7653c6}, length=${length_7a7653c6}"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ "$index_7a7653c6" -eq "0" ]; then
+        array::lpush "${!array_7a7653c6}" "$item_7a7653c6" || return "$SHELL_FALSE"
+        return "$SHELL_TRUE"
+    fi
+
+    if [ "$index_7a7653c6" -eq "${length_7a7653c6}" ]; then
+        array::rpush "${!array_7a7653c6}" "$item_7a7653c6" || return "$SHELL_FALSE"
+        return "$SHELL_TRUE"
+    fi
+
+    array_7a7653c6=("${array_7a7653c6[@]:0:index_7a7653c6}" "$item_7a7653c6" "${array_7a7653c6[@]:index_7a7653c6}")
+
+    return "$SHELL_TRUE"
+}
+
 ###################################### 下面是测试代码 ######################################
 
 function TEST::array::length() {
@@ -337,36 +403,79 @@ function TEST::array::is_empty() {
     utest::assert_fail $?
 }
 
-function TEST::array::index() {
+function TEST::array::get() {
     local arr
 
-    array::index arr 0
+    array::get arr 0
     utest::assert_fail $?
 
-    array::index arr -0
+    array::get arr -0
     utest::assert_fail $?
 
-    array::index arr 1
+    array::get arr 1
     utest::assert_fail $?
 
     arr=(1 2 3 4 5)
 
-    utest::assert_equal "$(array::index arr -0)" 1
-    utest::assert_equal "$(array::index arr -1)" 5
-    utest::assert_equal "$(array::index arr -2)" 4
-    utest::assert_equal "$(array::index arr -3)" 3
-    utest::assert_equal "$(array::index arr -4)" 2
-    utest::assert_equal "$(array::index arr -5)" 1
-    array::index arr -6
+    utest::assert_equal "$(array::get arr -0)" 1
+    utest::assert_equal "$(array::get arr -1)" 5
+    utest::assert_equal "$(array::get arr -2)" 4
+    utest::assert_equal "$(array::get arr -3)" 3
+    utest::assert_equal "$(array::get arr -4)" 2
+    utest::assert_equal "$(array::get arr -5)" 1
+    array::get arr -6
     utest::assert_fail $?
 
-    utest::assert_equal "$(array::index arr 0)" 1
-    utest::assert_equal "$(array::index arr 1)" 2
-    utest::assert_equal "$(array::index arr 2)" 3
-    utest::assert_equal "$(array::index arr 3)" 4
-    utest::assert_equal "$(array::index arr 4)" 5
-    array::index arr 5
+    utest::assert_equal "$(array::get arr 0)" 1
+    utest::assert_equal "$(array::get arr 1)" 2
+    utest::assert_equal "$(array::get arr 2)" 3
+    utest::assert_equal "$(array::get arr 3)" 4
+    utest::assert_equal "$(array::get arr 4)" 5
+    array::get arr 5
     utest::assert_fail $?
+}
+
+function TEST::array::find() {
+    local arr
+
+    utest::assert_equal "$(array::find arr "xxxx")" -1
+    utest::assert_equal "$(array::find arr "1")" -1
+
+    arr=(1 2 3)
+    utest::assert_equal "$(array::find arr "1")" 0
+    utest::assert_equal "$(array::find arr "2")" 1
+    utest::assert_equal "$(array::find arr "3")" 2
+
+    utest::assert_equal "$(array::find arr "4")" -1
+
+    arr=("a" "b" "a" "b" "c")
+    utest::assert_equal "$(array::find arr "a")" 0
+    utest::assert_equal "$(array::find arr "b")" 1
+    utest::assert_equal "$(array::find arr "c")" 4
+}
+
+function TEST::array::index() {
+    local arr
+    local index
+
+    array::index arr "xxxx"
+    utest::assert_fail $?
+    utest::assert_equal "$(array::index arr "xxxx")" ""
+
+    arr=(1 2 3)
+    utest::assert_equal "$(array::index arr "1")" 0
+    utest::assert_equal "$(array::index arr "2")" 1
+    utest::assert_equal "$(array::index arr "3")" 2
+    index=$(array::index arr "3")
+    utest::assert $?
+    index=$(array::index arr "4")
+    utest::assert_fail $?
+    utest::assert_equal "$(array::index arr "4")" ""
+
+    arr=("a" "b" "a" "b" "c")
+    utest::assert_equal "$(array::index arr "a")" 0
+    utest::assert_equal "$(array::index arr "b")" 1
+    utest::assert_equal "$(array::index arr "c")" 4
 }
 
 function TEST::array::first() {
@@ -712,6 +821,34 @@ function TEST::array::join_with::two_char() {
     res=$(array::join_with arr ", ")
     utest::assert $?
     utest::assert_equal "$res" "abc, def"
+}
+
+function TEST::array::insert() {
+    local arr=()
+
+    array::insert arr -1 1>/dev/null
+    utest::assert_fail $?
+
+    array::insert arr 1 1>/dev/null
+    utest::assert_fail $?
+
+    array::insert arr 0 1
+    utest::assert_equal "${arr[*]}" "1"
+
+    array::insert arr 1 2
+    utest::assert_equal "${arr[*]}" "1 2"
+
+    array::insert arr 0 3
+    utest::assert_equal "${arr[*]}" "3 1 2"
+
+    array::insert arr 1 4
+    utest::assert_equal "${arr[*]}" "3 4 1 2"
+
+    array::insert arr -1 1>/dev/null
+    utest::assert_fail $?
+
+    array::insert arr 5 1>/dev/null
+    utest::assert_fail $?
 }
 
 function array::_main() {

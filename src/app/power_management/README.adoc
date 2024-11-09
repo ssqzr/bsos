@@ -1,0 +1,83 @@
+# power_management 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinux.org/title/Power_management[官方文档]
+
+## 多种暂停方法
+
+https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#[挂起和休眠]
+
+https://docs.kernel.org/admin-guide/pm/sleep-states.html[Linux 官方文档介绍 Sleep 状态]
+
+### 暂停至空闲状态(suspend-to-idle)
+
+https://docs.kernel.org/admin-guide/pm/sleep-states.html#suspend-to-idle[suspend-to-idle]
+
+这是系统挂起的通用、纯软件、轻量级变体（也称为 `S2I` 或 `S2Idle` ）。通过冻结用户空间、暂停计时并将所有 `I/O` 设备置于低功耗状态（可能比工作状态下的可用功耗更低），它允许相对于运行时空闲节省更多能量，以便处理器可以花费系统暂停时处于最深度空闲状态的时间。
+
+系统是通过带内中断从该状态唤醒的，因此理论上任何在工作状态下能够引起中断产生的设备也都可以设置为S2Idle的唤醒设备。
+
+### 待机(standby)
+
+https://docs.kernel.org/admin-guide/pm/sleep-states.html#standby[standby]
+
+如果支持该状态，则可以提供适度但真实的节能，同时提供相对简单的返回工作状态的转换。不会丢失任何操作状态（系统核心逻辑保留电源），因此系统可以轻松返回到中断的位置。
+
+除了冻结用户空间、暂停计时并将所有 `I/O` 设备置于低功耗状态（ `suspend-to-idle` ）之外，非启动 `CPU` 会脱机，并且在转换期间所有低级系统功能都会暂停进入这种状态。因此，相对于挂起至空闲状态（ `suspend-to-idle` ），它应该可以节省更多的能量，但恢复延迟通常会比该状态更长。
+
+相对于挂起至空闲状态（ `suspend-to-idle` ），可以将系统从该状态唤醒的设备集通常会减少，并且可能需要依赖平台来适当设置唤醒功能。
+
+如果设置了 `CONFIG_SUSPEND` 内核配置选项并且平台向核心系统挂起子系统注册了对它的支持，则支持此状态。在基于 `ACPI` 的系统上，此状态映射到 `ACPI` 定义的 `S1` 系统状态。
+
+### 挂起到内存(Suspend-to-RAM)
+
+https://docs.kernel.org/admin-guide/pm/sleep-states.html#suspend-to-ram[Suspend-to-RAM]
+
+此状态（也称为 `STR` 或 `S2RAM` ）如果支持，可显着节省能源，因为系统中的所有内容都置于低功耗状态（内存除外，应将其置于自刷新模式以保持其性能）内容。进入待机状态（ `standby` ）时执行的所有步骤也在转换到 `S2RAM` 期间执行。根据平台功能，可能会发生其他操作。特别是，在基于 ACPI 的系统上，内核将控制权传递给平台固件 （ `BIOS` ），作为 `S2RAM` 转换期间的最后一步，这通常会导致关闭一些不直接由内核控制的低级组件。
+
+设备和 `CPU` 的状态保存在内存中。所有设备均暂停并进入低功耗状态。在许多情况下，所有外设总线在进入 `S2RAM` 时都会断电，因此设备必须能够处理返回“开启”状态的转换。
+
+在基于 `ACPI` 的系统上， `S2RAM` 需要平台固件中的一些最小引导代码才能从中恢复系统。在其他平台上也可能出现这种情况。
+
+相对于挂起至空闲（ `suspend-to-idle` ）和待机（ `standby` ），可以从 `S2RAM` 唤醒系统的设备集通常会减少，并且可能需要依赖平台来适当设置唤醒功能。
+
+如果设置了 `CONFIG_SUSPEND` 内核配置选项并且平台向核心系统挂起子系统注册了对其的支持，则支持 `S2RAM` 。在基于 `ACPI` 的系统上，它映射到 `ACPI` 定义的 `S3` 系统状态。
+
+### 休眠
+
+https://docs.kernel.org/admin-guide/pm/sleep-states.html#hibernation[Hibernation]
+
+此状态（也称为挂起至磁盘或 `STD` ）可提供最大程度的节能效果，甚至可以在没有系统挂起的低级平台支持的情况下使用。但是，底层 `CPU` 架构需要一些低级代码来恢复系统。
+
+休眠与任何系统挂起变体都有显着不同。需要三次系统状态更改才能将其置于休眠状态，两次系统状态更改才能将其恢复。
+
+首先，当触发休眠时，内核停止所有系统活动并创建要写入持久存储的内存快照映像。接下来，系统进入可以保存快照图像的状态，将图像写出，最后系统进入目标低功耗状态，在该状态下，几乎所有硬件组件（包括内存）都被切断电源，除了一组有限的唤醒设备。
+
+一旦快照映像被写出，系统可能会进入特殊的低功耗状态（如 `ACPI S4`），或者可能会自行断电。断电意味着最小的功耗，它允许该机制在任何系统上工作。然而，进入特殊的低功耗状态可能允许使用其他系统唤醒方式（例如按键盘上的按键或打开笔记本电脑的盖子）。
+
+唤醒后，控制权转到运行引导加载程序的平台固件，该引导加载程序引导内核的新实例（控制也可以直接转到引导加载程序，具体取决于系统配置，但无论如何它都会导致内核的新实例被启动）。内核的新实例（称为 `restore kernel` ）在持久存储中查找休眠映像，如果找到，则将其加载到内存中。接下来，系统中的所有活动都会停止，恢复内核会用镜像内容覆盖自身，并跳转到存储在镜像中的原始内核中的一个特殊的蹦床区域（称为 `image kernel` ），这就是特殊架构所在的地方——需要特定的低级代码。最后，镜像内核将系统恢复到休眠前的状态，并允许用户空间再次运行。
+
+如果设置了 `CONFIG_HIBERNATION` 内核配置选项，则支持休眠。但是，仅当对给定 `CPU` 架构的支持包括用于系统恢复的低级代码时，才能设置此选项。
+
+## 休眠
+
+https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Hibernation[休眠]
+
+[.red]#休眠功能需要 swap 空间#。
+
+支持休眠大致需要三个步骤：
+
+- 创建 swap 空间
+- 配置 initramfs 的 HOOKS
+- 将休眠位置传递给 initramfs。目前这个不需要手动处理。
+
+.将休眠位置传递给 initramfs
+[quote]
+____
+Since systemd v255 and mkinitcpio v38, when the system is running on UEFI, systemd-sleep(8) will automatically pick a suitable swap space to hibernate into, and the information of the used swap space is stored in HibernateLocation EFI variable. Upon next boot, systemd-hibernate-resume(8) reads the location off the EFI variable and the system resumes. This means the following steps are not necessary unless the system is using legacy BIOS or you want to choose a different swap space from the automatically-selected one.
+
+从systemd v255和mkinitcpio v38开始，当系统在UEFI上运行时， systemd-sleep(8)会自动选择一个合适的交换空间来休眠，并且所使用的交换空间的信息存储在HibernateLocation EFI变量中。下次启动时， systemd-hibernate-resume(8)会读取 EFI 变量的位置，然后系统将恢复。这意味着除非系统使用旧版BIOS或者您想要从自动选择的交换空间中选择不同的交换空间，否则不需要执行以下步骤。
+
+____
+

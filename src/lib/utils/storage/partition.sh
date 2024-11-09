@@ -18,7 +18,7 @@ source "${SCRIPT_DIR_37054d6f}/../parameter.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_37054d6f}/../fs/fs.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_37054d6f}/../float.sh"
+source "${SCRIPT_DIR_37054d6f}/../math/math.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_37054d6f}/disk.sh"
 
@@ -142,7 +142,7 @@ function storage::disk::partition::size_gb() {
 
     size_byte=$(storage::disk::partition::size_byte "${path}") || return "${SHELL_FALSE}"
     # 保留两位小数
-    size_gb=$(float::div "${size_byte}" "$((base * base * base))") || return "${SHELL_FALSE}"
+    size_gb=$(math::div "${size_byte}" "$((base * base * base))" 2) || return "${SHELL_FALSE}"
     echo "${size_gb}"
 
     return "${SHELL_TRUE}"

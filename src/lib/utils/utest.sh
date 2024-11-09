@@ -50,9 +50,9 @@ function utest::assert_equal() {
         utest::printf_result "$UTEST_RESULT_FAILED"
         println_info ""
         printf_error --format="%11s" "left: "
-        println_error "$left"
+        println_error -- "$left"
         printf_error --format="%11s" "right: "
-        println_error "$right"
+        println_error -- "$right"
         return "$SHELL_FALSE"
     fi
 

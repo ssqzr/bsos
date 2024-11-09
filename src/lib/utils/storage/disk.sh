@@ -18,7 +18,7 @@ source "${SCRIPT_DIR_f3dd15b5}/../cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_f3dd15b5}/../parameter.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_f3dd15b5}/../float.sh"
+source "${SCRIPT_DIR_f3dd15b5}/../math/math.sh"
 
 function storage::disk::list() {
     local -n disks_29302f7a="$1"
@@ -76,7 +76,7 @@ function storage::disk::size_gb() {
 
     size_byte=$(storage::disk::size_byte "${path}") || return "${SHELL_FALSE}"
     # 保留两位小数
-    size_gb=$(float::div "${size_byte}" "$((base * base * base))") || return "${SHELL_FALSE}"
+    size_gb=$(math::div "${size_byte}" "$((base * base * base))" 2) || return "${SHELL_FALSE}"
     # size_gb 的长度可能小于 3
     # echo "${size_gb:0:-2}.${size_gb: -2}"
     echo "${size_gb}"

@@ -28,6 +28,15 @@ function systemctl::is_not_exists() {
     ! systemctl::is_exists "$@"
 }
 
+function systemctl::manager_state::reload() {
+    cmd::run_cmd_with_history -- sudo systemctl daemon-reload
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "systemctl daemon-reload failed"
+        return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
 function systemctl::is_active() {
     local unit="$1"
     # systemctl -q is-active 的退出码如果是 4 表示 unit 不存在，这里还是通过封装函数判断

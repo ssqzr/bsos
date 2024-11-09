@@ -44,4 +44,6 @@ source "${SCRIPT_DIR_cd871afe}/flatpak/flatpak.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/storage/storage.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_cd871afe}/float.sh"
+source "${SCRIPT_DIR_cd871afe}/math/math.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/swap.sh"
