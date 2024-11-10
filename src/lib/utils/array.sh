@@ -62,25 +62,25 @@ function array::is_not_contain() {
 function array::get() {
     local -n array_0181bda3=$1
     shift
-    local index=$1
+    local index_0181bda3=$1
     shift
 
-    local length
-    local min_index
+    local length_0181bda3
+    local min_index_0181bda3
 
-    length=$(array::length "${!array_0181bda3}") || return "$SHELL_FALSE"
+    length_0181bda3=$(array::length "${!array_0181bda3}") || return "$SHELL_FALSE"
 
-    ((min_index = 0 - length))
+    ((min_index_0181bda3 = 0 - length_0181bda3))
 
     if array::is_empty "${!array_0181bda3}"; then
         return "$SHELL_FALSE"
     fi
 
-    if [ "${index}" -lt "${min_index}" ] || [ "${index}" -ge "${length}" ]; then
+    if [ "${index_0181bda3}" -lt "${min_index_0181bda3}" ] || [ "${index_0181bda3}" -ge "${length_0181bda3}" ]; then
         return "$SHELL_FALSE"
     fi
 
-    echo "${array_0181bda3[${index}]}"
+    echo "${array_0181bda3[${index_0181bda3}]}"
     return "$SHELL_TRUE"
 }
 
@@ -158,6 +158,32 @@ function array::remove() {
         fi
     done
     array_6338e158=("${new_array_6338e158[@]}")
+}
+
+function array::remove_at() {
+    local -n array_a6fe79c9=$1
+    local index_a6fe79c9="$2"
+
+    local length_a6fe79c9
+    local min_index_a6fe79c9
+
+    length_a6fe79c9=$(array::length "${!array_a6fe79c9}") || return "$SHELL_FALSE"
+
+    ((min_index_a6fe79c9 = 0 - length_a6fe79c9))
+
+    if array::is_empty "${!array_a6fe79c9}"; then
+        return "$SHELL_FALSE"
+    fi
+
+    if [ "${index_a6fe79c9}" -lt "${min_index_a6fe79c9}" ] || [ "${index_a6fe79c9}" -ge "${length_a6fe79c9}" ]; then
+        return "$SHELL_FALSE"
+    fi
+
+    if [ "${index_a6fe79c9}" -lt "0" ]; then
+        index_a6fe79c9=$((length_a6fe79c9 + index_a6fe79c9))
+    fi
+
+    array_a6fe79c9=("${array_a6fe79c9[@]::${index_a6fe79c9}}" "${array_a6fe79c9[@]:${index_a6fe79c9}+1}")
 }
 
 function array::remove_empty() {
@@ -849,6 +875,28 @@ function TEST::array::insert() {
 
     array::insert arr 5 1>/dev/null
     utest::assert_fail $?
+}
+
+function TEST::array::remove() {
+    local arr=("1" "2" "3" "1" "4" "5")
+    array::remove arr 0
+    utest::assert_equal "${arr[*]}" "1 2 3 1 4 5"
+    array::remove arr 1
+    utest::assert_equal "${arr[*]}" "2 3 4 5"
+}
+
+function TEST::array::remove_at() {
+    local arr=("1" "2" "3" "1" "4" "5" "6" "7")
+    array::remove_at arr 0
+    utest::assert_equal "${arr[*]}" "2 3 1 4 5 6 7"
+    array::remove_at arr 1
+    utest::assert_equal "${arr[*]}" "2 1 4 5 6 7"
+    array::remove_at arr -1
+    utest::assert_equal "${arr[*]}" "2 1 4 5 6"
+    array::remove_at arr -5
+    utest::assert_equal "${arr[*]}" "1 4 5 6"
+    array::remove_at arr -2
+    utest::assert_equal "${arr[*]}" "1 4 6"
 }
 
 function array::_main() {

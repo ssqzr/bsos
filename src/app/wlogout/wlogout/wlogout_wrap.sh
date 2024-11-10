@@ -44,6 +44,38 @@ if pgrep -x "wlogout" >/dev/null; then
     exit 0
 fi
 
+# 全局变量
+declare __button_count=6
+declare __column_count=6
+declare __row_count=1
+# 按钮的半径
+declare __button_cycle_radius
+# 中心圆的半径
+declare __cycle_radius_in_center
+# 按钮半径缩放比例
+declare __button_radius_scale=0.8
+# 中心圆和按钮总共占屏幕宽度或者高度的百分比
+declare __length_percent=85
+# 记录所有按钮的圆心的坐标
+declare __buttons_center_of_cycle_xy=()
+# 记录所有按钮的 margin 的配置
+declare __buttons_margin=()
+
+# 当前聚焦显示器的视口的宽度和高度，需要考虑屏幕旋转
+declare __focused_monitor_viewport_width=0
+declare __focused_monitor_viewport_height=0
+
+declare __button_color
+declare __font_size
+
+# 图片路径
+declare __lock_image_filepath
+declare __logout_image_filepath
+declare __shutdown_image_filepath
+declare __reboot_image_filepath
+declare __suspend_image_filepath
+declare __hibernate_image_filepath
+
 function wlogout_wrap::log_dir() {
     local log_dir="$HOME/.cache/wlogout/log"
     echo "$log_dir"
@@ -66,125 +98,13 @@ function wlogout_wrap::style_filepath() {
     echo "${SCRIPT_DIR_37160405}/style.css"
 }
 
-function wlogout_wrap::font_size() {
+function wlogout_wrap::init_monitor_info() {
     local focused_monitor_width
     local focused_monitor_height
-    local focused_monitor
-    local font_size
-
-    focused_monitor=$(hyprland::hyprctl::monitors | cfg::array::filter_by_key_value --type="json" "focused" "true" | cfg::array::first) || return "$SHELL_FALSE"
-    if string::is_empty "$focused_monitor"; then
-        lerror "get focused monitor failed"
-        return "$SHELL_FALSE"
-    fi
-    focused_monitor_width=$(cfg::map::get --type="json" "width" "$focused_monitor") || return "$SHELL_FALSE"
-    focused_monitor_height=$(cfg::map::get --type="json" "height" "$focused_monitor") || return "$SHELL_FALSE"
-    if [ "$focused_monitor_width" -ge "$focused_monitor_height" ]; then
-        font_size=$((focused_monitor_height * 4 / 100))
-    else
-        font_size=$((focused_monitor_width * 4 / 100))
-    fi
-
-    linfo "font_size=${font_size}"
-
-    export FONT_SIZE="${font_size}"
-    return "$SHELL_TRUE"
-}
-
-function wlogout_wrap::button_color() {
-    # 检测 GTK 颜色方案，设置按钮的颜色
-    local gtk_color_scheme_mode
-    local button_color
-    gtk_color_scheme_mode=$(gsettings::color_scheme_mode)
-    if [ "$gtk_color_scheme_mode" == "dark" ]; then
-        button_color="white"
-    else
-        button_color="black"
-    fi
-    linfo "button_color=${button_color}"
-    export BUTTON_COLOR="$button_color"
-}
-
-function wlogout_wrap::button_lock_image_filepath() {
-    local color
-    local lock_image_filepath
-    color=$(wlogout_wrap::button_color)
-    if $is_develop_mode; then
-        lock_image_filepath="${SCRIPT_DIR_37160405}/icons/lock_${color}.png"
-    else
-        lock_image_filepath="$HOME/.config/wlogout/icons/lock_${color}.png"
-    fi
-    linfo "lock_image_filepath=${lock_image_filepath}"
-    export LOCK_IMAGE_FILEPATH="$lock_image_filepath"
-}
-
-function wlogout_wrap::button_logout_image_filepath() {
-    local color
-    local logout_image_filepath
-    color=$(wlogout_wrap::button_color)
-    if $is_develop_mode; then
-        logout_image_filepath="${SCRIPT_DIR_37160405}/icons/logout_${color}.png"
-    else
-        logout_image_filepath="$HOME/.config/wlogout/icons/logout_${color}.png"
-    fi
-    linfo "logout_image_filepath=${logout_image_filepath}"
-    export LOGOUT_IMAGE_FILEPATH="$logout_image_filepath"
-}
-
-function wlogout_wrap::button_shutdown_image_filepath() {
-    local color
-    local shutdown_image_filepath
-    color=$(wlogout_wrap::button_color)
-    if $is_develop_mode; then
-        shutdown_image_filepath="${SCRIPT_DIR_37160405}/icons/shutdown_${color}.png"
-    else
-        shutdown_image_filepath="$HOME/.config/wlogout/icons/shutdown_${color}.png"
-    fi
-    linfo "shutdown_image_filepath=${shutdown_image_filepath}"
-    export SHUTDOWN_IMAGE_FILEPATH="$shutdown_image_filepath"
-}
-
-function wlogout_wrap::button_reboot_image_filepath() {
-    local color
-    local reboot_image_filepath
-    color=$(wlogout_wrap::button_color)
-    if $is_develop_mode; then
-        reboot_image_filepath="${SCRIPT_DIR_37160405}/icons/reboot_${color}.png"
-    else
-        reboot_image_filepath="$HOME/.config/wlogout/icons/reboot_${color}.png"
-    fi
-    linfo "reboot_image_filepath=${reboot_image_filepath}"
-    export REBOOT_IMAGE_FILEPATH="$reboot_image_filepath"
-}
-
-function wlogout_wrap::button_radius() {
-    local hyprland_rounding
-    local active_radius
-    local button_radius
-
-    hyprland_rounding=$(hyprland::hyprctl::getoption::decoration::rounding)
-
-    # eval hypr border radius
-    active_radius=$((hyprland_rounding * 5))
-    button_radius=$((hyprland_rounding * 8))
-
-    linfo "active_radius=${active_radius}"
-    linfo "button_radius=${button_radius}"
-
-    export ACTIVE_RADIUS="$active_radius"
-    export BUTTON_RADIUS="$button_radius"
-}
-
-function wlogout_wrap::margin() {
-    local focused_monitor_width
-    local focused_monitor_height
+    # 屏幕缩放的比例
     local focused_monitor_scale_persent
     local temp
     local focused_monitor
-    local x_margin
-    local y_margin
-    local x_scale_margin
-    local y_scale_margin
 
     focused_monitor=$(hyprland::hyprctl::monitors | cfg::array::filter_by_key_value --type="json" "focused" "true" | cfg::array::first) || return "$SHELL_FALSE"
     if string::is_empty "$focused_monitor"; then
@@ -208,36 +128,238 @@ function wlogout_wrap::margin() {
     # https://wiki.hyprland.org/Configuring/Monitors/#rotating
     local transform_90deg=(1 3 5 7)
     if array::is_contain transform_90deg "$focused_monitor_transform"; then
-        temp=$focused_monitor_width
-        focused_monitor_width=$focused_monitor_height
-        focused_monitor_height=$temp
-    fi
-
-    if [ "$focused_monitor_width" -ge "$focused_monitor_height" ]; then
-        # 垂直方向的margin
-        y_margin=$((focused_monitor_height * 100 / focused_monitor_scale_persent / 4))
-        # 水平方向的margin
-        x_margin=$((focused_monitor_width * 100 / focused_monitor_scale_persent / 2 - y_margin))
-        # 缩放后的垂直方向的margin，放大后margin缩小20%，也就是以前的 80%
-        y_scale_margin=$((y_margin * 8 / 10))
-        # 缩放后的水平方向的margin，放大后缩小的margin是垂直方向缩小的margin一样
-        x_scale_margin=$((x_margin - y_margin * 2 / 10))
+        # 旋转90度，宽高互换
+        __focused_monitor_viewport_height=$focused_monitor_width
+        __focused_monitor_viewport_width=$focused_monitor_height
     else
-        x_margin=$((focused_monitor_width * 100 / focused_monitor_scale_persent / 4))
-        y_margin=$((focused_monitor_height * 100 / focused_monitor_scale_persent / 2 - x_margin))
-        x_scale_margin=$((x_margin * 8 / 10))
-        y_scale_margin=$((y_margin - x_margin * 2 / 10))
+        __focused_monitor_viewport_width=$focused_monitor_width
+        __focused_monitor_viewport_height=$focused_monitor_height
+    fi
+    linfo "__focused_monitor_viewport_width=${__focused_monitor_viewport_width}"
+    linfo "__focused_monitor_viewport_height=${__focused_monitor_viewport_height}"
+}
+
+function wlogout_wrap::font_size() {
+    if [ "${__focused_monitor_viewport_width}" -ge "${__focused_monitor_viewport_height}" ]; then
+        __font_size=$((__focused_monitor_viewport_height * 4 / 100))
+    else
+        __font_size=$((__focused_monitor_viewport_width * 4 / 100))
     fi
 
-    linfo "x_margin=${x_margin}"
-    linfo "y_margin=${y_margin}"
-    linfo "x_scale_margin=${x_scale_margin}"
-    linfo "y_scale_margin=${y_scale_margin}"
+    linfo "font_size=${__font_size}"
 
-    export X_MARGIN="$x_margin"
-    export Y_MARGIN="$y_margin"
-    export X_SCALE_MARGIN="$x_scale_margin"
-    export Y_SCALE_MARGIN="$y_scale_margin"
+    return "$SHELL_TRUE"
+}
+
+function wlogout_wrap::button_color() {
+    # 检测 GTK 颜色方案，设置按钮的颜色
+    local gtk_color_scheme_mode
+    gtk_color_scheme_mode=$(gsettings::color_scheme_mode)
+    if [ "$gtk_color_scheme_mode" == "dark" ]; then
+        __button_color="white"
+    else
+        __button_color="black"
+    fi
+    linfo "button_color=${__button_color}"
+}
+
+function wlogout_wrap::button_image_filepath() {
+    if $is_develop_mode; then
+        __lock_image_filepath="${SCRIPT_DIR_37160405}/icons/lock_${__button_color}.png"
+        __logout_image_filepath="${SCRIPT_DIR_37160405}/icons/logout_${__button_color}.png"
+        __shutdown_image_filepath="${SCRIPT_DIR_37160405}/icons/shutdown_${__button_color}.png"
+        __reboot_image_filepath="${SCRIPT_DIR_37160405}/icons/reboot_${__button_color}.png"
+        __suspend_image_filepath="${SCRIPT_DIR_37160405}/icons/suspend_${__button_color}.png"
+        __hibernate_image_filepath="${SCRIPT_DIR_37160405}/icons/hibernate_${__button_color}.png"
+    else
+        __lock_image_filepath="$HOME/.config/wlogout/icons/lock_${__button_color}.png"
+        __logout_image_filepath="$HOME/.config/wlogout/icons/logout_${__button_color}.png"
+        __shutdown_image_filepath="$HOME/.config/wlogout/icons/shutdown_${__button_color}.png"
+        __reboot_image_filepath="$HOME/.config/wlogout/icons/reboot_${__button_color}.png"
+        __suspend_image_filepath="$HOME/.config/wlogout/icons/suspend_${__button_color}.png"
+        __hibernate_image_filepath="$HOME/.config/wlogout/icons/hibernate_${__button_color}.png"
+    fi
+    linfo "lock_image_filepath=${__lock_image_filepath}"
+    linfo "logout_image_filepath=${__logout_image_filepath}"
+    linfo "shutdown_image_filepath=${__shutdown_image_filepath}"
+    linfo "reboot_image_filepath=${__reboot_image_filepath}"
+    linfo "suspend_image_filepath=${__suspend_image_filepath}"
+    linfo "hibernate_image_filepath=${__hibernate_image_filepath}"
+}
+
+# 计算中心圆和按钮的半径
+# 按钮圆的半径最大是中心圆的一半，不然多个按钮会重叠
+function wlogout_wrap::init_cycle_radius() {
+    local max_length
+    local max_radius
+
+    max_length=$((__focused_monitor_viewport_width > __focused_monitor_viewport_height ? __focused_monitor_viewport_height : __focused_monitor_viewport_width))
+
+    max_length=$((max_length * __length_percent / 100))
+
+    # 中心圆的直径 + 按钮的直径 = max_length
+    # 按钮圆的半径最大是中心圆的一半，不然多个按钮会重叠
+    __cycle_radius_in_center=$((max_length / 3))
+    # 聚焦按钮时半径会变大，所以按照最大情况进行计算
+    max_radius=$((__cycle_radius_in_center / 2))
+    # 默认的按钮的半径是聚焦时的 4/5
+    __button_cycle_radius=$(math::mul "${max_radius}" "${__button_radius_scale}")
+    __button_cycle_radius=$(math::floor "${__button_cycle_radius}")
+
+    linfo "center_cycle_radius=${__cycle_radius_in_center}"
+    linfo "button_cycle_radius=${__button_cycle_radius}"
+}
+
+# 计算所有按钮圆的圆心的坐标
+# 6个按钮，所以每两个相邻的按钮圆心到中心圆的夹角是60度
+# 原点是屏幕的左上角
+function wlogout_wrap::init_button_cycle_origin_xy() {
+    local center_cycle_x
+    local center_cycle_y
+
+    # 以中心圆为原点，计算按钮的圆心到x轴正向的夹角
+    local current_degree
+    local index
+    local temp_degree
+    local x_relative_to_center
+    local y_relative_to_center
+    local x
+    local y
+
+    local temp
+
+    center_cycle_x=$((__focused_monitor_viewport_width / 2))
+    center_cycle_y=$((__focused_monitor_viewport_height / 2))
+
+    for ((index = 0; index < __button_count; index++)); do
+        if [ -z "$current_degree" ]; then
+            # 第一个夹角从0-60度随机生成
+            current_degree=$(math::rand 0 60) || return "$SHELL_FALSE"
+        else
+            current_degree=$((current_degree + 60))
+        fi
+        # 计算按钮的圆心的坐标
+        if [ "${current_degree}" -ge 0 ] && [ "${current_degree}" -lt 90 ]; then
+            x_relative_to_center=$(math::cos_by_degree "${current_degree}") || return "$SHELL_FALSE"
+            x_relative_to_center=$(math::mul "${x_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::sin_by_degree "${current_degree}") || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+
+            x=$(math::add "$center_cycle_x" "$x_relative_to_center")
+            y=$(math::sub "$center_cycle_y" "${y_relative_to_center}")
+            array::rpush __buttons_center_of_cycle_xy "${x},${y}"
+        elif [ "${current_degree}" -ge 90 ] && [ "${current_degree}" -lt 180 ]; then
+            x_relative_to_center=$(math::cos_by_degree $((180 - current_degree))) || return "$SHELL_FALSE"
+            x_relative_to_center=$(math::mul "${x_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::sin_by_degree $((180 - current_degree))) || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+
+            x=$(math::sub "$center_cycle_x" "$x_relative_to_center")
+            y=$(math::sub "$center_cycle_y" "$y_relative_to_center")
+            array::rpush __buttons_center_of_cycle_xy "${x},${y}"
+        elif [ "${current_degree}" -ge 180 ] && [ "${current_degree}" -lt 270 ]; then
+            x_relative_to_center=$(math::cos_by_degree $((current_degree - 180))) || return "$SHELL_FALSE"
+            x_relative_to_center=$(math::mul "${x_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::sin_by_degree $((current_degree - 180))) || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+
+            x=$(math::sub "$center_cycle_x" "$x_relative_to_center")
+            y=$(math::add "$center_cycle_y" "$y_relative_to_center")
+            array::rpush __buttons_center_of_cycle_xy "${x},${y}"
+        else
+            x_relative_to_center=$(math::cos_by_degree $((360 - current_degree))) || return "$SHELL_FALSE"
+            x_relative_to_center=$(math::mul "${x_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::sin_by_degree $((360 - current_degree))) || return "$SHELL_FALSE"
+            y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
+
+            x=$(math::add "$center_cycle_x" "$x_relative_to_center")
+            y=$(math::add "$center_cycle_y" "$y_relative_to_center")
+            array::rpush __buttons_center_of_cycle_xy "${x},${y}"
+        fi
+    done
+
+    linfo "buttons_center_of_cycle_xy=${__buttons_center_of_cycle_xy[*]}"
+
+    # 逆序，让其方向是顺时针顺序而不是逆时针顺序
+    # array::reverse __buttons_center_of_cycle_xy || return "$SHELL_FALSE"
+    # 打乱，打乱就不需要逆序处理了
+    temp=()
+    while (($(array::length __buttons_center_of_cycle_xy) > 0)); do
+        index=$(math::rand 0 $(($(array::length __buttons_center_of_cycle_xy) - 1))) || return "$SHELL_FALSE"
+        temp+=("${__buttons_center_of_cycle_xy[$index]}")
+        array::remove_at __buttons_center_of_cycle_xy "$index"
+    done
+    __buttons_center_of_cycle_xy=("${temp[@]}")
+
+    return "$SHELL_TRUE"
+}
+
+function wlogout_wrap::init_button_cycle_margin_string() {
+    local index
+    local x
+    local y
+    local temp
+    local button_area_width
+
+    local margin_top
+    local margin_right
+    local margin_bottom
+    local margin_left
+
+    local active_margin_top
+    local active_margin_right
+    local active_margin_bottom
+    local active_margin_left
+
+    button_area_width=$((__focused_monitor_viewport_width / __column_count))
+
+    for ((index = 0; index < __button_count; index++)); do
+        temp="${__buttons_center_of_cycle_xy[$index]}"
+        x="${temp%%,*}"
+        y="${temp##*,}"
+        linfo "button cycle center point: x=${x}, y=${y}"
+        # x 此时可能是负数
+        x=$(math::sub "$x" $((button_area_width * index)))
+        # 向下取整
+        x=$(math::floor "$x")
+        y=$(math::floor "$y")
+
+        margin_left=$((x - __button_cycle_radius))
+        margin_right=$((0 - (x - button_area_width + __button_cycle_radius)))
+        margin_top=$((y - __button_cycle_radius))
+        margin_bottom=$((__focused_monitor_viewport_height - y - __button_cycle_radius))
+
+        array::rpush __buttons_margin "${margin_top}px ${margin_right}px ${margin_bottom}px ${margin_left}px"
+    done
+}
+
+function wlogout_wrap::export() {
+    local temp
+
+    export FONT_SIZE="${__font_size}"
+    export BUTTON_COLOR="$__button_color"
+
+    export BUTTON_RADIUS="${__button_cycle_radius}"
+
+    temp="${__buttons_margin[0]}"
+    export MARGIN_0="${temp}"
+    temp="${__buttons_margin[1]}"
+    export MARGIN_1="${temp}"
+    temp="${__buttons_margin[2]}"
+    export MARGIN_2="${temp}"
+    temp="${__buttons_margin[3]}"
+    export MARGIN_3="${temp}"
+    temp="${__buttons_margin[4]}"
+    export MARGIN_4="${temp}"
+    temp="${__buttons_margin[5]}"
+    export MARGIN_5="${temp}"
+
+    export LOCK_IMAGE_FILEPATH="${__lock_image_filepath}"
+    export LOGOUT_IMAGE_FILEPATH="${__logout_image_filepath}"
+    export SHUTDOWN_IMAGE_FILEPATH="${__shutdown_image_filepath}"
+    export REBOOT_IMAGE_FILEPATH="${__reboot_image_filepath}"
+    export SUSPEND_IMAGE_FILEPATH="${__suspend_image_filepath}"
+    export HIBERNATE_IMAGE_FILEPATH="${__hibernate_image_filepath}"
 }
 
 function wlogout_wrap::main() {
@@ -263,14 +385,20 @@ function wlogout_wrap::main() {
         return "$SHELL_FALSE"
     fi
 
+    wlogout_wrap::init_monitor_info || return "$SHELL_FALSE"
     wlogout_wrap::font_size || return "$SHELL_FALSE"
     wlogout_wrap::button_color || return "$SHELL_FALSE"
-    wlogout_wrap::button_radius || return "$SHELL_FALSE"
-    wlogout_wrap::margin || return "$SHELL_FALSE"
+    wlogout_wrap::button_image_filepath || return "$SHELL_FALSE"
+    wlogout_wrap::init_cycle_radius || return "$SHELL_FALSE"
+    wlogout_wrap::init_button_cycle_origin_xy || return "$SHELL_FALSE"
+    wlogout_wrap::init_button_cycle_margin_string || return "$SHELL_FALSE"
+    wlogout_wrap::export || return "$SHELL_FALSE"
 
     style=$(envsubst <"$style_filepath") || return "$SHELL_FALSE"
 
-    wlogout -b 2 -c 0 -r 0 -m 0 --layout "$layout_filepath" --css <(echo "$style") --protocol layer-shell
+    echo "$style" >"$HOME/lzw_test.css"
+
+    wlogout -b "${__column_count}" -c 0 -r 0 -m 0 --layout "$layout_filepath" --css <(echo "$style") --protocol layer-shell
     return "$SHELL_TRUE"
 }
 

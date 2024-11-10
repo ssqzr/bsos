@@ -265,6 +265,106 @@ function math::div() {
     return "$SHELL_TRUE"
 }
 
+function math::abs() {
+    local num=$1
+    shift
+
+    if math::ge "$num" 0; then
+        echo "$num"
+        return "$SHELL_TRUE"
+    fi
+
+    math::sub 0 "$num" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::rand() {
+    local min=$1
+    shift
+    local max=$1
+    shift
+
+    local diff_num
+
+    min=${min:-0}
+
+    num=$(head -n 10 "/dev/urandom" | cksum | awk -F ' ' '{print $1}')
+
+    if [ -z "$max" ]; then
+        if math::lt "$num" "$min"; then
+            num=$((num + min))
+        fi
+    else
+        diff_num=$((max - min + 1))
+        num=$((num % diff_num + min))
+    fi
+
+    echo "$num"
+
+    return "$SHELL_TRUE"
+}
+
+function math::sqrt() {
+    local num=$1
+    shift
+
+    if math::lt "$num" 0; then
+        lerror "param num($num) < 0"
+        return "$SHELL_FALSE"
+    fi
+
+    awk "BEGIN{print sqrt($num)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::pi() {
+    awk "BEGIN{print atan2(0, -1)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::degree_to_radian() {
+    local degree=$1
+    shift
+
+    awk "BEGIN{print ($degree * atan2(0, -1) / 180)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::sin_by_radian() {
+    local radian=$1
+    shift
+
+    awk "BEGIN{print sin($radian)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::sin_by_degree() {
+    local degree=$1
+    shift
+
+    # local radian
+    # radian=$(math::degree_to_radian "$degree") || return "$SHELL_FALSE"
+    # math::sin_by_radian "$radian" || return "$SHELL_FALSE"
+    awk "BEGIN{print sin($degree * atan2(0, -1) / 180)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::cos_by_radian() {
+    local radian=$1
+    shift
+
+    awk "BEGIN{print cos($radian)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function math::cos_by_degree() {
+    local degree=$1
+    shift
+
+    awk "BEGIN{print cos($degree * atan2(0, -1) / 180)}" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
 ######################################### 下面是单元测试代码 #########################################
 function TEST::math::is_integer() {
     math::is_integer 0
@@ -788,4 +888,51 @@ function TEST::math::div() {
     utest::assert_equal "$(math::div 1.5 2.2 2)" "0.68"
     utest::assert_equal "$(math::div 1.5 2.6 2)" "0.58"
     utest::assert_equal "$(math::div 1.5 "$((2 * 3))")" "0.25"
+}
+
+function TEST::math::abs() {
+    utest::assert_equal "$(math::abs 0)" "0"
+    utest::assert_equal "$(math::abs -1)" "1"
+    utest::assert_equal "$(math::abs -1)" "1"
+    utest::assert_equal "$(math::abs 1.5)" "1.5"
+    utest::assert_equal "$(math::abs -1.5)" "1.5"
+}
+
+function TEST::math::rand() {
+    local res
+
+    utest::assert_equal "$(math::rand 0 0)" "0"
+    utest::assert_equal "$(math::rand 1 1)" "1"
+
+    for ((i = 0; i < 100; i++)); do
+        res="$(math::rand 1 10)"
+        if [[ "$res" -le 10 ]] && [[ "$res" -gt 1 ]]; then
+            utest::assert "$SHELL_TRUE"
+        else
+            utest::assert_fail "$SHELL_FALSE" "$res is not in [1, 10]"
+        fi
+    done
+}
+
+function TEST::math::sqrt() {
+    utest::assert_equal "$(math::sqrt 4)" "2"
+    utest::assert_equal "$(math::sqrt 8)" "2.82843"
+    utest::assert_equal "$(math::sqrt 9)" "3"
+    utest::assert_equal "$(math::sqrt 16)" "4"
+}
+
+function TEST::math::sin_by_degree() {
+    utest::assert_equal "$(math::sin_by_degree 0)" "0"
+    utest::assert_equal "$(math::sin_by_degree 30)" "0.5"
+    utest::assert_equal "$(math::sin_by_degree 45)" "0.707107"
+    utest::assert_equal "$(math::sin_by_degree 60)" "0.866025"
+    utest::assert_equal "$(math::sin_by_degree 90)" "1"
+}
+
+function TEST::math::cos_by_degree() {
+    utest::assert_equal "$(math::cos_by_degree 0)" "1"
+    utest::assert_equal "$(math::cos_by_degree 30)" "0.866025"
+    utest::assert_equal "$(math::cos_by_degree 45)" "0.707107"
+    utest::assert_equal "$(math::cos_by_degree 60)" "0.5"
+    utest::assert_equal "$(math::cos_by_degree 90)" "6.12323e-17"
 }

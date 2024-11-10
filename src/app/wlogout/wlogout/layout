@@ -25,3 +25,17 @@
     "text": "重启",
     "keybind": "r"
 }
+
+{
+    "label": "suspend",
+    "action": "systemctl suspend",
+    "text": "挂起",
+    "keybind": "u"
+}
+
+{
+    "label": "hibernate",
+    "action": "systemctl hibernate",
+    "text": "休眠",
+    "keybind": "h"
+}
