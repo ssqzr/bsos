@@ -50,7 +50,8 @@ function libpamac::trait::install() {
     pkgbuild_filepath="$(libpamac::trait::_src_directory)/PKGBUILD"
     cmd::run_cmd_with_history -- sed -i "'s/ENABLE_FLATPAK=0/ENABLE_FLATPAK=1/'" "$pkgbuild_filepath" || return "$SHELL_FALSE"
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(libpamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
+    # 因为修改了 PKGBUILD ，所以每次都需要重新编译覆盖，防止通过其他手段更新后因为 --needed 选项导致没有编译
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(libpamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(libpamac::trait::package_name) failed."
         return "$SHELL_FALSE"
