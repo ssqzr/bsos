@@ -107,7 +107,7 @@ function hyprpaper::wallpaper::clean_old_file() {
     fs::directory::create_recursive "$wallpaper_dir" || return "$SHELL_FALSE"
 
     today="$(hyprpaper::wallpaper::today)" || return "$SHELL_FALSE"
-    cmd::run_cmd_with_history -- find "$wallpaper_dir" -type f -not -name "*${today}*" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- find "$wallpaper_dir" -type f -not -name "'*${today}*'" -exec rm -f {} "\;" || return "${SHELL_FALSE}"
 
     return "$SHELL_TRUE"
 }
