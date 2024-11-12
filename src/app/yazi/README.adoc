@@ -9,7 +9,50 @@ https://github.com/sxyazi/yazi[官方文档]
 [#yazi-file-chooser]
 ### yazi 支持文件选择器
 
-https://github.com/sxyazi/yazi/issues/1120[Implement org.freedesktop.FileManager1]
+使用终端文件管理器作为文件选择器，需要配套的 `xdg-desktop-portal` 才可以。目前只有 https://github.com/GermainZ/xdg-desktop-portal-termfilechooser[xdg-desktop-portal-termfilechooser] 满足。
 
-https://github.com/sxyazi/yazi/discussions/281[How can I set yazi as default file/folder picker?]
+先看下如下文章：
 
+- https://wiki.archlinux.org/title/XDG_Desktop_Portal[XDG Desktop Portal]
+- https://github.com/sxyazi/yazi/issues/1120[Implement org.freedesktop.FileManager1]
+- https://github.com/sxyazi/yazi/discussions/281[How can I set yazi as default file/folder picker?]
+- https://github.com/GermainZ/xdg-desktop-portal-termfilechooser[xdg-desktop-portal-termfilechooser 原始仓库]
+- https://github.com/boydaihungst/xdg-desktop-portal-termfilechooser/blob/3ca52f7b0135eed375b05d5fed84d589f0620af5/contrib/yazi-wrapper.sh[xdg-desktop-portal-termfilechooser 的 yazi-wrapper.sh]
+
+目前 `yazi` 对选择文件或者目录的支持并不完善。
+
+[source,console]
+----
+❯ yazi -h
+Usage: yazi [OPTIONS] [ENTRIES]...
+
+Arguments:
+  [ENTRIES]...  Set the current working entry
+
+Options:
+      --cwd-file <CWD_FILE>            Write the cwd on exit to this file
+      --chooser-file <CHOOSER_FILE>    Write the selected files to this file on open fired
+      --clear-cache                    Clear the cache directory
+      --client-id <CLIENT_ID>          Use the specified client ID, must be a globally unique number
+      --local-events <LOCAL_EVENTS>    Report the specified local events to stdout
+      --remote-events <REMOTE_EVENTS>  Report the specified remote events to stdout
+      --debug                          Print debug information
+  -V, --version                        Print version
+  -h, --help                           Print help
+----
+
+`--chooser-file` 用于选择文件或者目录，并且可以选择多个。
+
+对于文件选择器，需要满足的场景是：
+
+- 选择单个文件，用于读取
+- 选择多个文件，用于读取
+- 选择单个目录，用于读取，最好支持只显示目录。
+- 选择单个文件，用于写入
+
+目前 yazi 可以满足，但是使用上体验并不好，比如：
+
+- 选择目录的时候，会显示目录下的所有文件，而不是只显示目录。
+- 总是可以选择多个文件，但是需要满足只选择一个文件的需求。
+
+我给 `yazi` 提了 https://github.com/sxyazi/yazi/issues/51#issuecomment-2470916427[`Features request`] ，等待官方回复吧。

@@ -583,6 +583,15 @@ Headers version mismatch. Please run hyprpm update to fix those.
 hyprpm update -v --no-shallow
 ----
 
+### 使用 `Dolphin` 作为文件选择器
+
+xref:../dolphin/README.adoc#use-dolphin-as-file-selector[使用 `Dolphin` 作为文件选择器]
+
+
+### 使用 `yazi` 作为文件选择器
+
+xref:../yazi/README.adoc#yazi-file-chooser[使用 `yazi` 作为文件选择器]
+
 [#use-plugin]
 ## 插件的处理
 
@@ -618,7 +627,23 @@ https://github.com/pyt0xic/hyprfocus[Fork hyprfocus] 这个仓库支持。
 
 ### https://github.com/H3rmt/hyprswitch[hyprswitch]
 
+## TODO
 
+### hyprpolkitagent
+
+https://wiki.hyprland.org/Hypr-Ecosystem/hyprpolkitagent/[hyprpolkitagent]
+
+目前我觉得 hyprpolkitagent 界面不好看，所以暂时不使用。
+
+但是它毕竟是官方出品，持续关注一下。
+
+### uwsm
+
+https://wiki.hyprland.org/Useful-Utilities/Systemd-start/[Systemd start]
+
+https://github.com/Vladimir-csp/uwsm[uwsm]
+
+有点麻烦，再研究研究。
 
 ## 参考
 

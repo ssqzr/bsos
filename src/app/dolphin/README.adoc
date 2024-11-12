@@ -2,5 +2,47 @@
 include::../../../doc/base.adoc[]
 
 
-official_document_url[官方文档]
+https://wiki.archlinux.org/title/Dolphin[官方文档]
 
+
+## 问题记录
+
+[#use-dolphin-as-file-selector]
+### 使用 `Dolphin` 作为文件选择器
+
+https://wiki.archlinux.org/title/XDG_Desktop_Portal[XDG_Desktop_Portal]
+
+我使用的是 `flatpak` 安装的 `Dolphin` 。
+
+我参考 https://wiki.hyprland.org/Hypr-Ecosystem/xdg-desktop-portal-hyprland/#using-the-kde-file-picker-with-xdph[Hyprland 的xdg-desktop-portal-hyprland] 文档进行部署。
+
+- 安装 `xdg-desktop-portal-hyprland`
+- 安装 `xdg-desktop-portal-gtk`
+- 确保 `xdg-desktop-portal-hyprland` 服务启动。`systemctl --user status xdg-desktop-portal-hyprland`
+- 确保 `xdg-desktop-portal-gtk` 服务启动。`systemctl --user status xdg-desktop-portal-gtk`
+- 确保 `xdg-desktop-portal` 服务启动。`systemctl --user status xdg-desktop-portal`
+- 新增配置文件 `~/.config/xdg-desktop-portal/hyprland-portals.conf`
+
+    [source,ini,hyprland-portals.conf]
+    ----
+    [preferred]
+    default = hyprland;gtk
+    org.freedesktop.impl.portal.FileChooser = kde
+    ----
+
+- 确保重启主机
+
+但是在应用程序里打开文件时仍然不是 `Dolphin` 。
+
+我的情况和 https://www.reddit.com/r/hyprland/comments/1bsjlb3/default_file_manager_change/[Default File Manager? Change?] 是一样的，但是这个帖子并没有给出解决方案。
+
+倒是这个 https://github.com/hyprwm/Hyprland/discussions/4988[How to use dolphin as directory/file picker in gtk applications?] 给出的解决方案就是 `Hyprland` 里介绍的方法，但是对于我是没用的。
+
+我目前怀疑有可能是如下的原因：
+
+- 根据 https://www.reddit.com/r/hyprland/comments/1bsjlb3/default_file_manager_change/[Default File Manager? Change?] 讨论，可能需要安装 `xdg-desktop-portal-kde`
+- 可能通过 `flatpak` 安装的 `Dolphin` 不支持。
+
+由于 `Dolphin` 和 `xdg-desktop-portal-kde` 对 `KDE` 的依赖太多，我并不想在 `Hyprland` 里安装过多 `KDE` 的包，不然我为什么不直接使用 `KDE` 的桌面环境呢？
+
+[.red]#FIXME: 需要替代的方案吧。#

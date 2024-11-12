@@ -50,6 +50,17 @@ function hyprland::hyprpm::install() {
     return "${SHELL_TRUE}"
 }
 
+function hyprland::trait::xdg_desktop_portal::install() {
+    fs::file::copy --force "${SCRIPT_DIR_c084e0be}/xdg-desktop-portal/hyprland-portals.conf" "$XDG_CONFIG_HOME/xdg-desktop-portal/hyprland-portals.conf" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::trait::xdg_desktop_portal::uninstall() {
+    # 不删除目录，这个目录并不是 Hyprland 独有的，而是属于 xdg-desktop-portal 的
+    fs::file::delete "$XDG_CONFIG_HOME/xdg-desktop-portal/hyprland-portals.conf" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
 # 指定使用的包管理器
 function hyprland::trait::package_manager() {
     echo "pacman"
@@ -119,6 +130,9 @@ function hyprland::trait::post_install() {
         done
     fi
 
+    # 处理 xdg-desktop-portal
+    hyprland::trait::xdg_desktop_portal::install || return "${SHELL_FALSE}"
+
     hyprland::settings::cursors || return "${SHELL_FALSE}"
     if hyprland::hyprctl::is_can_connect; then
         hyprland::hyprctl::reload || return "$SHELL_FALSE"
@@ -141,6 +155,7 @@ function hyprland::trait::uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function hyprland::trait::post_uninstall() {
     fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    hyprland::trait::xdg_desktop_portal::uninstall || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -189,7 +204,9 @@ function hyprland::trait::dependencies() {
     # "yay:vim"
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
-    local apps=("custom:fonts" "pacman:polkit-kde-agent")
+    local apps=()
+
+    apps+=("custom:fonts" "pacman:polkit-kde-agent")
 
     # xdg-desktop-portal
     apps+=("pacman:xdg-desktop-portal-hyprland" "pacman:xdg-desktop-portal-gtk")
