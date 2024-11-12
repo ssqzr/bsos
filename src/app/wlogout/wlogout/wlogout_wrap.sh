@@ -86,7 +86,7 @@ function wlogout_wrap::set_log() {
     log_filename="${log_filename##*/}"
     log::handler::file_handler::register || return "$SHELL_FALSE"
     log::handler::file_handler::set_log_file "$(wlogout_wrap::log_dir)/${log_filename}.log" || return "$SHELL_FALSE"
-    log::level::set "$LOG_LEVEL_DEBUG" || return "$SHELL_FALSE"
+    log::level::set "$LOG_LEVEL_INFO" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -102,7 +102,7 @@ function wlogout_wrap::init_monitor_info() {
     local focused_monitor_width
     local focused_monitor_height
     # 屏幕缩放的比例
-    local focused_monitor_scale_persent
+    local focused_monitor_scale
     local temp
     local focused_monitor
 
@@ -115,28 +115,27 @@ function wlogout_wrap::init_monitor_info() {
     focused_monitor_width=$(cfg::map::get --type="json" "width" "$focused_monitor") || return "$SHELL_FALSE"
     focused_monitor_height=$(cfg::map::get --type="json" "height" "$focused_monitor") || return "$SHELL_FALSE"
     focused_monitor_transform=$(cfg::map::get --type="json" "transform" "$focused_monitor") || return "$SHELL_FALSE"
-    focused_monitor_scale_persent=$(cfg::map::get --type="json" "scale" "$focused_monitor") || return "$SHELL_FALSE"
+    focused_monitor_scale=$(cfg::map::get --type="json" "scale" "$focused_monitor") || return "$SHELL_FALSE"
 
-    linfo "focused_monitor_width=${focused_monitor_width}"
-    linfo "focused_monitor_height=${focused_monitor_height}"
-    linfo "focused_monitor_transform=${focused_monitor_transform}"
-    linfo "focused_monitor_scale_persent=${focused_monitor_scale_persent}"
-
-    focused_monitor_scale_persent=$(awk "BEGIN{printf \"%u\n\",(${focused_monitor_scale_persent}*100)}")
-    linfo "focused_monitor_scale_persent=${focused_monitor_scale_persent}"
+    ldebug "focused_monitor_width=${focused_monitor_width}"
+    ldebug "focused_monitor_height=${focused_monitor_height}"
+    ldebug "focused_monitor_transform=${focused_monitor_transform}"
+    ldebug "focused_monitor_scale=${focused_monitor_scale}"
 
     # https://wiki.hyprland.org/Configuring/Monitors/#rotating
     local transform_90deg=(1 3 5 7)
     if array::is_contain transform_90deg "$focused_monitor_transform"; then
         # 旋转90度，宽高互换
-        __focused_monitor_viewport_height=$focused_monitor_width
-        __focused_monitor_viewport_width=$focused_monitor_height
+        # focused_monitor_scale 可能为小数
+        __focused_monitor_viewport_height=$(math::div "$focused_monitor_width" "$focused_monitor_scale" 0)
+        __focused_monitor_viewport_width=$(math::div "$focused_monitor_height" "$focused_monitor_scale" 0)
     else
-        __focused_monitor_viewport_width=$focused_monitor_width
-        __focused_monitor_viewport_height=$focused_monitor_height
+        __focused_monitor_viewport_width=$(math::div "$focused_monitor_width" "$focused_monitor_scale" 0)
+        __focused_monitor_viewport_height=$(math::div "$focused_monitor_height" "$focused_monitor_scale" 0)
     fi
-    linfo "__focused_monitor_viewport_width=${__focused_monitor_viewport_width}"
-    linfo "__focused_monitor_viewport_height=${__focused_monitor_viewport_height}"
+
+    ldebug "__focused_monitor_viewport_width=${__focused_monitor_viewport_width}"
+    ldebug "__focused_monitor_viewport_height=${__focused_monitor_viewport_height}"
 }
 
 function wlogout_wrap::font_size() {
@@ -146,7 +145,7 @@ function wlogout_wrap::font_size() {
         __font_size=$((__focused_monitor_viewport_width * 4 / 100))
     fi
 
-    linfo "font_size=${__font_size}"
+    ldebug "font_size=${__font_size}"
 
     return "$SHELL_TRUE"
 }
@@ -160,7 +159,7 @@ function wlogout_wrap::button_color() {
     else
         __button_color="black"
     fi
-    linfo "button_color=${__button_color}"
+    ldebug "button_color=${__button_color}"
 }
 
 function wlogout_wrap::button_image_filepath() {
@@ -179,12 +178,12 @@ function wlogout_wrap::button_image_filepath() {
         __suspend_image_filepath="$HOME/.config/wlogout/icons/suspend_${__button_color}.png"
         __hibernate_image_filepath="$HOME/.config/wlogout/icons/hibernate_${__button_color}.png"
     fi
-    linfo "lock_image_filepath=${__lock_image_filepath}"
-    linfo "logout_image_filepath=${__logout_image_filepath}"
-    linfo "shutdown_image_filepath=${__shutdown_image_filepath}"
-    linfo "reboot_image_filepath=${__reboot_image_filepath}"
-    linfo "suspend_image_filepath=${__suspend_image_filepath}"
-    linfo "hibernate_image_filepath=${__hibernate_image_filepath}"
+    ldebug "lock_image_filepath=${__lock_image_filepath}"
+    ldebug "logout_image_filepath=${__logout_image_filepath}"
+    ldebug "shutdown_image_filepath=${__shutdown_image_filepath}"
+    ldebug "reboot_image_filepath=${__reboot_image_filepath}"
+    ldebug "suspend_image_filepath=${__suspend_image_filepath}"
+    ldebug "hibernate_image_filepath=${__hibernate_image_filepath}"
 }
 
 # 计算中心圆和按钮的半径
@@ -203,11 +202,10 @@ function wlogout_wrap::init_cycle_radius() {
     # 聚焦按钮时半径会变大，所以按照最大情况进行计算
     max_radius=$((__cycle_radius_in_center / 2))
     # 默认的按钮的半径是聚焦时的 4/5
-    __button_cycle_radius=$(math::mul "${max_radius}" "${__button_radius_scale}")
-    __button_cycle_radius=$(math::floor "${__button_cycle_radius}")
+    __button_cycle_radius=$(math::mul "${max_radius}" "${__button_radius_scale}" 0)
 
-    linfo "center_cycle_radius=${__cycle_radius_in_center}"
-    linfo "button_cycle_radius=${__button_cycle_radius}"
+    ldebug "center_cycle_radius=${__cycle_radius_in_center}"
+    ldebug "button_cycle_radius=${__button_cycle_radius}"
 }
 
 # 计算所有按钮圆的圆心的坐标
@@ -245,8 +243,8 @@ function wlogout_wrap::init_button_cycle_origin_xy() {
             y_relative_to_center=$(math::sin_by_degree "${current_degree}") || return "$SHELL_FALSE"
             y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
 
-            x=$(math::add "$center_cycle_x" "$x_relative_to_center")
-            y=$(math::sub "$center_cycle_y" "${y_relative_to_center}")
+            x=$(math::add "$center_cycle_x" "$x_relative_to_center" 0) || return "$SHELL_FALSE"
+            y=$(math::sub "$center_cycle_y" "${y_relative_to_center}" 0) || return "$SHELL_FALSE"
             array::rpush __buttons_center_of_cycle_xy "${x},${y}"
         elif [ "${current_degree}" -ge 90 ] && [ "${current_degree}" -lt 180 ]; then
             x_relative_to_center=$(math::cos_by_degree $((180 - current_degree))) || return "$SHELL_FALSE"
@@ -254,8 +252,8 @@ function wlogout_wrap::init_button_cycle_origin_xy() {
             y_relative_to_center=$(math::sin_by_degree $((180 - current_degree))) || return "$SHELL_FALSE"
             y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
 
-            x=$(math::sub "$center_cycle_x" "$x_relative_to_center")
-            y=$(math::sub "$center_cycle_y" "$y_relative_to_center")
+            x=$(math::sub "$center_cycle_x" "$x_relative_to_center" 0)
+            y=$(math::sub "$center_cycle_y" "$y_relative_to_center" 0)
             array::rpush __buttons_center_of_cycle_xy "${x},${y}"
         elif [ "${current_degree}" -ge 180 ] && [ "${current_degree}" -lt 270 ]; then
             x_relative_to_center=$(math::cos_by_degree $((current_degree - 180))) || return "$SHELL_FALSE"
@@ -263,8 +261,8 @@ function wlogout_wrap::init_button_cycle_origin_xy() {
             y_relative_to_center=$(math::sin_by_degree $((current_degree - 180))) || return "$SHELL_FALSE"
             y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
 
-            x=$(math::sub "$center_cycle_x" "$x_relative_to_center")
-            y=$(math::add "$center_cycle_y" "$y_relative_to_center")
+            x=$(math::sub "$center_cycle_x" "$x_relative_to_center" 0)
+            y=$(math::add "$center_cycle_y" "$y_relative_to_center" 0)
             array::rpush __buttons_center_of_cycle_xy "${x},${y}"
         else
             x_relative_to_center=$(math::cos_by_degree $((360 - current_degree))) || return "$SHELL_FALSE"
@@ -272,13 +270,13 @@ function wlogout_wrap::init_button_cycle_origin_xy() {
             y_relative_to_center=$(math::sin_by_degree $((360 - current_degree))) || return "$SHELL_FALSE"
             y_relative_to_center=$(math::mul "${y_relative_to_center}" "${__cycle_radius_in_center}") || return "$SHELL_FALSE"
 
-            x=$(math::add "$center_cycle_x" "$x_relative_to_center")
-            y=$(math::add "$center_cycle_y" "$y_relative_to_center")
+            x=$(math::add "$center_cycle_x" "$x_relative_to_center" 0)
+            y=$(math::add "$center_cycle_y" "$y_relative_to_center" 0)
             array::rpush __buttons_center_of_cycle_xy "${x},${y}"
         fi
     done
 
-    linfo "buttons_center_of_cycle_xy=${__buttons_center_of_cycle_xy[*]}"
+    ldebug "buttons_center_of_cycle_xy=${__buttons_center_of_cycle_xy[*]}"
 
     # 逆序，让其方向是顺时针顺序而不是逆时针顺序
     # array::reverse __buttons_center_of_cycle_xy || return "$SHELL_FALSE"
@@ -317,12 +315,9 @@ function wlogout_wrap::init_button_cycle_margin_string() {
         temp="${__buttons_center_of_cycle_xy[$index]}"
         x="${temp%%,*}"
         y="${temp##*,}"
-        linfo "button cycle center point: x=${x}, y=${y}"
+        ldebug "button cycle center point: x=${x}, y=${y}"
         # x 此时可能是负数
-        x=$(math::sub "$x" $((button_area_width * index)))
-        # 向下取整
-        x=$(math::floor "$x")
-        y=$(math::floor "$y")
+        x=$(math::sub "$x" $((button_area_width * index)) 0)
 
         margin_left=$((x - __button_cycle_radius))
         margin_right=$((0 - (x - button_area_width + __button_cycle_radius)))
@@ -372,8 +367,8 @@ function wlogout_wrap::main() {
     layout_filepath="$(wlogout_wrap::layout_filepath)"
     style_filepath="$(wlogout_wrap::style_filepath)"
 
-    linfo "layout_filepath=$layout_filepath"
-    linfo "style_filepath=$style_filepath"
+    ldebug "layout_filepath=$layout_filepath"
+    ldebug "style_filepath=$style_filepath"
 
     if [ ! -f "$layout_filepath" ]; then
         lerror "layout file($layout_filepath) not exists."
@@ -386,17 +381,22 @@ function wlogout_wrap::main() {
     fi
 
     wlogout_wrap::init_monitor_info || return "$SHELL_FALSE"
+
     wlogout_wrap::font_size || return "$SHELL_FALSE"
+
     wlogout_wrap::button_color || return "$SHELL_FALSE"
+
     wlogout_wrap::button_image_filepath || return "$SHELL_FALSE"
+
     wlogout_wrap::init_cycle_radius || return "$SHELL_FALSE"
+
     wlogout_wrap::init_button_cycle_origin_xy || return "$SHELL_FALSE"
+
     wlogout_wrap::init_button_cycle_margin_string || return "$SHELL_FALSE"
+
     wlogout_wrap::export || return "$SHELL_FALSE"
 
     style=$(envsubst <"$style_filepath") || return "$SHELL_FALSE"
-
-    echo "$style" >"$HOME/lzw_test.css"
 
     wlogout -b "${__column_count}" -c 0 -r 0 -m 0 --layout "$layout_filepath" --css <(echo "$style") --protocol layer-shell
     return "$SHELL_TRUE"

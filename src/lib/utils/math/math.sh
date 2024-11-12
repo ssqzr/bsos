@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# 注意事项：
+# 1. 浮点数精度是通过 printf 实现的， awk 里的 printf ，bash 的 printf 都是参考的 C 语言标准库里的 printf
+# 2. printf 对于 0.5 的值处理，偶舍奇进。
+#       当数值的整数部分为偶数时， .5 不进位，会被舍去
+#       当数值的整数部分为奇数时， .5 进位
+#       https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules
+#       https://learn.microsoft.com/zh-cn/cpp/c-runtime-library/reference/printf-printf-l-wprintf-wprintf-l?view=msvc-170
+#       具体测试看 TEST::math::printf_0_5
+# 3. 浮点数的计算一定不要想当然，可能就出乎预料
+
 if [ -n "${SCRIPT_DIR_4947c3c0}" ]; then
     return
 fi
@@ -153,11 +163,11 @@ function math::_check_accuracy() {
     local accuracy="$1"
     shift
     if math::is_not_integer "$accuracy"; then
-        lerror "param accuracy($accuracy) is not integer"
+        lerror "param accuracy($accuracy) must be integer"
         return "$SHELL_FALSE"
     fi
-    if math::le "$accuracy" 0; then
-        lerror "param accuracy($accuracy) <= 0"
+    if math::lt "$accuracy" 0; then
+        lerror "param accuracy($accuracy) must be greater than or equal to 0"
         return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
@@ -236,6 +246,7 @@ function math::mul() {
 }
 
 # NOTE: 浮点数需要注意精度的问题
+# accuracy 是保留小数点后的位数，采用四舍五入的方式，注意 .5 的取舍是 偶舍奇进
 function math::div() {
     # 被除数
     local dividend="$1"
@@ -243,7 +254,6 @@ function math::div() {
     # 除数
     local divisor="$1"
     shift
-    # 精度，默认2
     local accuracy="$1"
     shift
 
@@ -366,6 +376,22 @@ function math::cos_by_degree() {
 }
 
 ######################################### 下面是单元测试代码 #########################################
+function TEST::math::printf_0_5() {
+    utest::assert_equal "$(printf "%.0f" 0.5)" "0"
+    utest::assert_equal "$(printf "%.0f" 1.5)" "2"
+    utest::assert_equal "$(printf "%.0f" 2.5)" "2"
+    utest::assert_equal "$(printf "%.0f" 3.5)" "4"
+    utest::assert_equal "$(printf "%.0f" 4.5)" "4"
+    utest::assert_equal "$(printf "%.0f" 5.5)" "6"
+    utest::assert_equal "$(printf "%.0f" 6.5)" "6"
+    utest::assert_equal "$(printf "%.0f" 7.5)" "8"
+    utest::assert_equal "$(printf "%.0f" 8.5)" "8"
+    utest::assert_equal "$(printf "%.0f" 9.5)" "10"
+    utest::assert_equal "$(printf "%.0f" 10.5)" "10"
+    utest::assert_equal "$(printf "%.0f" 11.5)" "12"
+    utest::assert_equal "$(printf "%.0f" 12.5)" "12"
+}
+
 function TEST::math::is_integer() {
     math::is_integer 0
     utest::assert $?
@@ -853,6 +879,9 @@ function TEST::math::round() {
 }
 
 function TEST::math::add() {
+    utest::assert_equal "$(math::add 1 1.4 0)" "2"
+    utest::assert_equal "$(math::add 1 1.5 0)" "2"
+    utest::assert_equal "$(math::add 1 1.5000001 0)" "3"
     utest::assert_equal "$(math::add 1 2)" "3"
     utest::assert_equal "$(math::add 1 1.2222 2)" "2.22"
     utest::assert_equal "$(math::add -3 4.567)" "1.567"
@@ -860,6 +889,9 @@ function TEST::math::add() {
 }
 
 function TEST::math::sub() {
+    utest::assert_equal "$(math::sub 1.4 1 0)" "0"
+    utest::assert_equal "$(math::sub 3 1.5 0)" "2"
+    utest::assert_equal "$(math::sub 3 1.5000001 0)" "1"
     utest::assert_equal "$(math::sub 1 2)" "-1"
     utest::assert_equal "$(math::sub 1 1.2222 2)" "-0.22"
     utest::assert_equal "$(math::sub -3 4.567)" "-7.567"
@@ -867,6 +899,9 @@ function TEST::math::sub() {
 }
 
 function TEST::math::mul() {
+    utest::assert_equal "$(math::mul 1 1.4 0)" "1"
+    utest::assert_equal "$(math::mul 1 1.5 0)" "2"
+    utest::assert_equal "$(math::mul 1 1.5000001 0)" "2"
     utest::assert_equal "$(math::mul 2 0)" "0"
     utest::assert_equal "$(math::mul 1 2)" "2"
     utest::assert_equal "$(math::mul 2 1.2222 2)" "2.44"
@@ -878,6 +913,9 @@ function TEST::math::mul() {
 }
 
 function TEST::math::div() {
+    utest::assert_equal "$(math::div 1 2 0)" "0"
+    utest::assert_equal "$(math::div 2 3 0)" "1"
+    utest::assert_equal "$(math::div 4 3 0)" "1"
     utest::assert_equal "$(math::div 1 2 2)" "0.50"
     utest::assert_equal "$(math::div 1 3 2)" "0.33"
     utest::assert_equal "$(math::div 1 3 3)" "0.333"
