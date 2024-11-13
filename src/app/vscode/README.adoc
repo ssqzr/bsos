@@ -1,5 +1,11 @@
 # vscode 安装说明文档
 include::../../../doc/base.adoc[]
 
-official_document_url[官方文档]
+https://code.visualstudio.com/[官方文档]
+
+## 说明
+
+https://wiki.archlinux.org/title/Visual_Studio_Code[Archlinux Visual Studio Code Wiki]
+
+
 
