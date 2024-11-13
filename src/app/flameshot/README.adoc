@@ -10,8 +10,10 @@ https://github.com/flameshot-org/flameshot[官方文档]
 
 ### 多屏幕支持
 
-https://github.com/flameshot-org/flameshot/issues/1184[Flameshot does not work with multiple monitors]
-https://github.com/flameshot-org/flameshot/issues/2522[flameshot monitor unexpected behavior]
+- https://wiki.hyprland.org/FAQ/#how-do-i-screenshot[How do I screenshot?]
+- https://wiki.hyprland.org/FAQ/#my-screenshot-utilities-wont-work-with-multiple-screens[My screenshot utilities won’t work with multiple screens]
+- https://github.com/flameshot-org/flameshot/issues/1184[Flameshot does not work with multiple monitors]
+- https://github.com/flameshot-org/flameshot/issues/2522[flameshot monitor unexpected behavior]
 
 我有两个屏幕分别为 A 和 B 。
 
