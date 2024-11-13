@@ -4,3 +4,137 @@ include::../../../doc/base.adoc[]
 
 https://github.com/hyprwm/hyprpaper[官方文档]
 
+
+## 关于 `splash`
+
+https://wiki.hyprland.org/Hypr-Ecosystem/hyprpaper/[hyprpaper] 的介绍里有一个配置项 `splash` ，官方对它的描述是：
+
+[quote]
+____
+enable rendering of the hyprland splash over the wallpaper
+____
+
+对这个不是很理解，网上也没有找到易懂的解释，大概说是将 `Hyprland` 的启动文本渲染在壁纸上。
+
+查看 https://github.com/hyprwm/hyprpaper/blob/main/src/Hyprpaper.cpp[Hyprpaper源码]。
+
+[source,cpp]
+----
+void CHyprpaper::renderWallpaperForMonitor(SMonitor* pMonitor) {
+    static auto* const PRENDERSPLASH = reinterpret_cast<Hyprlang::INT* const*>(g_pConfigManager->config->getConfigValuePtr("splash")->getDataStaticPtr());
+    static auto* const PSPLASHOFFSET = reinterpret_cast<Hyprlang::FLOAT* const*>(g_pConfigManager->config->getConfigValuePtr("splash_offset")->getDataStaticPtr());
+
+    // .... 省略无关代码
+
+    if (**PRENDERSPLASH && getenv("HYPRLAND_INSTANCE_SIGNATURE")) {
+        auto SPLASH = execAndGet("hyprctl splash");
+        SPLASH.pop_back();
+
+        Debug::log(LOG, "Rendering splash: %s", SPLASH.c_str());
+
+        // .... 省略无关代码
+    }
+
+    // .... 省略无关代码
+}
+----
+
+实际上就是将 `hyprctl splash` 命令的输出渲染在壁纸上了。
+
+查看 https://github.com/hyprwm/Hyprland/blob/main/src/Compositor.cpp[Hyprland源码： Compositor.cpp]。
+
+[source,cpp]
+----
+void CCompositor::setRandomSplash() {
+    std::random_device              dev;
+    std::mt19937                    engine(dev());
+    std::uniform_int_distribution<> distribution(0, SPLASHES.size() - 1);
+
+    m_szCurrentSplash = SPLASHES[distribution(engine)];
+}
+----
+
+继续看 `SPLASHES` 的定义 https://github.com/hyprwm/Hyprland/blob/main/src/helpers/Splashes.hpp[Hyprland源码： Splashes.hpp]：
+
+[source,cpp]
+----
+inline const std::vector<std::string> SPLASHES = {
+    // clang-format off
+    "Woo, animations!",
+    "It's like Hypr, but better.",
+    "Release 1.0 when?",
+    "It's not awesome, it's Hyprland!",
+    "\"I commit too often, people can't catch up lmao\" - Vaxry",
+    "This text is random.",
+    "\"There are reasons to not use rust.\" - Boga",
+    "Read the wiki.",
+    "\"Hello everyone this is YOUR daily dose of ‘read the wiki’\" - Vaxry",
+    "h",
+    "\"‘why no work’, bro I haven't hacked your pc to get live feeds yet\" - Vaxry",
+    "Compile, wait for 20 minutes, notice a new commit, compile again.",
+    "To rice, or not to rice, that is the question.",
+    "Now available on Fedora!",
+    "\"Hyprland is so good it starts with a capital letter\" - Hazel",
+    "\"please make this message a splash\" - eriedaberrie",
+    "\"the only wayland compositor powered by fried chicken\" - raf",
+    "\"This will never get into Hyprland\" - Flafy",
+    "\"Hyprland only gives you up on -git\" - fazzi",
+    "Segmentation fault (core dumped)",
+    "\"disabling hyprland logo is a war crime\" - vaxry",
+    "some basic startup code",
+    "\"I think I am addicted to hyprland\" - mathisbuilder",
+    "\"hyprland is the most important package in the arch repos\" - jacekpoz",
+    "Thanks Brodie!",
+    "Thanks fufexan!",
+    "Thanks raf!",
+    "You can't use --splash to change this message :)",
+    "Hyprland will overtake Gnome in popularity by [insert year]",
+    // music reference / quote section
+    "J'remue le ciel, le jour, la nuit.",
+    "aezakmi, aezakmi, aezakmi, aezakmi, aezakmi, aezakmi, aezakmi!",
+    "Wir sind schon sehr lang zusammen...",
+    "I see a red door and I want it painted black.",
+    "Take on me, take me on...",
+    "You spin me right round baby right round",
+    "Stayin' alive, stayin' alive",
+    "Say no way, say no way ya, no way!",
+    "Ground control to Major Tom...",
+    "Alors on danse",
+    "And all that I can see, is just a yellow lemon tree.",
+    "Got a one-way ticket to the blues",
+    "Is this the real life, is this just fantasy",
+    "What's in your head, in your head?",
+    "We're all living in America, America, America.",
+    "I'm still standing, better than I ever did",
+    "Here comes the sun, bringing you love and shining on everyone",
+    "Two trailer park girls go round the outside",
+    "With the lights out, it's less dangerous",
+    "Here we go back, this is the moment, tonight is the night",
+    "Now you're just somebody that I used to know...",
+    "Black bird, black moon, black sky",
+    "Some legends are told, some turn to dust or to gold",
+    "Your brain gets smart, but your head gets dumb.",
+    "Save your mercy for someone who needs it more",
+    "You're gonna hear my voice when I shout it out loud",
+    "Ding ding pch n daa, bam-ba-ba-re-bam baram bom bom baba-bam-bam-bommm",
+    "Súbeme la radio que esta es mi canción",
+    "I'm beggin', beggin' you",
+    "Never gonna let you down (I am trying!)",
+    "\"I use Arch, btw\" - John Cena",
+    "\"Hyper\".replace(\"e\", \"\")",
+    "\"my win11 install runs hyprland that is true\" - raf",
+    "\"stop playing league loser\" - hyprBot",
+    "\"If it ain't broke, don't fix it\" - Lucascito_03",
+    "\"@vaxry how do i learn c++\" - flicko",
+    //
+    "Join the discord server!",
+    "Thanks ThatOneCalculator!",
+    "The AUR packages always work, except for the times they don't.",
+    "Funny animation compositor woo",
+    //
+    "2 years!"
+    // clang-format on
+};
+----
+
+这些消息都是一些幽默、讽刺或者有趣的文本，它们被用作 `Hyprland` 启动时的欢迎消息。这些消息可能是在 `Hyprland` 的启动脚本中随机选择并显示的，以增加用户在使用 `Hyprland` 时的乐趣。
