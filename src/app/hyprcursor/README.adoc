@@ -1,0 +1,39 @@
+# hyprcursor 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.hyprland.org/Hypr-Ecosystem/hyprcursor/[官方文档]
+
+
+## 主题
+
+搜集的主题列表：
+
+- https://github.com/sakshatshinde/hyprcursor-themes[A list of publicly available hyprcursor themes.]
+- https://github.com/ful1e5/Bibata_Cursor[Bibata]
+- https://github.com/ful1e5/Bibata_Extra_Cursor[More Bibata]
+- https://github.com/ful1e5/Bibata_Cursor_Rainbow?tab=readme-ov-file['Semi-Animated' Bibata cursors with rainbow colors.]
+
+安装后的主题文件存放路径： `/usr/share/icons` 。
+
+## 配置
+
+设置 `hyprcursor` 参考文档：
+
+- https://wiki.hyprland.org/FAQ/#how-do-i-change-me-mouse-cursor[How do I change me mouse cursor?]
+- https://wiki.hyprland.org/Hypr-Ecosystem/hyprcursor/[hyprcursor wiki]
+
+[source，ini]
+----
+env = HYPRCURSOR_THEME,Bibata-Modern-Amber
+env = HYPRCURSOR_SIZE,24
+
+cursor {
+    enable_hyprcursor = true <1>
+}
+
+exec-once=hyprctl setcursor $HYPRCURSOR_THEME $HYPRCURSOR_SIZE <2>
+----
+
+<1> https://wiki.hyprland.org/Configuring/Variables/#cursor[`Hyprland wiki`] 里介绍这个默认值是 `true` ，但是实际上没指定时是 `false` ，所以需要手动开启。
+<2> 单单设置环境变量并不能生效，需要通过 `exec-once` 指令来执行。

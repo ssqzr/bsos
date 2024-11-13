@@ -225,6 +225,9 @@ function hyprland::trait::dependencies() {
     # xdg-desktop-portal
     apps+=("pacman:xdg-desktop-portal-hyprland" "pacman:xdg-desktop-portal-gtk")
 
+    # 光标的主题
+    apps+=("custom:hyprcursor")
+
     # 插件hyprpm需要的
     apps+=("pacman:cpio")
     apps+=("pacman:hyprwayland-scanner")
