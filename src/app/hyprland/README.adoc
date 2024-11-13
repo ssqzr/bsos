@@ -592,6 +592,37 @@ xref:../dolphin/README.adoc#use-dolphin-as-file-selector[使用 `Dolphin` 作为
 
 xref:../yazi/README.adoc#yazi-file-chooser[使用 `yazi` 作为文件选择器]
 
+### 拷贝配置时被重置为默认的配置
+
+最开始处理 hypr 配置时，是先删除 hypr 目录，然后将配置拷贝到 hypr 。
+
+但是在删除 hypr 后， hyprland 可能检测到配置丢失后创建目录和默认配置，导致后续再拷贝配置时出现异常。
+
+有如下解决方案：
+
+. 不删除整个目录，逐个拷贝 hypr 目录下文件和目录。例如 hypr/hyprland.conf 和 hypr/conf.d 。
++
+.. 还是会出现删除 hypr/hyprland.conf 后被检测到的问题，只是冲突时间减少了，概率会小很多。
+.. 需要考虑当前 hypr 下存在其他文件或者目录的情况，需要清除。
+
+. 采用 link 的方式，例如 hypr -> hyprland
++
+.. 先将配置在临时目录 hyprland.tmp 中处理好
+.. 将 hypr 链接到 hyprland.tmp
+.. 删除目标目录 hyprland 
+.. 将 hyprland.tmp 拷贝到 hyprland
+.. 将链接链接到 hyprland
+.. 删除 hyprland.tmp
++
+[.red]#注意：#
+
+* 需要考虑已经存在 hypr 目录的场景
+
+. 先 https://wiki.hyprland.org/Configuring/Variables/#misc[禁用自动重载] ，处理配置后再启用。
+
+[.green]#https://wiki.hyprland.org/Configuring/Variables/#misc[禁用自动重载] 方式是最简单且安全的。#
+
+
 [#use-plugin]
 ## 插件的处理
 

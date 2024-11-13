@@ -11,6 +11,51 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
+function hyprland::trait::config::install() {
+    local src
+    local dst
+    local files
+    local filename
+
+    hyprland::hyprctl::autoreload::disable || return "${SHELL_FALSE}"
+
+    # 先备份配置
+    fs::directory::safe_delete "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    if fs::path::is_exists "${XDG_CONFIG_HOME}/hypr"; then
+        fs::directory::copy --force "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
+    fi
+
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    fs::directory::copy --force "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+
+    if fs::path::is_exists "${BUILD_TEMP_DIR}/hypr/conf.d"; then
+        fs::directory::read files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
+        for src in "${files[@]}"; do
+            filename="$(fs::path::basename "$src")"
+            dst="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
+            if fs::path::is_exists "${dst}"; then
+                continue
+            fi
+            if fs::path::is_file "${src}"; then
+                fs::file::copy "${src}" "${dst}" || return "${SHELL_FALSE}"
+            elif fs::path::is_directory "${src}"; then
+                fs::directory::copy "${src}" "${dst}" || return "${SHELL_FALSE}"
+            else
+                lerror "file(${src}) is not file and directory"
+                return "${SHELL_FALSE}"
+            fi
+        done
+    fi
+
+    hyprland::hyprctl::autoreload::enable || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::trait::config::uninstall() {
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
 function hyprland::settings::cursors() {
     # 反复安装直接覆盖就可以了
     local config_filepath="$XDG_CONFIG_HOME/hypr/conf.d/020-cursor.conf"
@@ -97,38 +142,7 @@ function hyprland::trait::install() {
 
 # 安装的后置操作，比如写配置文件
 function hyprland::trait::post_install() {
-    local src
-    local dst
-    local files
-    local filename
-
-    # 先备份配置
-    fs::directory::safe_delete "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
-    if fs::path::is_exists "${XDG_CONFIG_HOME}/hypr"; then
-        fs::directory::copy --force "${XDG_CONFIG_HOME}/hypr" "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
-    fi
-
-    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
-    fs::directory::copy --force "${SCRIPT_DIR_c084e0be}/hypr" "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
-
-    if fs::path::is_exists "${BUILD_TEMP_DIR}/hypr/conf.d"; then
-        fs::directory::read files "${BUILD_TEMP_DIR}/hypr/conf.d" || return "${SHELL_FALSE}"
-        for src in "${files[@]}"; do
-            filename="$(fs::path::basename "$src")"
-            dst="${XDG_CONFIG_HOME}/hypr/conf.d/${filename}"
-            if fs::path::is_exists "${dst}"; then
-                continue
-            fi
-            if fs::path::is_file "${src}"; then
-                fs::file::copy "${src}" "${dst}" || return "${SHELL_FALSE}"
-            elif fs::path::is_directory "${src}"; then
-                fs::directory::copy "${src}" "${dst}" || return "${SHELL_FALSE}"
-            else
-                lerror "file(${src}) is not file and directory"
-                return "${SHELL_FALSE}"
-            fi
-        done
-    fi
+    hyprland::trait::config::install || return "${SHELL_FALSE}"
 
     # 处理 xdg-desktop-portal
     hyprland::trait::xdg_desktop_portal::install || return "${SHELL_FALSE}"
@@ -154,7 +168,7 @@ function hyprland::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hyprland::trait::post_uninstall() {
-    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hypr" || return "${SHELL_FALSE}"
+    hyprland::trait::config::uninstall || return "${SHELL_FALSE}"
     hyprland::trait::xdg_desktop_portal::uninstall || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

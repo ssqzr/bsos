@@ -24,10 +24,30 @@ function hyprland::hyprctl::is_can_connect() {
     return "$SHELL_TRUE"
 }
 
+function hyprland::hyprctl::is_not_can_connect() {
+    ! hyprland::hyprctl::is_can_connect
+}
+
 function hyprland::hyprctl::reload() {
     cmd::run_cmd_with_history -- hyprctl reload || return "$SHELL_FALSE"
 
     linfo "reload hyprland config success."
+
+    return "$SHELL_TRUE"
+}
+
+function hyprland::hyprctl::autoreload::disable() {
+    cmd::run_cmd_with_history -- hyprctl keyword "misc:disable_autoreload" true || return "$SHELL_FALSE"
+
+    linfo "disable hyprland config autoreload success."
+
+    return "$SHELL_TRUE"
+}
+
+function hyprland::hyprctl::autoreload::enable() {
+    cmd::run_cmd_with_history -- hyprctl keyword "misc:disable_autoreload" false || return "$SHELL_FALSE"
+
+    linfo "enable hyprland config autoreload success."
 
     return "$SHELL_TRUE"
 }
