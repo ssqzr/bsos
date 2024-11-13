@@ -11,6 +11,16 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
+function xdg::trait::hyprland::install() {
+    hyprland::config::add "350" "${SCRIPT_DIR_29b7d4b3}/hyprland/xdg.conf" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+function xdg::trait::hyprland::uninstall() {
+    hyprland::config::remove "350" "xdg.conf" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
 # 指定使用的包管理器
 function xdg::trait::package_manager() {
     echo "pacman"
@@ -48,6 +58,8 @@ function xdg::trait::install() {
 function xdg::trait::post_install() {
     # https://wiki.archlinux.org/title/XDG_user_directories
     cmd::run_cmd_with_history -- xdg-user-dirs-update || return "${SHELL_FALSE}"
+
+    xdg::trait::hyprland::install || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -64,6 +76,8 @@ function xdg::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function xdg::trait::post_uninstall() {
+
+    xdg::trait::hyprland::uninstall || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
