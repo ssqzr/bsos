@@ -63,11 +63,12 @@ function chrome::trait::install() {
 # 安装的后置操作，比如写配置文件
 function chrome::trait::post_install() {
     # 可以修改启动参数配置文件 ~/.config/chrome-flags.conf
+    fs::file::copy --force "${SCRIPT_DIR_8474d0ef}/chrome-flags.conf" "${XDG_CONFIG_HOME}/chrome-flags.conf" || return "${SHELL_FALSE}"
 
     # 修改浏览器为默认浏览器
     chrome::set_xdg_mime || return "${SHELL_FALSE}"
 
-    hyprland::config::add "350" "${SCRIPT_DIR_8474d0ef}/chrome.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_8474d0ef}/hyprland/chrome.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -84,6 +85,8 @@ function chrome::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function chrome::trait::post_uninstall() {
+    fs::file::delete "${XDG_CONFIG_HOME}/chrome-flags.conf" || return "${SHELL_FALSE}"
+
     chrome::undo_set_xdg_mime || return "${SHELL_FALSE}"
 
     hyprland::config::remove "350" "chrome.conf" || return "${SHELL_FALSE}"
