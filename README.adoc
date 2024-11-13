@@ -326,7 +326,7 @@ IMPORTANT: 后面需要提供更安全的卸载流程。
 * [*] swaync 的样式没处理，字体也没处理
 * [*] 处理 vtty 的字体和shell的美化问题
 * [ ] 音频配置文件的处理
-* [ ] xref:src/app/fcitx5/README.adoc#fcitx5-vscode-input-repeat[VSCode终端输入中文重复的问题]
+* [*] xref:src/app/fcitx5/README.adoc#fcitx5-vscode-input-repeat[VSCode终端输入中文重复的问题]
 * [*] xref:src/app/hyprland/README.adoc#hyprland-pywal[Hyprland使用pywal的问题]
 * [*] xref:src/app/rofi/README.adoc#rofi-focus[rofi 焦点问题]
 * [*] xref:src/app/open_vm_tools/README.adoc[虚拟机需要安装性能优化工具]
@@ -338,7 +338,7 @@ IMPORTANT: 后面需要提供更安全的卸载流程。
 * [*] [.line-through]#pywal xref:src/app/pywal/README.adoc#repeat-color[生成的颜色重复]# 改用 wallust 。
 * [*] `manager::app::do_command_recursion` 等递归调用时重复执行的问题
 * [ ] 卸载某个应用时，需要检测其依赖是否可以被卸载。<<uninstall_relation>>
-* [ ] xref:src/app/wallust/README.adoc#wallust-3.0[wallust 3.0版本的处理]
+* [*] xref:src/app/wallust/README.adoc#wallust-3.0[wallust 3.0版本的处理]
 * [*] 调试命令 `dev trait` 支持多个应用和多个子命令
 * [ ] print.sh 支持 256 colors
 * [*] 日志支持多个 handler ，并且支持从命令行参数指定
@@ -348,7 +348,8 @@ IMPORTANT: 后面需要提供更安全的卸载流程。
 * [*] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
 * [ ] 提供命令行的帮助信息
 * [ ] xref:src/app/yazi/README.adoc#yazi-file-chooser[yazi 实现文件选择器的功能]
-* [ ] xref:src/app/hyprland/README.adoc#hyprland-zoom-abnormal[hyprland放大功能异常]
+* [*] xref:src/app/hyprland/README.adoc#hyprland-zoom-abnormal[hyprland放大功能异常]
+* [ ] https://github.com/Slackadays/Clipboard[部署 Clipboard]，只能用于命令行？？还没想好怎么使用
 
 ## 引用
 
