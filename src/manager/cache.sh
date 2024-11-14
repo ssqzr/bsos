@@ -147,8 +147,7 @@ function manager::cache::generate_app_dependencies() {
         fi
         manager::cache::generate_app_dependencies "$item" || return "$SHELL_FALSE"
         local item_dependencies=()
-        temp_str="$(config::cache::app::dependencies::all "$item")"
-        array::readarray item_dependencies < <(echo "$temp_str")
+        config::cache::app::dependencies::all item_dependencies "$item" || return "$SHELL_FALSE"
         array::extend all_dependencies item_dependencies
     done
 
@@ -163,8 +162,7 @@ function manager::cache::generate_app_dependencies() {
         fi
         manager::cache::generate_app_dependencies "$item" || return "$SHELL_FALSE"
         local item_dependencies=()
-        temp_str="$(config::cache::app::dependencies::all "$item")"
-        array::readarray item_dependencies < <(echo "$temp_str")
+        config::cache::app::dependencies::all item_dependencies "$item" || return "$SHELL_FALSE"
         array::extend all_dependencies item_dependencies
     done
 
@@ -204,8 +202,7 @@ function manager::cache::generate_apps_relation() {
         local pm_app="custom:$app_name"
 
         local item_dependencies=()
-        temp_str="$(config::cache::app::dependencies::all "$pm_app")"
-        array::readarray item_dependencies < <(echo "$temp_str")
+        config::cache::app::dependencies::all item_dependencies "$item" || return "$SHELL_FALSE"
 
         for item in "${item_dependencies[@]}"; do
             config::cache::app::required_by::rpush_unique "$item" "$pm_app" || return "$SHELL_FALSE"
@@ -228,7 +225,7 @@ function manager::cache::do() {
         config::cache::delete || return "$SHELL_FALSE"
     fi
 
-    if ! config::cache::apps::is_exists; then
+    if config::cache::apps::is_not_exists; then
         manager::cache::generate_apps_relation || return "$SHELL_FALSE"
     fi
 
@@ -236,7 +233,7 @@ function manager::cache::do() {
     if ! array::is_empty "${!include_pm_apps_096d6b8f}"; then
         manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
     else
-        if ! config::cache::top_apps::is_exists; then
+        if config::cache::top_apps::is_not_exists; then
             # 生成需要处理的应用列表
             manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
         fi

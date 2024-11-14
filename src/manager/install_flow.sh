@@ -11,14 +11,12 @@ function install_flow::app::do_guide() {
     linfo "start run all apps guide..."
 
     local top_apps=()
-    local temp_str
     # shellcheck disable=SC2034
     local cache_apps=()
     local exclude_apps=()
     local pm_app
 
-    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
-    array::readarray top_apps < <(echo "${temp_str}")
+    config::cache::top_apps::all top_apps || return "$SHELL_FALSE"
 
     config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
 
@@ -35,15 +33,13 @@ function install_flow::app::do_guide() {
 function install_flow::app::install() {
     local top_apps=()
     local exclude_apps=()
-    local temp_str
     local pm_app
     # shellcheck disable=SC2034
     local cache_apps=()
 
     linfo "start run apps install..."
 
-    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
-    array::readarray top_apps < <(echo "${temp_str}")
+    config::cache::top_apps::all top_apps || return "$SHELL_FALSE"
 
     config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
 
@@ -63,12 +59,10 @@ function install_flow::app::upgrade() {
     local pm_app
     # shellcheck disable=SC2034
     local apps_d10a6218=()
-    local temp_str
 
     linfo "start run apps upgrade..."
 
-    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
-    array::readarray top_apps < <(echo "${temp_str}")
+    config::cache::top_apps::all top_apps || return "$SHELL_FALSE"
 
     config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
 
@@ -85,15 +79,13 @@ function install_flow::app::upgrade() {
 function install_flow::app::do_fixme() {
     local exclude_apps=()
     local top_apps=()
-    local temp_str
     local pm_app
     # shellcheck disable=SC2034
     local cache_apps=()
 
     linfo "start run all apps install fixme..."
 
-    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
-    array::readarray top_apps < <(echo "${temp_str}")
+    config::cache::top_apps::all top_apps || return "$SHELL_FALSE"
 
     config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
 

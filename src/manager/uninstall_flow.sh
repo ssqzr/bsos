@@ -12,12 +12,10 @@ function uninstall_flow::app::uninstall() {
     local exclude_apps=()
     local pm_app
     local cache_apps=()
-    local temp_str
 
     linfo "start run apps uninstall..."
 
-    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
-    array::readarray top_apps < <(echo "${temp_str}")
+    config::cache::top_apps::all top_apps || return "$SHELL_FALSE"
 
     config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
 
@@ -37,12 +35,10 @@ function uninstall_flow::app::uninstall() {
 function uninstall_flow::app::do_unfixme() {
     local top_apps=()
     local exclude_apps=()
-    local temp_str
     local cache_apps=()
     linfo "start run apps unfixme..."
 
-    temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
-    array::readarray top_apps < <(echo "${temp_str}")
+    config::cache::top_apps::all top_apps || return "$SHELL_FALSE"
 
     config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
 

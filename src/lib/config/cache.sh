@@ -34,12 +34,25 @@ function config::cache::top_apps::is_exists() {
     config::map::has_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
+function config::cache::top_apps::is_not_exists() {
+    ! config::cache::top_apps::is_exists
+}
+
 function config::cache::top_apps::delete() {
     config::map::delete_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
 function config::cache::top_apps::all() {
-    config::array::all ".cache.top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+    # shellcheck disable=SC2034
+    local -n top_apps_6f9f87d6="$1"
+    shift
+
+    local temp_str_6f9f87d6
+
+    temp_str_6f9f87d6="$(config::array::all ".cache.top_apps" "${__config_filepath}")" || return "$SHELL_FALSE"
+    array::readarray top_apps_6f9f87d6 < <(echo "${temp_str_6f9f87d6}")
+
+    return "$SHELL_TRUE"
 }
 
 function config::cache::top_apps::clean() {
@@ -87,6 +100,10 @@ function config::cache::apps::is_exists() {
     config::map::has_key ".cache" "apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
+function config::cache::apps::is_not_exists() {
+    ! config::cache::apps::is_exists
+}
+
 function config::cache::apps::delete() {
     config::map::delete_key ".cache" "apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
@@ -95,6 +112,10 @@ function config::cache::app::dependencies::is_exists() {
     local pm_app="$1"
     config::map::has_key ".cache.apps.[\"${pm_app}\"]" "dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
+}
+
+function config::cache::app::dependencies::is_not_exists() {
+    ! config::cache::app::dependencies::is_exists "$@"
 }
 
 function config::cache::app::dependencies::delete() {
@@ -124,8 +145,17 @@ function config::cache::app::dependencies::rpush_unique() {
 }
 
 function config::cache::app::dependencies::all() {
-    local pm_app="$1"
-    config::array::all ".cache.apps.[\"${pm_app}\"].dependencies" "${__config_filepath}" || return "$SHELL_FALSE"
+    # shellcheck disable=SC2034
+    local -n exclude_apps_18b945db="$1"
+    shift
+    local pm_app_18b945db="$1"
+    shift
+
+    local temp_str_18b945db
+
+    temp_str_18b945db="$(config::array::all ".cache.apps.[\"${pm_app_18b945db}\"].dependencies" "${__config_filepath}")" || return "$SHELL_FALSE"
+    array::readarray exclude_apps_18b945db < <(echo "${temp_str_18b945db}")
+
     return "$SHELL_TRUE"
 }
 
@@ -162,7 +192,16 @@ function config::cache::app::required_by::rpush_unique() {
 }
 
 function config::cache::app::required_by::all() {
-    local pm_app="$1"
-    config::array::all ".cache.apps.[\"${pm_app}\"].required_by" "${__config_filepath}" || return "$SHELL_FALSE"
+    # shellcheck disable=SC2034
+    local -n exclude_apps_6c0b3f04="$1"
+    shift
+    local pm_app_6c0b3f04="$1"
+    shift
+
+    local temp_str_6c0b3f04
+
+    temp_str_6c0b3f04="$(config::array::all ".cache.apps.[\"${pm_app_6c0b3f04}\"].required_by" "${__config_filepath}")" || return "$SHELL_FALSE"
+    array::readarray exclude_apps_6c0b3f04 < <(echo "${temp_str_6c0b3f04}")
+
     return "$SHELL_TRUE"
 }
