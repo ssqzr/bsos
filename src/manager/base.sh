@@ -25,27 +25,27 @@ __CORE_APPS=("custom:systemd_resolved" "custom:pacman" "custom:sudo" "pacman:go-
 # rust 我需要rustup包，但是一些APP依赖rust时默认安装的是rust包，导致再次安装rustup会冲突
 __PRIOR_INSTALL_APPS=("custom:system_setting" "pacman:base-devel" "pacman:git" "custom:yay" "custom:pamac" "custom:rust")
 
-function base::core_apps::list() {
+function manager::base::core_apps::list() {
     array::print __CORE_APPS
 }
 
-function base::core_apps::is_contain() {
+function manager::base::core_apps::is_contain() {
     local pm_app="$1"
     array::is_contain __CORE_APPS "$pm_app"
 }
 
-function base::prior_install_apps::list() {
+function manager::base::prior_install_apps::list() {
 
     array::print __PRIOR_INSTALL_APPS
 }
 
-function base::prior_install_apps::is_contain() {
+function manager::base::prior_install_apps::is_contain() {
     local pm_app="$1"
     array::is_contain __PRIOR_INSTALL_APPS "$pm_app"
 }
 
 # NOTE: 不要打印日志，因为一般调用这个函数在日志初始化前
-function base::check_root_user() {
+function manager::base::check_root_user() {
     if os::user::is_root; then
         # 此时还没初始化日志，所以不能使用日志接口
         println_error "this script cannot be run as root."
@@ -55,7 +55,7 @@ function base::check_root_user() {
 }
 
 # 简单的单例，防止重复运行
-function base::lock() {
+function manager::base::lock() {
     local lock_file="/tmp/bsos.lock"
     exec 99>"$lock_file"
     flock -n 99
@@ -70,7 +70,7 @@ function base::lock() {
     return "$SHELL_TRUE"
 }
 
-function base::input_root_password() {
+function manager::base::input_root_password() {
     # 执行 su 需要输入密码
     local password
     while true; do
@@ -86,7 +86,7 @@ function base::input_root_password() {
 }
 
 # 导出全局的变量
-function base::export_env() {
+function manager::base::export_env() {
     local src_dir
 
     # 最长的是 success 字符串，长度为 7
@@ -97,11 +97,11 @@ function base::export_env() {
     export BUILD_ROOT_DIR="/var/tmp/bsos/build"
 
     # 处理 ROOT_PASSWORD
-    base::input_root_password
+    manager::base::input_root_password
 }
 
 # 启用无需密码
-function base::enable_no_password() {
+function manager::base::enable_no_password() {
     # NOTE: 此时不一定有sudo，只能通过su root来执行
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "enable no password..."
 
@@ -130,7 +130,7 @@ function base::enable_no_password() {
 }
 
 # 禁用无需密码
-function base::disable_no_password() {
+function manager::base::disable_no_password() {
     # NOTE: 此时不一定有sudo，只能通过su root来执行
 
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "disable no password..."

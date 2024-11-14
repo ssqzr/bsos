@@ -6,7 +6,7 @@ SCRIPT_DIR_b121320e="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_b121320e}/../lib/utils/all.sh" || exit 1
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_b121320e}/app_manager.sh" || exit 1
+source "${SCRIPT_DIR_b121320e}/app.sh" || exit 1
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_b121320e}/base.sh" || exit 1
 # shellcheck source=/dev/null
@@ -35,7 +35,7 @@ function manager::cache::generate_top_apps() {
         linfo "is in develop mode, not add prior install apps to top app list"
     else
         # 先处理优先安装的app
-        temp_str="$(base::prior_install_apps::list)" || return "$SHELL_FALSE"
+        temp_str="$(manager::base::prior_install_apps::list)" || return "$SHELL_FALSE"
         array::readarray priority_apps < <(echo "${temp_str}")
         for pm_app in "${priority_apps[@]}"; do
             config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
@@ -55,7 +55,7 @@ function manager::cache::generate_top_apps() {
         app_name=$(basename "${app_path}")
         local pm_app="custom:$app_name"
 
-        if base::core_apps::is_contain "$pm_app"; then
+        if manager::base::core_apps::is_contain "$pm_app"; then
             continue
         fi
 

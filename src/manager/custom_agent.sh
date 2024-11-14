@@ -28,7 +28,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 # - SRC_ROOT_DIR 代码的根目录
 # - PM_APP_NAME 模板
 # - BUILD_TEMP_DIR 安装流程的临时构建根目录
-function custom_manager::_env() {
+function manager::custom_agent::_env() {
     local app_name="$1"
 
     if [ -z "${app_name}" ]; then
@@ -76,7 +76,7 @@ function custom_manager::_env() {
     return "$SHELL_TRUE"
 }
 
-function custom_manager::_clean_build() {
+function manager::custom_agent::_clean_build() {
     linfo "clean app(${PM_APP_NAME}) build env..."
     fs::directory::safe_delete "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
     fs::directory::create_recursive "${BUILD_TEMP_DIR}" || return "$SHELL_FALSE"
@@ -84,7 +84,7 @@ function custom_manager::_clean_build() {
     return "${SHELL_TRUE}"
 }
 
-function custom_manager::prepare() {
+function manager::custom_agent::prepare() {
     if [ ! -e "${XDG_CONFIG_HOME}" ]; then
         cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}" || return "${SHELL_FALSE}"
     fi
@@ -96,7 +96,7 @@ function custom_manager::prepare() {
     return "$SHELL_TRUE"
 }
 
-function custom_manager::command::install_guide() {
+function manager::custom_agent::command::install_guide() {
     if config::app::is_configed::get "$PM_APP_NAME"; then
         # 说明已经配置过了
         linfo "app(${PM_APP_NAME}) install guide has configed, not need to config again"
@@ -107,13 +107,13 @@ function custom_manager::command::install_guide() {
     linfo "app(${PM_APP_NAME}) install guide config success"
 }
 
-function custom_manager::command::pre_install() {
-    custom_manager::_clean_build || return "$SHELL_FALSE"
+function manager::custom_agent::command::pre_install() {
+    manager::custom_agent::_clean_build || return "$SHELL_FALSE"
     "${app_name}::trait::pre_install" || return "$SHELL_FALSE"
     linfo "app(${PM_APP_NAME}) pre_install success"
 }
 
-function custom_manager::main() {
+function manager::custom_agent::main() {
     local app_name="$1"
     local command="$2"
 
@@ -132,19 +132,19 @@ function custom_manager::main() {
         return "$SHELL_FALSE"
     fi
 
-    custom_manager::_env "${app_name}" || return 1
-    custom_manager::prepare || return "$SHELL_FALSE"
+    manager::custom_agent::_env "${app_name}" || return 1
+    manager::custom_agent::prepare || return "$SHELL_FALSE"
 
     # shellcheck source=/dev/null
     source "${SRC_ROOT_DIR}/app/${app_name}/trait.sh" || return "$SHELL_FALSE"
 
     case "$command" in
     "install_guide")
-        custom_manager::command::install_guide || return "$SHELL_FALSE"
+        manager::custom_agent::command::install_guide || return "$SHELL_FALSE"
         ;;
 
     "pre_install")
-        custom_manager::command::pre_install || return "$SHELL_FALSE"
+        manager::custom_agent::command::pre_install || return "$SHELL_FALSE"
         ;;
 
     "description" | "install" | "post_install" | "pre_uninstall" | "uninstall" | "post_uninstall" | "upgrade" | "fixme" | "unfixme" | "dependencies" | "features")
@@ -165,4 +165,4 @@ function custom_manager::main() {
     return "${SHELL_TRUE}"
 }
 
-custom_manager::main "$@"
+manager::custom_agent::main "$@"

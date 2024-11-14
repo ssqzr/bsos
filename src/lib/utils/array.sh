@@ -331,6 +331,16 @@ function array::reverse() {
     done
 }
 
+function array::copy() {
+    local -n result_610fd6e5="$1"
+    shift
+    local -n array_610fd6e5="$1"
+    shift
+    # shellcheck disable=SC2034
+    result_610fd6e5=("${array_610fd6e5[@]}")
+    return "$SHELL_TRUE"
+}
+
 function array::map() {
     local -n result_f4a7c537="$1"
     shift
@@ -919,6 +929,22 @@ function TEST::array::remove_at() {
     utest::assert_equal "${arr[*]}" "1 4 5 6"
     array::remove_at arr -2
     utest::assert_equal "${arr[*]}" "1 4 6"
+}
+
+function TEST::array::copy() {
+    local arr=("1" "2" "3" "4" "5" "6" "7")
+    local arr_copy
+
+    array::copy arr_copy arr
+    utest::assert_equal "${arr_copy[*]}" "${arr[*]}"
+
+    array::rpop arr
+    utest::assert_equal "${arr[*]}" "1 2 3 4 5 6"
+    utest::assert_equal "${arr_copy[*]}" "1 2 3 4 5 6 7"
+
+    array::lpop arr_copy
+    utest::assert_equal "${arr[*]}" "1 2 3 4 5 6"
+    utest::assert_equal "${arr_copy[*]}" "2 3 4 5 6 7"
 }
 
 function array::_main() {

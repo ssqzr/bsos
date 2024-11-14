@@ -14,11 +14,9 @@ source "${SCRIPT_DIR_8dac019e}/lib/package_manager/manager.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/base.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_8dac019e}/manager/app_manager.sh"
+source "${SCRIPT_DIR_8dac019e}/manager/app.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_8dac019e}/manager/install_flow.sh"
-# shellcheck source=/dev/null
-source "${SCRIPT_DIR_8dac019e}/manager/uninstall_flow.sh"
+source "${SCRIPT_DIR_8dac019e}/manager/flow.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/cache.sh"
 # shellcheck source=/dev/null
@@ -55,7 +53,7 @@ function main::install_core_dependencies() {
 
     linfo "start install core dependencies..."
 
-    temp_str="$(base::core_apps::list)" || return "$SHELL_FALSE"
+    temp_str="$(manager::base::core_apps::list)" || return "$SHELL_FALSE"
     array::readarray core_apps < <(echo "${temp_str}")
     for pm_app in "${core_apps[@]}"; do
         linfo "core app(${pm_app}) install..."
@@ -134,7 +132,7 @@ function main::command::install() {
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
-    install_flow::main_flow || return "$SHELL_FALSE"
+    manager::flow::install::main || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -182,7 +180,7 @@ function main::command::uninstall() {
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
-    uninstall_flow::main_flow || return "$SHELL_FALSE"
+    manager::flow::uninstall::main || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -230,7 +228,7 @@ function main::command::upgrade() {
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
-    install_flow::upgrade_flow || return "$SHELL_FALSE"
+    manager::flow::upgrade::main || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -278,7 +276,7 @@ function main::command::fixme() {
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
-    install_flow::fixme_flow || return "$SHELL_FALSE"
+    manager::flow::fixme::main || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -326,7 +324,7 @@ function main::command::unfixme() {
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
-    uninstall_flow::unfixme_flow || return "$SHELL_FALSE"
+    manager::flow::unfixme::main || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -356,7 +354,7 @@ function main::_do_main() {
 function main::signal::handler_exit() {
     local code="$1"
     linfo "exit code: ${code}"
-    base::disable_no_password || return "$SHELL_FALSE"
+    manager::base::disable_no_password || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -393,7 +391,7 @@ function main::run() {
     fi
 
     # 第一步就是检查用户，不然可能会污染环境
-    base::check_root_user || return "$SHELL_FALSE"
+    manager::base::check_root_user || return "$SHELL_FALSE"
 
     # 其次设置日志的路径，尽量记录日志
     log_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/main.log"
@@ -402,7 +400,7 @@ function main::run() {
     log::level::set "$LOG_LEVEL_DEBUG" || return "$SHELL_FALSE"
 
     # 单例
-    base::lock || return "$SHELL_FALSE"
+    manager::base::lock || return "$SHELL_FALSE"
 
     # 设置记录执行命令的文件路径
     cmd_history_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/cmd.history"
@@ -414,9 +412,9 @@ function main::run() {
     config::set_config_filepath "${config_filepath}" || return "$SHELL_FALSE"
 
     # 导出全局变量
-    base::export_env || return "$SHELL_FALSE"
+    manager::base::export_env || return "$SHELL_FALSE"
 
-    base::enable_no_password || return "$SHELL_FALSE"
+    manager::base::enable_no_password || return "$SHELL_FALSE"
     trap 'main::signal::handler_exit "$?"' EXIT
 
     array::lpop remain_params command || return "$SHELL_FALSE"

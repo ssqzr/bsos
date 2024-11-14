@@ -12,9 +12,11 @@ source "$SCRIPT_DIR_d6dc03c7/lib/utils/all.sh"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR_d6dc03c7/manager/base.sh"
 # shellcheck source=/dev/null
-source "$SCRIPT_DIR_d6dc03c7/manager/app_manager.sh"
+source "$SCRIPT_DIR_d6dc03c7/manager/app.sh"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR_d6dc03c7/manager/flags.sh"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR_d6dc03c7/manager/flow.sh"
 
 function develop::gen_uuid() {
     uuidgen | awk -F '-' '{print $1}'
@@ -292,7 +294,7 @@ function develop::command::install() {
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
-    install_flow::main_flow || return "$SHELL_FALSE"
+    manager::flow::install::main || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
