@@ -365,24 +365,93 @@ function main::run() {
     local config_filepath
     local code
     local remain_params=()
-    local flags=()
     local param
-    local temp_str
+    local temp
+
+    local help=""
+
+    help="
+$(debug::function::filename) [OPTIONS] <SUBCOMMAND> [SUBCOMMAND OPTIONS]
+
+OPTIONS:
+    --develop               BOOL                                开发模式
+    --reuse-cache           BOOL                                重用缓存
+    --check-loop            BOOL                                检查循环依赖
+
+SUBCOMMAND:
+    install                                                     安装
+        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
+        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+
+    uninstall                                                   卸载
+        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
+        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+
+    upgrade                                                     升级
+        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
+        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+
+    fixme                                                       修复依赖
+        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
+        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+
+    unfixme                                                     撤销修复
+        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
+        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+
+    dev [DEV SUBCOMMAND] [DEV SUBCOMMAND OPTIONS]               开发协助命令
+        create                                                  根据模板创建部署应用的实现代码
+            --app           APP_NAME,APP_NAME,...               创建的应用列表，使用 ',' 分割。参数可以指定多次。
+
+        update                                                  更新模板
+            --app           APP_NAME,APP_NAME,...               更新模板的应用列表，使用 ',' 分割。参数可以指定多次。
+
+        check_loop                                              检查 APP 之间是否循环依赖
+
+        install                                                 测试应用的安装流程
+            --app           APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
+            --exclude-app   APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+
+        trait                                                   执行 APP 的 trait 函数
+            --app           APP_NAME,APP_NAME,...               应用列表，使用 ',' 分割。参数可以指定多次。
+            --trait         TRAIT_NAME,TRAIT_NAME,...           执行 trait 函数名列表，使用 ',' 分割。参数可以指定多次。
+        
+    help                                                        帮助
+
+"
 
     # 先解析全局的参数
     for param in "$@"; do
         case "$param" in
-        --flag=*)
-            parameter::parse_array --separator="," --option="$param" flags || return "$SHELL_FALSE"
+        --develop=*)
+            temp=""
+            parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
+            if [ "$temp" -eq "$SHELL_TRUE" ]; then
+                manager::flags::append "develop" || return "$SHELL_FALSE"
+            fi
+            ;;
+        --reuse-cache=*)
+            temp=""
+            parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
+            if [ "$temp" -eq "$SHELL_TRUE" ]; then
+                manager::flags::append "reuse_cache" || return "$SHELL_FALSE"
+            fi
+            ;;
+        --check-loop=*)
+            temp=""
+            parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
+            if [ "$temp" -eq "$SHELL_TRUE" ]; then
+                manager::flags::append "check_loop" || return "$SHELL_FALSE"
+            fi
+            ;;
+        -h | --help)
+            echo -e "$help"
+            return "$SHELL_TRUE"
             ;;
         *)
             remain_params+=("$param")
             ;;
         esac
-    done
-
-    for temp_str in "${flags[@]}"; do
-        manager::flags::append "${temp_str}" || return "$SHELL_FALSE"
     done
 
     if array::is_empty remain_params; then
@@ -435,10 +504,7 @@ function main::run() {
 
 function main::wrap_run() {
     main::run "$@"
-    if [ $? -eq "$SHELL_TRUE" ]; then
-        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "all success."
-        return "$SHELL_TRUE"
-    else
+    if [ $? -eq "$SHELL_FALSE" ]; then
         lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "something is wrong, please check log."
         return "$SHELL_FALSE"
     fi
