@@ -96,6 +96,21 @@ function manager::cache::generate_top_apps() {
     return "$SHELL_TRUE"
 }
 
+function manager::cache::generate_exclude_apps() {
+    local -n exclude_apps_83764fdc="$1"
+    shift
+
+    local item_83764fdc
+
+    # 每次都重新生成
+    config::cache::exclude_apps::clean || return "$SHELL_FALSE"
+
+    for item_83764fdc in "${exclude_apps_83764fdc[@]}"; do
+        config::cache::exclude_apps::rpush_unique "$item_83764fdc" || return "$SHELL_FALSE"
+    done
+    return "$SHELL_TRUE"
+}
+
 function manager::cache::generate_app_dependencies() {
     local pm_app="$1"
     if [ -z "$pm_app" ]; then
@@ -203,7 +218,10 @@ function manager::cache::generate_apps_relation() {
 }
 
 function manager::cache::do() {
-    local pm_apps=("${@}")
+    local -n include_pm_apps_096d6b8f=$1
+    shift
+    local -n exclude_pm_apps_096d6b8f=$1
+    shift
 
     if ! manager::flags::reuse_cache::is_exists; then
         linfo "no reuse cache, delete all cache"
@@ -214,15 +232,17 @@ function manager::cache::do() {
         manager::cache::generate_apps_relation || return "$SHELL_FALSE"
     fi
 
-    # 指定 pm_apps 参数时，必须重新生成 top app list
-    if ! array::is_empty pm_apps; then
-        manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
+    # 指定 include_pm_apps_096d6b8f 参数时，必须重新生成 top app list
+    if ! array::is_empty "${!include_pm_apps_096d6b8f}"; then
+        manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
     else
         if ! config::cache::top_apps::is_exists; then
             # 生成需要处理的应用列表
-            manager::cache::generate_top_apps "${pm_apps[@]}" || return "$SHELL_FALSE"
+            manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
         fi
     fi
+
+    manager::cache::generate_exclude_apps "${!exclude_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

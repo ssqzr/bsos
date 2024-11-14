@@ -12,15 +12,21 @@ function install_flow::app::do_guide() {
 
     local top_apps=()
     local temp_str
-    local _36317254_cache_apps=()
+    # shellcheck disable=SC2034
+    local cache_apps=()
+    local exclude_apps=()
+    local pm_app
 
     temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
+    config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
+
     ldebug "top_apps=${top_apps[*]}"
-    local pm_app
+    ldebug "exclude_apps=${exclude_apps[*]}"
+
     for pm_app in "${top_apps[@]}"; do
-        manager::app::install_guide _36317254_cache_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::install_guide cache_apps exclude_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"
@@ -28,17 +34,24 @@ function install_flow::app::do_guide() {
 
 function install_flow::app::install() {
     local top_apps=()
+    local exclude_apps=()
     local temp_str
+    local pm_app
+    # shellcheck disable=SC2034
+    local cache_apps=()
+
     linfo "start run apps install..."
 
     temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
+    config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
+
     ldebug "top_apps=${top_apps[*]}"
-    local pm_app
-    local _6ce8e784_installed_apps=()
+    ldebug "exclude_apps=${exclude_apps[*]}"
+
     for pm_app in "${top_apps[@]}"; do
-        manager::app::install _6ce8e784_installed_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::install cache_apps exclude_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"
@@ -46,36 +59,49 @@ function install_flow::app::install() {
 
 function install_flow::app::upgrade() {
     local top_apps=()
+    local exclude_apps=()
+    local pm_app
+    # shellcheck disable=SC2034
+    local apps_d10a6218=()
     local temp_str
+
     linfo "start run apps upgrade..."
 
     temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
+    config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
+
     ldebug "top_apps=${top_apps[*]}"
-    local pm_app
-    # shellcheck disable=SC2034
-    local apps_d10a6218=()
+    ldebug "exclude_apps=${exclude_apps[*]}"
+
     for pm_app in "${top_apps[@]}"; do
-        manager::app::upgrade apps_d10a6218 "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::upgrade apps_d10a6218 exclude_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"
 }
 
 function install_flow::app::do_fixme() {
+    local exclude_apps=()
     local top_apps=()
     local temp_str
-    local _b81225cf_cache_apps=()
+    local pm_app
+    # shellcheck disable=SC2034
+    local cache_apps=()
+
     linfo "start run all apps install fixme..."
 
     temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
 
+    config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
+
     ldebug "top_apps=${top_apps[*]}"
-    local pm_app
+    ldebug "exclude_apps=${exclude_apps[*]}"
+
     for pm_app in "${top_apps[@]}"; do
-        manager::app::fixme _b81225cf_cache_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::fixme cache_apps exclude_apps "${pm_app}" || return "$SHELL_FALSE"
     done
 
     return "$SHELL_TRUE"

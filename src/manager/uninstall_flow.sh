@@ -9,34 +9,45 @@ source "${SCRIPT_DIR_b2e4a0ea}/base.sh"
 
 function uninstall_flow::app::uninstall() {
     local top_apps=()
+    local exclude_apps=()
+    local pm_app
+    local cache_apps=()
     local temp_str
+
     linfo "start run apps uninstall..."
 
     temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
+
+    config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
+
     ldebug "top_apps=${top_apps[*]}"
+    ldebug "exclude_apps=${exclude_apps[*]}"
 
     # 因为优先安装的APP在最前面，所以这里reverse一下
     array::reverse top_apps
     ldebug "top_apps reverse=${top_apps[*]}"
 
-    local pm_app
-    local _532b27d8_uninstall_apps=()
     for pm_app in "${top_apps[@]}"; do
-        manager::app::uninstall _532b27d8_uninstall_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::uninstall cache_apps exclude_apps "${pm_app}" || return "$SHELL_FALSE"
     done
     return "$SHELL_TRUE"
 }
 
 function uninstall_flow::app::do_unfixme() {
     local top_apps=()
+    local exclude_apps=()
     local temp_str
-    local _691b5ab9_cache_apps=()
+    local cache_apps=()
     linfo "start run apps unfixme..."
 
     temp_str="$(config::cache::top_apps::all)" || return "$SHELL_FALSE"
     array::readarray top_apps < <(echo "${temp_str}")
+
+    config::cache::exclude_apps::all exclude_apps || return "$SHELL_FALSE"
+
     ldebug "top_apps=${top_apps[*]}"
+    ldebug "exclude_apps=${exclude_apps[*]}"
 
     # 因为优先安装的APP在最前面，所以这里reverse一下
     array::reverse top_apps
@@ -44,7 +55,7 @@ function uninstall_flow::app::do_unfixme() {
 
     local pm_app
     for pm_app in "${top_apps[@]}"; do
-        manager::app::unfixme _691b5ab9_cache_apps "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::unfixme cache_apps exclude_apps "${pm_app}" || return "$SHELL_FALSE"
     done
     return "$SHELL_TRUE"
 }

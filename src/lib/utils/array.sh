@@ -40,6 +40,10 @@ function array::is_empty() {
     return "$SHELL_FALSE"
 }
 
+function array::is_not_empty() {
+    ! array::is_empty "$@"
+}
+
 function array::is_contain() {
     # shellcheck disable=SC2178
     local -n array_24667025=$1
@@ -427,6 +431,24 @@ function TEST::array::is_empty() {
     array::lpush arr 2
     array::is_empty arr
     utest::assert_fail $?
+}
+
+function TEST::array::is_not_empty() {
+    local arr
+    array::is_not_empty arr
+    utest::assert_fail $?
+
+    arr=()
+    array::is_not_empty arr
+    utest::assert_fail $?
+
+    array::lpush arr 1
+    array::is_not_empty arr
+    utest::assert $?
+
+    array::lpush arr 2
+    array::is_not_empty arr
+    utest::assert $?
 }
 
 function TEST::array::get() {

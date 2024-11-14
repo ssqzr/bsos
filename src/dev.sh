@@ -243,12 +243,17 @@ function develop::command::install() {
 
     local app_name
     local pm_apps=()
+    local exclude_app_names=()
+    local exclude_pm_apps=()
     local param
 
     for param in "$@"; do
         case "$param" in
         --app=*)
             parameter::parse_array --separator="," --option="$param" app_names || return "$SHELL_FALSE"
+            ;;
+        --exclude-app=*)
+            parameter::parse_array --separator="," --option="$param" exclude_app_names || return "$SHELL_FALSE"
             ;;
         -*)
             lerror "unknown option $param"
@@ -269,6 +274,9 @@ function develop::command::install() {
     array::remove_empty app_names || return "$SHELL_FALSE"
     array::dedup app_names || return "$SHELL_FALSE"
 
+    array::remove_empty exclude_app_names || return "$SHELL_FALSE"
+    array::dedup exclude_app_names || return "$SHELL_FALSE"
+
     if array::is_empty app_names; then
         lerror "call app install failed, param(--app) is empty"
         return "$SHELL_FALSE"
@@ -278,7 +286,11 @@ function develop::command::install() {
         pm_apps+=("custom:$app_name")
     done
 
-    manager::cache::do "${pm_apps[@]}" || return "$SHELL_FALSE"
+    for app_name in "${exclude_app_names[@]}"; do
+        exclude_pm_apps+=("custom:$app_name")
+    done
+
+    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     install_flow::main_flow || return "$SHELL_FALSE"
 

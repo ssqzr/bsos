@@ -28,7 +28,7 @@ function config::cache::is_not_exists() {
     ! config::cache::is_exists
 }
 
-################################################### global 相关 ############################################
+######################## top_apps 相关 ########################
 
 function config::cache::top_apps::is_exists() {
     config::map::has_key ".cache" "top_apps" "${__config_filepath}" || return "$SHELL_FALSE"
@@ -51,7 +51,38 @@ function config::cache::top_apps::rpush_unique() {
     config::array::rpush_unique ".cache.top_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
 }
 
-################################################### APP 相关 ############################################
+######################## exclude_apps 相关 ########################
+
+function config::cache::exclude_apps::is_exists() {
+    config::map::has_key ".cache" "exclude_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
+function config::cache::exclude_apps::is_not_exists() {
+    ! config::cache::exclude_apps::is_exists
+}
+
+function config::cache::exclude_apps::all() {
+    # shellcheck disable=SC2034
+    local -n exclude_apps_22d8e2fc="$1"
+    shift
+
+    local temp_str_22d8e2fc
+
+    temp_str_22d8e2fc="$(config::array::all ".cache.exclude_apps" "${__config_filepath}")" || return "$SHELL_FALSE"
+    array::readarray exclude_apps_22d8e2fc < <(echo "${temp_str_22d8e2fc}")
+    return "$SHELL_TRUE"
+}
+
+function config::cache::exclude_apps::clean() {
+    config::array::clean ".cache.exclude_apps" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
+function config::cache::exclude_apps::rpush_unique() {
+    local app="$1"
+    config::array::rpush_unique ".cache.exclude_apps" "$app" "${__config_filepath}" || return "$SHELL_FALSE"
+}
+
+######################## APP 相关 ########################
 function config::cache::apps::is_exists() {
     config::map::has_key ".cache" "apps" "${__config_filepath}" || return "$SHELL_FALSE"
 }
