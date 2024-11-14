@@ -45,13 +45,11 @@ function manager::flow::apps::do_command() {
 # 更新整个系统
 # - 通过包管理器更新系统
 # - 更新所有应用
-function manager::flow::upgrade_all() {
+function manager::flow::upgrade_system() {
     # 先更新系统
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system first..."
     package_manager::upgrade_all_pm || return "$SHELL_FALSE"
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system success."
-
-    manager::flow::apps::do_command "upgrade" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -59,7 +57,8 @@ function manager::flow::upgrade_all() {
 ############################## 升级流程 ##############################
 
 function manager::flow::upgrade::main() {
-    manager::flow::upgrade_all || return "$SHELL_FALSE"
+    manager::flow::upgrade_system || return "$SHELL_FALSE"
+    manager::flow::apps::do_command "upgrade" || return "$SHELL_FALSE"
 
     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "you should reboot you system."
 
@@ -95,7 +94,7 @@ function manager::flow::install::post_install() {
 }
 
 function manager::flow::install::main() {
-    manager::flow::upgrade_all || return "$SHELL_FALSE"
+    manager::flow::upgrade_system || return "$SHELL_FALSE"
     manager::flow::install::pre_install || return "$SHELL_FALSE"
     manager::flow::install::install || return "$SHELL_FALSE"
     manager::flow::install::post_install || return "$SHELL_FALSE"
@@ -138,7 +137,7 @@ function manager::flow::uninstall::main() {
 ############################## fixme 流程 ##############################
 
 function manager::flow::fixme::main() {
-    manager::flow::upgrade_all || return "$SHELL_FALSE"
+    manager::flow::upgrade_system || return "$SHELL_FALSE"
 
     manager::flow::apps::do_command "fixme" || return "$SHELL_FALSE"
 

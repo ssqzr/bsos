@@ -35,14 +35,13 @@ function manager::cache::generate_top_apps() {
         linfo "is in develop mode, not add prior install apps to top app list"
     else
         # 先处理优先安装的app
-        temp_str="$(manager::base::prior_install_apps::list)" || return "$SHELL_FALSE"
-        array::readarray priority_apps < <(echo "${temp_str}")
+        manager::base::prior_install_apps::all priority_apps || return "$SHELL_FALSE"
         for pm_app in "${priority_apps[@]}"; do
             config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
         done
     fi
 
-    if ! array::is_empty pm_apps; then
+    if array::is_not_empty pm_apps; then
         linfo "only add ${pm_apps[*]} to top app list"
         for pm_app in "${pm_apps[@]}"; do
             config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
@@ -229,8 +228,8 @@ function manager::cache::do() {
         manager::cache::generate_apps_relation || return "$SHELL_FALSE"
     fi
 
-    # 指定 include_pm_apps_096d6b8f 参数时，必须重新生成 top app list
-    if ! array::is_empty "${!include_pm_apps_096d6b8f}"; then
+    # 指定 include_pm_apps_096d6b8f 参数时，必须重新生成
+    if array::is_not_empty "${!include_pm_apps_096d6b8f}"; then
         manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
     else
         if config::cache::top_apps::is_not_exists; then
@@ -239,7 +238,11 @@ function manager::cache::do() {
         fi
     fi
 
-    manager::cache::generate_exclude_apps "${!exclude_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
+    # 指定 exclude_pm_apps_096d6b8f 参数时，必须重新生成
+    # exclude_pm_apps_096d6b8f 为空时，配置里是什么就是什么
+    if array::is_not_empty "${!exclude_pm_apps_096d6b8f}"; then
+        manager::cache::generate_exclude_apps "${!exclude_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
+    fi
 
     return "$SHELL_TRUE"
 }

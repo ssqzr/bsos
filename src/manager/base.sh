@@ -25,8 +25,12 @@ __CORE_APPS=("custom:systemd_resolved" "custom:pacman" "custom:sudo" "pacman:go-
 # rust 我需要rustup包，但是一些APP依赖rust时默认安装的是rust包，导致再次安装rustup会冲突
 __PRIOR_INSTALL_APPS=("custom:system_setting" "pacman:base-devel" "pacman:git" "custom:yay" "custom:pamac" "custom:rust")
 
-function manager::base::core_apps::list() {
-    array::print __CORE_APPS
+function manager::base::core_apps::all() {
+    # shellcheck disable=SC2034
+    local -n core_apps_bb93b159="$1"
+    shift
+    array::copy core_apps_bb93b159 __CORE_APPS || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function manager::base::core_apps::is_contain() {
@@ -34,9 +38,12 @@ function manager::base::core_apps::is_contain() {
     array::is_contain __CORE_APPS "$pm_app"
 }
 
-function manager::base::prior_install_apps::list() {
-
-    array::print __PRIOR_INSTALL_APPS
+function manager::base::prior_install_apps::all() {
+    # shellcheck disable=SC2034
+    local -n prior_install_apps_bb93b159="$1"
+    shift
+    array::copy prior_install_apps_bb93b159 __PRIOR_INSTALL_APPS || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 function manager::base::prior_install_apps::is_contain() {

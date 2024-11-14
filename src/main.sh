@@ -24,24 +24,6 @@ source "${SCRIPT_DIR_8dac019e}/manager/flags.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
-function main::ask() {
-    local code
-
-    if config::cache::is_exists; then
-        if ! manager::flags::reuse_cache::is_exists; then
-            tui::builtin::confirm "reuse cache?" "y"
-            code=$?
-            if [ $code -eq 130 ]; then
-                return "$SHELL_FALSE"
-            elif [ $code -eq "$SHELL_TRUE" ]; then
-                manager::flags::reuse_cache::add || return "$SHELL_FALSE"
-            fi
-        fi
-    fi
-
-    return "$SHELL_TRUE"
-}
-
 # 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
 # 这些模块应该是没什么依赖的
 # 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
@@ -49,16 +31,18 @@ function main::install_core_dependencies() {
 
     local pm_app
     local core_apps=()
+    # shellcheck disable=SC2034
+    local exclude_apps=()
     local temp_str
 
     linfo "start install core dependencies..."
 
-    temp_str="$(manager::base::core_apps::list)" || return "$SHELL_FALSE"
-    array::readarray core_apps < <(echo "${temp_str}")
+    manager::base::core_apps::all core_apps || return "$SHELL_FALSE"
+
     for pm_app in "${core_apps[@]}"; do
         linfo "core app(${pm_app}) install..."
         if ! manager::app::is_custom "$pm_app"; then
-            manager::app::do_command_use_pm "install" "$pm_app" || return "$SHELL_FALSE"
+            manager::app::do_command_use_pm exclude_apps "install" "$pm_app" || return "$SHELL_FALSE"
         else
             linfo "app(${pm_app}) run pre_install..."
             manager::app::run_custom_manager "${pm_app}" "pre_install" || return "$SHELL_FALSE"
@@ -336,7 +320,6 @@ function main::_do_main() {
     main::must_do || return "$SHELL_FALSE"
     # NOTE: 在执行 main::must_do 之后才可以使用 yq 操作配置文件
 
-    main::ask || return "$SHELL_FALSE"
     main::check || return "$SHELL_FALSE"
 
     case "${command}" in
@@ -365,6 +348,7 @@ function main::run() {
     local config_filepath
     local code
     local remain_params=()
+    local remain_options=()
     local param
     local temp
 
@@ -374,9 +358,19 @@ function main::run() {
 $(debug::function::filename) [OPTIONS] <SUBCOMMAND> [SUBCOMMAND OPTIONS]
 
 OPTIONS:
-    --develop               BOOL                                开发模式
-    --reuse-cache           BOOL                                重用缓存
-    --check-loop            BOOL                                检查循环依赖
+    --develop[=yes/no]      BOOL                                启用开发模式
+                                                                    不指定参数或者 --develop=false 表示不启用
+                                                                    --develop 或者 --develop=yes 表示启用
+
+    --reuse-cache[=yes/no]  BOOL                                启用复用缓存
+                                                                    不指定参数或者 --reuse-cache=false 表示不启用
+                                                                    --reuse-cache 或者 --reuse-cache=yes 表示启用
+
+    --check-loop[=yes/no]   BOOL                                启用检查循环依赖
+                                                                    不指定参数或者 --check-loop=false 表示不启用
+                                                                    --check-loop 或者 --check-loop=yes 表示启用
+
+    -h, --help                                                  显示帮助信息
 
 SUBCOMMAND:
     install                                                     安装
@@ -415,29 +409,27 @@ SUBCOMMAND:
         trait                                                   执行 APP 的 trait 函数
             --app           APP_NAME,APP_NAME,...               应用列表，使用 ',' 分割。参数可以指定多次。
             --trait         TRAIT_NAME,TRAIT_NAME,...           执行 trait 函数名列表，使用 ',' 分割。参数可以指定多次。
-        
-    help                                                        帮助
 
 "
 
     # 先解析全局的参数
     for param in "$@"; do
         case "$param" in
-        --develop=*)
+        --develop | --develop=*)
             temp=""
             parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
             if [ "$temp" -eq "$SHELL_TRUE" ]; then
                 manager::flags::append "develop" || return "$SHELL_FALSE"
             fi
             ;;
-        --reuse-cache=*)
+        --reuse-cache | --reuse-cache=*)
             temp=""
             parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
             if [ "$temp" -eq "$SHELL_TRUE" ]; then
                 manager::flags::append "reuse_cache" || return "$SHELL_FALSE"
             fi
             ;;
-        --check-loop=*)
+        --check-loop= | --check-loop=*)
             temp=""
             parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
             if [ "$temp" -eq "$SHELL_TRUE" ]; then
@@ -447,6 +439,9 @@ SUBCOMMAND:
         -h | --help)
             echo -e "$help"
             return "$SHELL_TRUE"
+            ;;
+        -*)
+            remain_options+=("$param")
             ;;
         *)
             remain_params+=("$param")
@@ -489,12 +484,12 @@ SUBCOMMAND:
     array::lpop remain_params command || return "$SHELL_FALSE"
     case "${command}" in
     "dev")
-        develop::command "${remain_params[@]}"
+        develop::command "${remain_params[@]}" "${remain_options[@]}"
         code=$?
         ;;
 
     *)
-        main::_do_main "${command}" "${remain_params[@]}"
+        main::_do_main "${command}" "${remain_params[@]}" "${remain_options[@]}"
         code=$?
         ;;
     esac

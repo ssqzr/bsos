@@ -168,50 +168,58 @@ function manager::app::check_loop_relationships() {
 
 # 使用包管理器直接执行命令
 function manager::app::do_command_use_pm() {
-    local command="$1"
+    local -n exclude_apps_a55aa4b0="$1"
     shift
-    local pm_app="$1"
+    local command_a55aa4b0="$1"
     shift
-    local level_indent="$1"
+    local pm_app_a55aa4b0="$1"
+    shift
+    local level_indent_a55aa4b0="$1"
     shift
 
-    local package_manager
-    local package
+    local package_manager_a55aa4b0
+    local package_a55aa4b0
+    # 系统包管理器没有这些命令，忽略
     # shellcheck disable=SC2034
-    local ignore_command=("install_guide" "fixme" "unfixme")
+    local ignore_command_a55aa4b0=("install_guide" "pre_install" "post_install" "pre_uninstall" "post_uninstall" "fixme" "unfixme")
 
-    if [ -z "$command" ]; then
+    if [ -z "$command_a55aa4b0" ]; then
         lerror "command is empty"
         return "$SHELL_FALSE"
     fi
 
-    if [ -z "$pm_app" ]; then
+    if [ -z "$pm_app_a55aa4b0" ]; then
         lerror "pm_app is empty"
         return "$SHELL_FALSE"
     fi
 
-    if manager::app::is_custom "${pm_app}"; then
-        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: is custom, can not do command($command) by package manager"
+    if manager::app::is_custom "${pm_app_a55aa4b0}"; then
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: is custom, can not do command($command_a55aa4b0) by package manager"
         return "$SHELL_FALSE"
     fi
 
-    if array::is_contain ignore_command "$command"; then
-        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: system package manager can not do it, ignore command($command)"
+    if array::is_contain ignore_command_a55aa4b0 "$command_a55aa4b0"; then
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: system package manager can not do it, ignore command($command_a55aa4b0)"
         return "$SHELL_TRUE"
     fi
 
-    package_manager=$(manager::app::parse_package_manager "$pm_app")
-    package=$(manager::app::parse_app_name "$pm_app")
+    package_manager_a55aa4b0=$(manager::app::parse_package_manager "$pm_app_a55aa4b0")
+    package_a55aa4b0=$(manager::app::parse_app_name "$pm_app_a55aa4b0")
 
-    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: use ${package_manager} do command(${command})"
+    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: use ${package_manager_a55aa4b0} do command(${command_a55aa4b0})"
 
-    "package_manager::${command}" "${package_manager}" "${package}" || return "$SHELL_FALSE"
+    if array::is_contain "${!exclude_apps_a55aa4b0}" "${pm_app_a55aa4b0}"; then
+        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: it is in exclude apps, not do command(${command_a55aa4b0})."
+        return "$SHELL_TRUE"
+    fi
+
+    "package_manager::${command_a55aa4b0}" "${package_manager_a55aa4b0}" "${package_a55aa4b0}" || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: use ${package_manager} do command(${command}) failed"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: use ${package_manager_a55aa4b0} do command(${command_a55aa4b0}) failed"
         return "$SHELL_FALSE"
     fi
 
-    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent}${pm_app}: use ${package_manager} do command(${command}) success"
+    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: use ${package_manager_a55aa4b0} do command(${command_a55aa4b0}) success"
 
     return "$SHELL_TRUE"
 }
@@ -276,7 +284,11 @@ function manager::app::do_command_use_custom() {
 
     # 处理自己
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_ef62dd2b}${pm_app_ef62dd2b}: use custom manager self do command(${command_ef62dd2b})..."
-    manager::app::run_custom_manager "${pm_app_ef62dd2b}" "${command_ef62dd2b}" || return "$SHELL_FALSE"
+    if array::is_contain "${!exclude_apps_ef62dd2b}" "${pm_app_ef62dd2b}"; then
+        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_ef62dd2b}${pm_app_ef62dd2b}: it is in exclude apps, not do command(${command_ef62dd2b})."
+    else
+        manager::app::run_custom_manager "${pm_app_ef62dd2b}" "${command_ef62dd2b}" || return "$SHELL_FALSE"
+    fi
 
     if string::is_false "${is_reverse_ef62dd2b}"; then
         linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_ef62dd2b}${pm_app_ef62dd2b}: start features do command(${command_ef62dd2b})..."
@@ -320,18 +332,13 @@ function manager::app::do_command() {
 
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_0c1cd5f7}${pm_app_0c1cd5f7}: start do command(${command_0c1cd5f7})..."
 
-    if array::is_contain "${!exclude_apps_0c1cd5f7}" "${pm_app_0c1cd5f7}"; then
-        lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_0c1cd5f7}${pm_app_0c1cd5f7}: it is in exclude apps, not do command(${command_0c1cd5f7})."
-        return "${SHELL_TRUE}"
-    fi
-
     if array::is_contain "${!apps_0c1cd5f7}" "${pm_app_0c1cd5f7}"; then
         lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_0c1cd5f7}${pm_app_0c1cd5f7}: has been done command(${command_0c1cd5f7}). not do again."
         return "${SHELL_TRUE}"
     fi
 
     if manager::app::is_not_custom "$pm_app_0c1cd5f7"; then
-        manager::app::do_command_use_pm "${command_0c1cd5f7}" "$pm_app_0c1cd5f7" "${level_indent_0c1cd5f7}" || return "$SHELL_FALSE"
+        manager::app::do_command_use_pm "${!exclude_apps_0c1cd5f7}" "${command_0c1cd5f7}" "$pm_app_0c1cd5f7" "${level_indent_0c1cd5f7}" || return "$SHELL_FALSE"
     else
         # 注意 manager::app::do_command_use_custom 会调用 manager::app::do_command 形成递归
         manager::app::do_command_use_custom "${!apps_0c1cd5f7}" "${!exclude_apps_0c1cd5f7}" "${command_0c1cd5f7}" "$pm_app_0c1cd5f7" "${is_reverse_0c1cd5f7}" "${level_indent_0c1cd5f7}" || return "$SHELL_FALSE"

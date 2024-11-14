@@ -23,7 +23,7 @@ function pkgfile::trait::package_name() {
 
 # 简短的描述信息，查看包的信息的时候会显示
 function pkgfile::trait::description() {
-    package_manager::package_description "$(pamac::trait::package_manager)" "$(pkgfile::trait::package_name)"
+    package_manager::package_description "$(pkgfile::trait::package_manager)" "$(pkgfile::trait::package_name)"
 }
 
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
@@ -39,7 +39,7 @@ function pkgfile::trait::pre_install() {
 
 # 安装的操作
 function pkgfile::trait::install() {
-    package_manager::install "$(pamac::trait::package_manager)" "$(pkgfile::trait::package_name)" || return "$SHELL_FALSE"
+    package_manager::install "$(pkgfile::trait::package_manager)" "$(pkgfile::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -68,7 +68,7 @@ function pkgfile::trait::pre_uninstall() {
 
 # 卸载的操作
 function pkgfile::trait::uninstall() {
-    package_manager::uninstall "$(pamac::trait::package_manager)" "$(pkgfile::trait::package_name)" || return "$SHELL_FALSE"
+    package_manager::uninstall "$(pkgfile::trait::package_manager)" "$(pkgfile::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
