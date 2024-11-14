@@ -17,6 +17,8 @@ fi
 source "${SRC_ROOT_DIR}/lib/utils/all.sh" || exit 1
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR_f5d93f4f/utils.sh"
 
 # NOTE: 一些全局的变量必须已经初始化，后面会用到
 # NOTE: 可以用到的环境变量如下：
@@ -30,6 +32,7 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 # - BUILD_TEMP_DIR 安装流程的临时构建根目录
 function manager::custom_agent::_env() {
     local app_name="$1"
+    local temp
 
     if [ -z "${app_name}" ]; then
         lerror "param app_name is empty"
@@ -59,7 +62,8 @@ function manager::custom_agent::_env() {
     fi
 
     # export PM_APP_NAME
-    export PM_APP_NAME="custom:${app_name}"
+    temp="$(manager::utils::convert_app_name "${app_name}")" || return "$SHELL_FALSE"
+    export PM_APP_NAME="${temp}"
 
     # export BUILD_TEMP_DIR
     if [ -z "${BUILD_ROOT_DIR}" ]; then

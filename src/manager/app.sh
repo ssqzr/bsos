@@ -9,6 +9,8 @@ source "${SCRIPT_DIR_612d794c}/../lib/utils/all.sh"
 source "${SCRIPT_DIR_612d794c}/../lib/utils/utest.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_612d794c}/base.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_612d794c}/utils.sh"
 
 function manager::app::is_package_name_valid() {
     local package_name="$1"
@@ -107,59 +109,65 @@ function manager::app::run_custom_manager() {
 # app1依赖app2，app2依赖app3，app3有循环依赖，那么app2也有循环依赖，那么app1也有循环依赖
 function manager::app::is_no_loop_relationships() {
     local -n cache_apps_2fcf6903="$1"
+    shift
     # relation_type 取值：dependencies 或者 features
-    local relation_type="$2"
-    local pm_app="$3"
-    local link_path="$4"
+    local relation_type_2fcf6903="$1"
+    shift
+    local pm_app_2fcf6903="$1"
+    shift
+    local link_path_2fcf6903="$1"
+    shift
 
-    manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
+    local temp_array_2fcf6903=()
+    local temp_2fcf6903
 
-    local temp_array=()
-    local item
-    local temp_str
+    manager::app::is_package_name_valid "$pm_app_2fcf6903" || return "$SHELL_FALSE"
 
-    if manager::app::is_not_custom "$pm_app"; then
+    if manager::app::is_not_custom "$pm_app_2fcf6903"; then
         # 如果不是自定义的包，那么不需要检查循环依赖
         return "$SHELL_TRUE"
     fi
 
-    if array::is_contain "${!cache_apps_2fcf6903}" "$pm_app"; then
+    if array::is_contain "${!cache_apps_2fcf6903}" "$pm_app_2fcf6903"; then
         # 如果已经在缓存中，那么不需要检查循环依赖
-        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($pm_app) has checked no loop ${relation_type}. skip it."
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($pm_app_2fcf6903) has checked no loop ${relation_type_2fcf6903}. skip it."
         return "$SHELL_TRUE"
     fi
 
-    echo "$link_path" | grep -wq "$pm_app"
+    echo "$link_path_2fcf6903" | grep -wq "$pm_app_2fcf6903"
     if [ $? -eq "${SHELL_TRUE}" ]; then
-        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($pm_app) has loop ${relation_type}. ${relation_type} link path: ${link_path} $pm_app"
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "app($pm_app_2fcf6903) has loop ${relation_type_2fcf6903}. ${relation_type_2fcf6903} link path: ${link_path_2fcf6903} $pm_app_2fcf6903"
         return "$SHELL_FALSE"
     fi
 
-    temp_str="$(manager::app::run_custom_manager "${pm_app}" "${relation_type}")" || return "$SHELL_FALSE"
-    array::readarray temp_array < <(echo "$temp_str")
-    for item in "${temp_array[@]}"; do
-        manager::app::is_no_loop_relationships "${!cache_apps_2fcf6903}" "${relation_type}" "${item}" "$link_path $pm_app" || return "$SHELL_FALSE"
+    temp_2fcf6903="$(manager::app::run_custom_manager "${pm_app_2fcf6903}" "${relation_type_2fcf6903}")" || return "$SHELL_FALSE"
+    array::readarray temp_array_2fcf6903 < <(echo "$temp_2fcf6903")
+    for temp_2fcf6903 in "${temp_array_2fcf6903[@]}"; do
+        manager::app::is_no_loop_relationships "${!cache_apps_2fcf6903}" "${relation_type_2fcf6903}" "${temp_2fcf6903}" "$link_path_2fcf6903 $pm_app_2fcf6903" || return "$SHELL_FALSE"
     done
 
-    cache_apps_2fcf6903+=("${pm_app}")
+    cache_apps_2fcf6903+=("${pm_app_2fcf6903}")
     return "$SHELL_TRUE"
 }
 
 # 检查循环依赖
 function manager::app::check_loop_relationships() {
+    # shellcheck disable=SC2034
+    local dependencies_cache_apps=()
+    # shellcheck disable=SC2034
+    local features_cache_apps=()
+    local app_name
+    local pm_app
+    local app_path
 
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start check all app loop relationships, it may take a long time..."
 
-    local _d4dd25bd_dependencies_cache_apps=()
-    local _83bf212f_features_cache_apps=()
-
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        local app_name
         app_name=$(basename "${app_path}")
-        local pm_app="custom:$app_name"
+        pm_app="$(manager::utils::convert_app_name "${app_name}")" || return "$SHELL_FALSE"
 
-        manager::app::is_no_loop_relationships _d4dd25bd_dependencies_cache_apps "dependencies" "${pm_app}" || return "$SHELL_FALSE"
-        manager::app::is_no_loop_relationships _83bf212f_features_cache_apps "features" "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_relationships dependencies_cache_apps "dependencies" "${pm_app}" || return "$SHELL_FALSE"
+        manager::app::is_no_loop_relationships features_cache_apps "features" "${pm_app}" || return "$SHELL_FALSE"
     done
 
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "check all app loop relationships success"

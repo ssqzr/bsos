@@ -218,6 +218,76 @@ function string::split_with() {
     return "$SHELL_TRUE"
 }
 
+# [start,end) 范围内查找
+function string::find() {
+    local str="$1"
+    shift
+    local search_str="$1"
+    shift
+    local start="$1"
+    shift
+    local end="$1"
+    shift
+
+    local str_length
+    local search_str_length
+    local index
+
+    str_length=$(string::length "$str")
+    search_str_length=$(string::length "$search_str")
+
+    start=${start:-0}
+    end=${end:-$str_length}
+
+    if [ "${start}" -lt "0" ]; then
+        # -x % x = 0
+        start=$((start % str_length))
+        if [ "${start}" -lt "0" ]; then
+            start=$((start + str_length))
+        fi
+    fi
+
+    if [ "${end}" -lt "0" ]; then
+        end=$((end % str_length))
+        if [ "${end}" -lt "0" ]; then
+            end=$((end + str_length))
+        fi
+    fi
+
+    if [ "${start}" -gt "${end}" ]; then
+        echo "-1"
+        return "$SHELL_FALSE"
+    fi
+
+    # start 超过范围
+    if [ "${start}" -gt 0 ] && [ "${start}" -ge "${str_length}" ]; then
+        echo "-1"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$search_str"; then
+        echo "0"
+        return "$SHELL_TRUE"
+    fi
+
+    # 此时 start 和 end 在字符串范围内，且 start <= end ， end 可以等于字符串长度
+
+    if [ "$((end - start))" -lt "$search_str_length" ]; then
+        echo "-1"
+        return "$SHELL_FALSE"
+    fi
+
+    for ((index = start; index <= end - search_str_length; index++)); do
+        if [ "${str:$index:$search_str_length}" == "$search_str" ]; then
+            echo "${index}"
+            return "$SHELL_TRUE"
+        fi
+    done
+
+    echo "-1"
+    return "$SHELL_FALSE"
+}
+
 ######################################### 下面是单元测试代码 #########################################
 function TEST::string::trim() {
     local res
@@ -836,6 +906,33 @@ function TEST::string::split_with::split_with_two_char() {
     utest::assert_equal "${res[0]}" "a"
     utest::assert_equal "${res[1]}" " b"
     utest::assert_equal "${res[2]}" "c"
+
+}
+
+function TEST::string::find() {
+    local str="abcdefghijklmnopqrstuvwxyz"
+
+    # 测试 search_str 为空字符串
+    utest::assert_equal "$(string::find "" "")" 0
+    # 测试 search_str 为空字符串， start 和 end 是合法的
+    utest::assert_equal "$(string::find "12345" "" 1 1)" 0
+    # 测试 search_str 为空字符串， start > end 是不合法的
+    utest::assert_equal "$(string::find "12345" "" 3 1)" -1
+    # 测试 start 超过范围
+    utest::assert_equal "$(string::find "1" "1" 1 1)" -1
+
+    utest::assert_equal "$(string::find "$str" "bcd")" 1
+    utest::assert_equal "$(string::find "$str" "z")" 25
+    utest::assert_equal "$(string::find "$str" "z" 0 26)" 25
+    utest::assert_equal "$(string::find "$str" "z" 0 25)" -1
+
+    # 测试下标为负数
+    utest::assert_equal "$(string::find "$str" "y" 0 -1)" 24
+    utest::assert_equal "$(string::find "$str" "z" 0 -1)" -1
+    utest::assert_equal "$(string::find "$str" "a" -26 -25)" 0
+    utest::assert_equal "$(string::find "$str" "a" -26 -26)" -1
+    utest::assert_equal "$(string::find "$str" "a" -52 -51)" 0
+    utest::assert_equal "$(string::find "$str" "a" -52 -52)" -1
 
 }
 

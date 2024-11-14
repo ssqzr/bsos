@@ -11,6 +11,8 @@ source "${SCRIPT_DIR_b121320e}/app.sh" || exit 1
 source "${SCRIPT_DIR_b121320e}/base.sh" || exit 1
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_b121320e}/flags.sh" || exit 1
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_b121320e}/utils.sh" || exit 1
 
 # 生成安装列表
 function manager::cache::generate_top_apps() {
@@ -25,6 +27,7 @@ function manager::cache::generate_top_apps() {
     local none_dependencies=()
     local item
     local app_path
+    local app_name
 
     # 先清空安装列表
     config::cache::top_apps::clean || return "$SHELL_FALSE"
@@ -50,9 +53,8 @@ function manager::cache::generate_top_apps() {
     fi
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        local app_name
         app_name=$(basename "${app_path}")
-        local pm_app="custom:$app_name"
+        pm_app="$(manager::utils::convert_app_name "${app_name}")" || return "$SHELL_FALSE"
 
         if manager::base::core_apps::is_contain "$pm_app"; then
             continue
@@ -174,33 +176,33 @@ function manager::cache::generate_app_dependencies() {
 # 每个APP的依赖关系图
 function manager::cache::generate_apps_relation() {
     local temp_str
+    local app_name
+    local pm_app
+    local item_dependencies=()
 
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate apps relation infomation, it take a long time..."
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        local app_name
         app_name=$(basename "${app_path}")
-        local pm_app="custom:$app_name"
+        pm_app="$(manager::utils::convert_app_name "$app_name")" || return "$SHELL_FALSE"
 
         config::cache::app::dependencies::delete "$pm_app" || return "$SHELL_FALSE"
         config::cache::app::required_by::delete "$pm_app" || return "$SHELL_FALSE"
     done
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        local app_name
         app_name=$(basename "${app_path}")
-        local pm_app="custom:$app_name"
+        pm_app="$(manager::utils::convert_app_name "$app_name")" || return "$SHELL_FALSE"
 
         manager::cache::generate_app_dependencies "$pm_app" || return "$SHELL_FALSE"
     done
 
     # 根据dependencies依赖关系，生成 as_dependencies 的列表
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        local app_name
         app_name=$(basename "${app_path}")
-        local pm_app="custom:$app_name"
+        pm_app="$(manager::utils::convert_app_name "$app_name")" || return "$SHELL_FALSE"
 
-        local item_dependencies=()
+        item_dependencies=()
         config::cache::app::dependencies::all item_dependencies "$item" || return "$SHELL_FALSE"
 
         for item in "${item_dependencies[@]}"; do

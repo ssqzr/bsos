@@ -17,6 +17,8 @@ source "$SCRIPT_DIR_d6dc03c7/manager/app.sh"
 source "$SCRIPT_DIR_d6dc03c7/manager/flags.sh"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR_d6dc03c7/manager/flow.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_d6dc03c7}/manager/utils.sh"
 
 function develop::gen_uuid() {
     uuidgen | awk -F '-' '{print $1}'
@@ -226,7 +228,7 @@ function develop::command::trait() {
     fi
 
     for app_name in "${app_names[@]}"; do
-        pm_app="custom:$app_name"
+        pm_app="$(manager::utils::convert_app_name "${app_name}")" || return "$SHELL_FALSE"
         for command in "${traits[@]}"; do
             linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "call app($pm_app) trait ${command}..."
             manager::app::run_custom_manager "${pm_app}" "${command}" || return "$SHELL_FALSE"
@@ -243,7 +245,7 @@ function develop::command::install() {
 
     local app_names
 
-    local app_name
+    local temp_str
     local pm_apps=()
     local exclude_app_names=()
     local exclude_pm_apps=()
@@ -284,12 +286,12 @@ function develop::command::install() {
         return "$SHELL_FALSE"
     fi
 
-    for app_name in "${app_names[@]}"; do
-        pm_apps+=("custom:$app_name")
+    for temp_str in "${app_names[@]}"; do
+        pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    for app_name in "${exclude_app_names[@]}"; do
-        exclude_pm_apps+=("custom:$app_name")
+    for temp_str in "${exclude_app_names[@]}"; do
+        exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"

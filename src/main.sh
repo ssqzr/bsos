@@ -22,6 +22,8 @@ source "${SCRIPT_DIR_8dac019e}/manager/cache.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/flags.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_8dac019e}/manager/utils.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
 # 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
@@ -107,11 +109,11 @@ function main::command::install() {
     array::dedup exclude_app_names || return "$SHELL_FALSE"
 
     for temp_str in "${app_names[@]}"; do
-        pm_apps+=("custom:$temp_str")
+        pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     for temp_str in "${exclude_app_names[@]}"; do
-        exclude_pm_apps+=("custom:$temp_str")
+        exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
@@ -155,11 +157,11 @@ function main::command::uninstall() {
     array::dedup exclude_app_names || return "$SHELL_FALSE"
 
     for temp_str in "${app_names[@]}"; do
-        pm_apps+=("custom:$temp_str")
+        pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     for temp_str in "${exclude_app_names[@]}"; do
-        exclude_pm_apps+=("custom:$temp_str")
+        exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
@@ -203,11 +205,11 @@ function main::command::upgrade() {
     array::dedup exclude_app_names || return "$SHELL_FALSE"
 
     for temp_str in "${app_names[@]}"; do
-        pm_apps+=("custom:$temp_str")
+        pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     for temp_str in "${exclude_app_names[@]}"; do
-        exclude_pm_apps+=("custom:$temp_str")
+        exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
@@ -251,11 +253,11 @@ function main::command::fixme() {
     array::dedup exclude_app_names || return "$SHELL_FALSE"
 
     for temp_str in "${app_names[@]}"; do
-        pm_apps+=("custom:$temp_str")
+        pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     for temp_str in "${exclude_app_names[@]}"; do
-        exclude_pm_apps+=("custom:$temp_str")
+        exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
@@ -299,11 +301,11 @@ function main::command::unfixme() {
     array::dedup exclude_app_names || return "$SHELL_FALSE"
 
     for temp_str in "${app_names[@]}"; do
-        pm_apps+=("custom:$temp_str")
+        pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     for temp_str in "${exclude_app_names[@]}"; do
-        exclude_pm_apps+=("custom:$temp_str")
+        exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
     manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
@@ -374,24 +376,35 @@ OPTIONS:
 
 SUBCOMMAND:
     install                                                     安装
-        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
-        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+        --app               [PACKAGE_MANAGER:]APP_NAME,...      安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app       [PACKAGE_MANAGER:]APP_NAME,...      排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
 
     uninstall                                                   卸载
-        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
-        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+        --app               [PACKAGE_MANAGER:]APP_NAME,...      安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app       [PACKAGE_MANAGER:]APP_NAME,...      排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
 
     upgrade                                                     升级
-        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
-        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+        --app               [PACKAGE_MANAGER:]APP_NAME,...      安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app       [PACKAGE_MANAGER:]APP_NAME,...      排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
 
-    fixme                                                       修复依赖
-        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
-        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+    fixme                                                       修复安装时不能解决的问题
+                                                                可能因为当时环境受限的原因，需要在特定环境下才可以执行的步骤。
+        --app               [PACKAGE_MANAGER:]APP_NAME,...      安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app       [PACKAGE_MANAGER:]APP_NAME,...      排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
 
     unfixme                                                     撤销修复
-        --app               APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
-        --exclude-app       APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+        --app               [PACKAGE_MANAGER:]APP_NAME,...      安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app       [PACKAGE_MANAGER:]APP_NAME,...      排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
 
     dev [DEV SUBCOMMAND] [DEV SUBCOMMAND OPTIONS]               开发协助命令
         create                                                  根据模板创建部署应用的实现代码
@@ -403,8 +416,10 @@ SUBCOMMAND:
         check_loop                                              检查 APP 之间是否循环依赖
 
         install                                                 测试应用的安装流程
-            --app           APP_NAME,APP_NAME,...               安装的应用列表，使用 ',' 分割。参数可以指定多次。
-            --exclude-app   APP_NAME,APP_NAME,...               排除的应用列表，使用 ',' 分割。参数可以指定多次。
+            --app           [PACKAGE_MANAGER:]APP_NAME,...      安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
+            --exclude-app   [PACKAGE_MANAGER:]APP_NAME,...      排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                没有指定 PACKAGE_MANAGER 时，默认是：custom
 
         trait                                                   执行 APP 的 trait 函数
             --app           APP_NAME,APP_NAME,...               应用列表，使用 ',' 分割。参数可以指定多次。
