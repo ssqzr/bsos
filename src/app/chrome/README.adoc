@@ -1,5 +1,101 @@
 # chrome 安装说明文档
 include::../../../doc/base.adoc[]
 
-official_document_url[官方文档]
+https://wiki.archlinux.org/title/Chromium[官方文档]
+
+
+
+## 问题记录
+
+[#bitwarden-window-tiled]
+### 使用 `wayland` 启动后， `Bitwarden` 插件弹框不是浮动
+
+当使用 `xwayland` 启动时， 在页面的密码框输入的时候， `Bitwarden` 插件弹出 "验证身份" 的窗口是浮动的，出现在插件图标的下方。
+
+当使用 `wayland` 启动时， `Bitwarden` 插件弹出 "验证身份" 的窗口是平铺的。
+
+.hyprctl clients 查看窗口信息
+[source,console]
+----
+Window 5f053ae10530 -> Bitwarden:
+        mapped: 1
+        hidden: 0
+        at: 770,225
+        size: 380,630
+        workspace: 3 (3)
+        floating: 1
+        pseudo: 0
+        monitor: 1
+        class: chrome-nngceckbapebfimnlniiiahkandclblb-Default
+        title: Bitwarden
+        initialClass: chrome-nngceckbapebfimnlniiiahkandclblb-Default
+        initialTitle: _crx_nngceckbapebfimnlniiiahkandclblb
+        pid: 13150
+        xwayland: 0
+        pinned: 0
+        fullscreen: 0
+        fullscreenClient: 0
+        grouped: 0
+        tags:
+        swallowing: 0
+        focusHistoryID: 2
+----
+
+于是我设置 `Hyprland` 的窗口规则让它浮动。
+
+[source]
+----
+windowrulev2 = float, class: ^chrome.*, title: ^(Bitwarden)$
+windowrulev2 = move onscreen cursor 0 0, class: ^chrome.*, title: ^(Bitwarden)$
+----
+
+发现并不生效。然后又尝试如下：
+
+[source]
+----
+# 不行
+windowrulev2 = float, title: ^(Bitwarden)$
+
+# 可以
+windowrulev2 = float, class: chrome
+
+----
+
+也就是说使用 `title` 匹配不行，怀疑 `title` 在启动初期并不是 `Bitwarden` 。
+
+于是我使用 `while` 循环一直输出 `hyprctl clients` ，去捕捉最初的桌面状态。
+
+[source,console]
+----
+Window 5f053ae33290 -> _crx_nngceckbapebfimnlniiiahkandclblb:
+	mapped: 1
+	hidden: 0
+	at: 770,225
+	size: 380,630
+	workspace: 3 (3)
+	floating: 1
+	pseudo: 0
+	monitor: 1
+	class: chrome-nngceckbapebfimnlniiiahkandclblb-Default
+	title: _crx_nngceckbapebfimnlniiiahkandclblb
+	initialClass: chrome-nngceckbapebfimnlniiiahkandclblb-Default
+	initialTitle: _crx_nngceckbapebfimnlniiiahkandclblb
+	pid: 13150
+	xwayland: 0
+	pinned: 0
+	fullscreen: 0
+	fullscreenClient: 0
+	grouped: 0
+	tags: 
+	swallowing: 0
+	focusHistoryID: 0
+
+----
+
+和我预想的一样。使用下面这个规则就可以了。
+
+[source]
+----
+windowrulev2 = xxxx, class: ^chrome.*, initialTitle: ^(_crx_.*)$
+----
 

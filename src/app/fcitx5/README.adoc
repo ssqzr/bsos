@@ -32,4 +32,11 @@ https://blog.einverne.info/post/2021/10/rime-shortcut.html[Rime 输入法中的�
 
 可以采用这个方法规避这个问题，但是并没有真正解决，所以不认为 `fix` 了，问题持续关注。
 
+[#GTK-IM-MODULE]
+### chrome 输入中文时可能漏字
 
+fcitx5 每次启动时都会弹出提示框不要设置 `GTK_IM_MODULE` 环境变量，并且还给出了详情地址： https://fcitx-im.org/wiki/Using_Fcitx_5_on_Wayland[Using Fcitx 5 on Wayland]
+
+如果不设置 `GTK_IM_MODULE=fcitx` 环境变量， `chrome` 输入有问题，例如输入“我是”，可能在输入的过程中输入框输入了“i”。 https://wiki.archlinuxcn.org/wiki/Fcitx5#Xwayland[这里]也有解释。
+
+后来将 chrome 的启动方式改为 `wayland` ，问题解决。就不需要设置这个环境变量了。
