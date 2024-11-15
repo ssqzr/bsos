@@ -20,4 +20,6 @@ https://github.com/peazip/PeaZip[官方文档]
 
 需要保存整个配置文件，不建议这么处理。暂时不处理配置文件了。
 
+### 光标主题没有生效
 
+xref:../flatpak/README.adoc#peazip-cursor[PeaZip 没有使用光标主题]

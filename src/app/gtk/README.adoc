@@ -1,0 +1,45 @@
+# gtk 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinux.org/title/GTK[官方文档]
+
+## 配置
+
+- https://wiki.archlinux.org/title/GTK#Configuration[Archlinux GTK配置]
+- https://docs.gtk.org/gtk3/class.Settings.html#properties[GTK3 Settings属性]
+- https://docs.gtk.org/gtk4/class.Settings.html#properties[GTK4 Settings属性]
+
+
+## 光标主题设置
+
+https://wiki.archlinux.org/title/Cursor_themes#GTK[Cursor Themes]
+
+xref:../cursor/README.adoc#anytype-no-cursor-theme[anytype 没有应用光标主题]
+
+.${HOME}/.gtkrc-2.0
+[source,ini]
+----
+[Settings]
+# 也就是 /usr/share/icons/Bibata-Modern-Amber/cursor.theme 里的名称
+gtk-cursor-theme-name=Bibata-Modern-Amber
+----
+
+.${XDG_CONFIG_HOME}/gtk-3.0/settings.ini
+[source,ini]
+----
+[Settings]
+# 也就是 /usr/share/icons/Bibata-Modern-Amber/cursor.theme 里的名称
+gtk-cursor-theme-name=Bibata-Modern-Amber
+----
+
+.${XDG_CONFIG_HOME}/gtk-4.0/settings.ini
+[source,ini]
+----
+[Settings]
+# 也就是 /usr/share/icons/Bibata-Modern-Amber/cursor.theme 里的名称
+gtk-cursor-theme-name=Bibata-Modern-Amber
+----
+
+
+

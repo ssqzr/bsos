@@ -1,0 +1,43 @@
+# cursor 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinux.org/title/Cursor_themes[官方文档]
+
+## 主题
+
+搜集的主题列表：
+
+- https://github.com/sakshatshinde/hyprcursor-themes[A list of publicly available hyprcursor themes.]
+- https://github.com/ful1e5/Bibata_Cursor[Bibata]
+- https://github.com/ful1e5/Bibata_Extra_Cursor[More Bibata]
+- https://github.com/ful1e5/Bibata_Cursor_Rainbow?tab=readme-ov-file['Semi-Animated' Bibata cursors with rainbow colors.]
+
+安装后的主题文件存放路径： `/usr/share/icons` 。
+
+[.red]#主题的名称# 是： `/usr/share/icons/Bibata-Modern-Amber/cursor.theme` 里的名称。
+
+
+## 问题记录
+
+### imhex 没有使用光标主题
+
+imhex 是使用 GLFW 开发的。
+
+[.red]#在网上没有搜索 GLFW 设置光标主题的方法。#
+
+[#anytype-no-cursor-theme]
+### anytype 没有使用光标主题
+
+.${XDG_CONFIG_HOME}/gtk-3.0/settings.ini
+[source,ini]
+----
+[Settings]
+gtk-cursor-theme-name=Bibata-Modern-Amber
+----
+
+### flatpak 的应用没有使用光标主题
+
+xref:../flatpak/README.adoc#flatpak-cursor[关于 flatpak 应用的 cursor 设置]
+
+

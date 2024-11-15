@@ -5,17 +5,6 @@ include::../../../doc/base.adoc[]
 https://wiki.hyprland.org/Hypr-Ecosystem/hyprcursor/[官方文档]
 
 
-## 主题
-
-搜集的主题列表：
-
-- https://github.com/sakshatshinde/hyprcursor-themes[A list of publicly available hyprcursor themes.]
-- https://github.com/ful1e5/Bibata_Cursor[Bibata]
-- https://github.com/ful1e5/Bibata_Extra_Cursor[More Bibata]
-- https://github.com/ful1e5/Bibata_Cursor_Rainbow?tab=readme-ov-file['Semi-Animated' Bibata cursors with rainbow colors.]
-
-安装后的主题文件存放路径： `/usr/share/icons` 。
-
 ## 配置
 
 设置 `hyprcursor` 参考文档：

@@ -4,3 +4,10 @@ include::../../../doc/base.adoc[]
 
 official_document_url[官方文档]
 
+
+
+## 问题记录
+
+### 百度网盘没有使用光标主题
+
+xref:../flatpak/README.adoc#baidu-netdisk-cursor[百度网盘 没有使用光标主题]

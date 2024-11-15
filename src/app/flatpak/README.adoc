@@ -1,0 +1,170 @@
+# flatpak 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+official_document_url[官方文档]
+
+## 常见目录说明
+
+- 应用的安装目录： `/var/lib/flatpak/app/应用的ID/current/active/files`
+- 应用的配置目录： `~/.var/app/应用的ID/config`
+- 全局的权限配置文件目录： `/var/lib/flatpak/overrides`
+- 用户级安装的权限配置文件目录： `~/.local/share/flatpak/overrides`
+** `~/.local/share/flatpak/overrides/global` 全局的权限配置文件
+** `~/.local/share/flatpak/overrides/应用ID` 单个应用的权限配置文件
+
+## 权限配置
+
+https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-override[flatpak override 命令]
+
+### 文件权限
+
+- https://docs.flatpak.org/en/latest/flatpak-command-reference.html#flatpak-override[flatpak override 命令]
+- https://docs.flatpak.org/en/latest/sandbox-permissions.html#filesystem-access[Filesystem access]
+
+- `--filesystem` 允许文件或者目录可访问权限
+- `--nofilesystem` 限制文件或者目录可访问权限
+
+如果通过 `--filesystem` 允许某个目录可访问，后面想取消，并不是通过 `--nofilesystem` 来取消的，`--nofilesystem` 是禁止访问的意思。
+
+目前只能通过修改配置文件的方式取消配置，相关的 https://github.com/flatpak/flatpak/issues/5854[Issue] 。
+
+[source,bash]
+----
+# 默认是系统级安装
+flatpak override  xxxxxx
+flatpak override --system xxxxxx
+# 用户级安装
+flatpak override --user xxxxxx
+
+# 添加文件权限
+# 设置只读权限， 应用ID 不指定就是全局的
+flatpak override --user --filesystem=文件路径:ro [应用ID]
+# 设置全部文件系统都可以访问
+flatpak override --user --filesystem=host [应用ID]
+# 设置 XDG 规范的目录
+flatpak override --user --filesystem=xdg-data/icons:ro [应用ID]
+
+----
+
+https://docs.flatpak.org/zh-cn/latest/sandbox-permissions.html#reserved-paths[预留路径] 及其子路径被保留，使用--filesystem请求访问它们将无效：
+
+[console,bash]
+----
+/app, /bin, /dev, /etc, /lib, /lib32, /lib64, /proc, /run/flatpak, /run/host, /sbin, /usr
+----
+
+不允许使用整个 `/run` 以及所有子路径，并且允许通过 `--filesystem` 公开
+
+`/run/flatpak` , `/run/host` 可以通过 `--filesystem` 放开访问权限，除此之外整个 `/run`  以及所有子路径不允许放开访问权限。此外，如果主机上的 `/var/run` 是 `../run` 的符号链接，则不允许公开它或其子路径。
+
+此外，主机中的以下目录需要使用 --filesystem 显式请求，并且默认情况下不适用于 `home`, `host`, `host-os`, `host-etc` ：
+
+- `~/.var/app` 应用只能访问它自己的目录： ~/.var/app/$FLATPAK_ID
+
+- `$XDG_DATA_HOME/flatpak` (`~/.local/share/flatpak`)
+
+- `/boot`
+
+- `/efi`
+
+- `/root`
+
+- `/sys`
+
+- `/tmp`
+
+- `/var`
++ 
+默认情况下，`/var/{cache, config, data, tmp}` 在沙盒中与 `~/.var/app/$FLATPAK_ID/{cache, config, data, cache/tmp}` 相同。
++
+但是，通过显式指定 `--filesystem=/var` ，只提供主机上的 `/var` ，并且那些将不再可用。
+
+- `/var/lib/flatpak` 指定 `/var` 并不会允许访问 `/var/lib/flatpak` 目录，所以这个需要显示指定。
+
+[#flatpak-cursor]
+## 关于 flatpak 应用的 cursor 设置
+
+
+.https://github.com/flatpak/flatpak/issues/709#issuecomment-1418926977[Different cursor theme in flatpak apps]
+[quote]
+____
+@hexchain:
+
+`flatpak override --user --filesystem=/usr/share/icons/:ro`
+
+This doesn't do anything useful. `--filesystem=/usr/anything` is ignored and has no effect, because `/usr` is reserved for the Flatpak runtime. The next development release of Flatpak will show a warning about this.
+
+这没有做任何有用的事情。 `--filesystem=/usr/anything` 被忽略且无效，因为 `/usr` 是为 `Flatpak` 运行时保留的。 `Flatpak` 的下一个开发版本将显示有关此的警告。
+
+`flatpak override --user --filesystem=xdg-data/icons:ro`
+
+This is likely to be unnecessary for the workaround you suggest. `--filesystem=xdg-data/icons` would expose `~/.local/share/icons` as something like `~/.var/app/org.gnome.Recipes/data/icons` in the container, and that is not the path you're using in your `XCURSOR_PATH`.
+
+对于您建议的解决方法来说，这可能是不必要的。 `--filesystem=xdg-data/icons` 会将 `~/.local/share/icons` 公开为类似的内容 `~/.var/app/org.gnome.Recipes/data/icons` 在容器中，这不是您在 `XCURSOR_PATH` 中使用的路径。
+
+`--env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons`
+
+If your cursors are in `~/.local/share/icons` or `/usr/share/icons`, then this should work even without the other overrides, because Flatpak makes these paths available by default:
+
+如果您的光标位于 `~/.local/share/icons` 或 `/usr/share/icons` 中，那么即使没有其他覆盖，这也应该可以工作，因为 `Flatpak` 默认情况下使这些路径可用：
+
+- host `/usr/share/icons` `->` sandbox `/run/host/share/icons`
+- host `$XDG_DATA_HOME/icons` (usually `~/.local/share/icons`) `->` sandbox `/run/host/user-share/icons`
+
+(Reference: `common/flatpak-run.c` and especially commits https://github.com/flatpak/flatpak/commit/1ee74fc5eaaab2cc964a620a33c5b901b13af11f[`1ee74fc`] and https://github.com/flatpak/flatpak/commit/ad87b12264e2795c27a2a4da496b2e3c719767e1[`ad87b12`])
+
+（参考： `common/flatpak-run.c` ，特别是提交 https://github.com/flatpak/flatpak/commit/1ee74fc5eaaab2cc964a620a33c5b901b13af11f[`1ee74fc`] 和 https://github.com/flatpak/flatpak/commit/ad87b12264e2795c27a2a4da496b2e3c719767e1[`ad87b12`] ）
+____
+
+上面说的基本上是对的，测试大部分的 flatpak 应用可以不需要修改就使用光标主题。
+
+[#peazip-cursor]
+### PeaZip 没有使用光标主题
+
+尝试过的方法：
+
+[source,bash]
+----
+flatpak override --user --env=XCURSOR_PATH=$XCURSOR_PATH:/run/host/user-share/icons:/run/host/share/icons
+flatpak override --user --filesystem=/usr/share/icons/:ro
+flatpak override --user --filesystem=xdg-data/icons:ro
+flatpak override --user --filesystem=host
+# 将 icon 主题文件复制到 $HOME/.local/share/icons
+flatpak override --user --filesystem=$HOME/.local/share/icons:ro
+# 将 icon 主题文件复制到 $HOME/.icons
+flatpak override --user --filesystem=$HOME/.icons:ro
+flatpak override --user --env=XCURSOR_PATH=$XCURSOR_PATH:$HOME/.local/share/icons:$HOME/.icons
+
+# 上面都不行
+----
+
+下面的可以：
+
+[source,bash]
+----
+flatpak --user override --env=XCURSOR_THEME=Bibata-Modern-Amber
+# 大小可以不用设置
+flatpak --user override --env=XCURSOR_SIZE=24
+# 这个就设置为全局的，其他的 flatpak 类似的应用也会使用这个光标主题
+----
+
+### Qv2ray 没有使用光标主题
+
+参考 <<peazip-cursor>>
+
+[.red]#没找到原因和解决方案。#
+
+[#baidu-netdisk-cursor]
+### 百度网盘 没有使用光标主题
+
+参考 <<peazip-cursor>>
+
+.新增配置 ${HOME}/.var/app/com.baidu.NetDisk/config/gtk-3.0/settings.ini
+[source,bash]
+----
+# ${HOME}/.var/app/com.baidu.NetDisk/config/gtk-3.0 目录是已经存在的
+[Settings]
+gtk-cursor-theme-name=Bibata-Modern-Amber
+----
+

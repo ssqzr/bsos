@@ -266,8 +266,18 @@ function flatpak::override::filesystem::_unset() {
     local config_filepath
     local temp_str
     local filesystems=()
+    local is_sudo="$SHELL_FALSE"
 
     ldebug "param scope=$scope, filesystem=$filesystem, is_deny=$is_deny, app=$app"
+
+    if string::is_empty "$scope" || [ "$scope" == "system" ]; then
+        is_sudo="$SHELL_TRUE"
+    elif [ "$scope" == "user" ]; then
+        is_sudo="$SHELL_FALSE"
+    else
+        lerror "unknown scope $scope"
+        return "$SHELL_FALSE"
+    fi
 
     case "$scope" in
     system)
@@ -313,7 +323,7 @@ function flatpak::override::filesystem::_unset() {
 
     temp_str="$(array::join_with filesystems ";")" || return "$SHELL_FALSE"
 
-    cmd::run_cmd_with_history -- sed -i "{{s|^filesystems=.*|filesystems=${temp_str}|g}}" "$config_filepath" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- sed -i "{{s|^filesystems=.*|filesystems=${temp_str}|g}}" "$config_filepath" || return "$SHELL_FALSE"
 
     linfo "remove filesystem $filesystem success, scope=$scope, app=$app, is_deny=$is_deny"
 
@@ -396,15 +406,13 @@ function flatpak::override::filesystem::deny_unset() {
     return "$SHELL_TRUE"
 }
 
-function flatpak::override::environment::set() {
+function flatpak::override::environment::allow() {
     local name
     local value
     local scope
     local app
 
     local param
-    local options=()
-    local is_sudo="$SHELL_FALSE"
 
     for param in "$@"; do
         case "$param" in
@@ -436,20 +444,85 @@ function flatpak::override::environment::set() {
 
     ldebug "param scope=$scope, app=$app, name=$name, value=$value"
 
+    flatpak::override::permission::set --scope="$scope" --app="$app" --policy=allow "env" "$name=$value" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function flatpak::override::environment::allow_unset() {
+    local name
+    local scope
+    local app
+
+    local param
+    local is_sudo="$SHELL_FALSE"
+    local config_filepath
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v name ]; then
+                name="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    ldebug "param scope=$scope, app=$app, name=$name"
+
     if string::is_empty "$scope" || [ "$scope" == "system" ]; then
         is_sudo="$SHELL_TRUE"
     elif [ "$scope" == "user" ]; then
         is_sudo="$SHELL_FALSE"
-        options+=("--user")
     else
         lerror "unknown scope $scope"
         return "$SHELL_FALSE"
     fi
 
-    flatpak::override::permission::set --scope="$scope" --app="$app" --policy=allow "env" "$name=$value" || return "$SHELL_FALSE"
+    case "$scope" in
+    system)
+        config_filepath="/var/lib/flatpak/overrides"
+        ;;
+    user)
+        config_filepath="$HOME/.local/share/flatpak/overrides"
+        ;;
+    *)
+        lerror "unknown scope $scope"
+        return "$SHELL_FALSE"
+        ;;
+    esac
+
+    if string::is_empty "$app"; then
+        config_filepath="${config_filepath}/global"
+    else
+        config_filepath="${config_filepath}/$app"
+    fi
+    ldebug "config file=$config_filepath"
+
+    if fs::path::is_not_exists "$config_filepath"; then
+        ldebug "config file($config_filepath) is not exists, not need unset"
+        return "$SHELL_TRUE"
+    fi
+
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- sed -i "{{s/^${name}=.*//g}}" "$config_filepath" || return "$SHELL_FALSE"
+
+    linfo "remove env success. scope=$scope, app=$app, name=$name"
 
     return "$SHELL_TRUE"
-
 }
 
 function flatpak::override::reset {

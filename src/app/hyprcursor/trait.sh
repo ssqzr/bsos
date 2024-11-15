@@ -122,9 +122,8 @@ function hyprcursor::trait::dependencies() {
 function hyprcursor::trait::features() {
     local apps=()
 
-    apps+=("yay:bibata-cursor-theme-bin")
-
-    apps+=("yay:bibata-extra-cursor-theme")
+    apps+=("custom:cursor")
+    apps+=("custom:gtk")
 
     array::print apps
     return "${SHELL_TRUE}"
