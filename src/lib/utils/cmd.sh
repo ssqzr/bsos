@@ -70,6 +70,7 @@ function cmd::run_cmd() {
     local param
     local temp_str
     local index
+    local exit_code
 
     for param in "$@"; do
         if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
@@ -126,14 +127,6 @@ function cmd::run_cmd() {
         return "$SHELL_FALSE"
     fi
 
-    if [ "$is_sudo" -eq "$SHELL_TRUE" ]; then
-        if [ -z "$password" ]; then
-            cmds=("sudo" "${cmds[@]}")
-        else
-            cmds=("printf" "$password" "|" "sudo" "-S" "${cmds[@]}")
-        fi
-    fi
-
     for ((index = 0; index < "${#cmds[@]}"; index++)); do
         temp_str="${cmds[$index]}"
         if [ "${#temp_str}" -ge 4 ] && [ "${temp_str:0:2}" == "{{" ] && [ "${temp_str: -2}" == "}}" ]; then
@@ -143,20 +136,38 @@ function cmd::run_cmd() {
         fi
     done
 
-    ldebug "start run cmd: ${cmds[*]}"
     if [ "$is_record_cmd" -eq "$SHELL_TRUE" ]; then
         echo "${cmds[*]}" >>"${__cmd_history_filepath}"
     fi
 
-    # https://stackoverflow.com/questions/9112979/pipe-stdout-and-stderr-to-two-different-processes-in-shell-script
-    { bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
+    if [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -z "$password" ]; then
+        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), password=$password, cmd=sudo bash -c ${cmds[*]}"
 
-    if [ $? -ne "$SHELL_TRUE" ]; then
-        lerror "run cmd failed: ${cmds[*]}"
+        # https://stackoverflow.com/questions/9112979/pipe-stdout-and-stderr-to-two-different-processes-in-shell-script
+        # shellcheck disable=SC2024
+        { sudo bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
+        exit_code=$?
+
+    elif [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -n "$password" ]; then
+        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), password=******, cmd=printf ****** | sudo -S bash -c ${cmds[*]}"
+
+        # shellcheck disable=SC2024
+        { printf "%s" "$password" | sudo -S bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
+        exit_code=$?
+
+    else
+        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), cmd=bash -c ${cmds[*]}"
+
+        { bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
+        exit_code=$?
+    fi
+
+    if [ "$exit_code" -ne "$SHELL_TRUE" ]; then
+        lerror "run cmd failed"
         return "$SHELL_FALSE"
     fi
 
-    ldebug "run cmd success: ${cmds[*]}"
+    ldebug "run cmd success"
     return "$SHELL_TRUE"
 }
 
