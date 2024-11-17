@@ -410,3 +410,135 @@ function fs::file::copy() {
     linfo "copy src file($src) to target($dst) success"
     return "$SHELL_TRUE"
 }
+
+function fs::file::read() {
+    local filepath
+    local is_sudo
+    local password
+    local param
+
+    ldebug "params=$*"
+
+    for param in "$@"; do
+        case "$param" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param" is_sudo || return "$SHELL_FALSE"
+            ;;
+        -p=* | --password=*)
+            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v filepath ]; then
+                filepath="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v filepath ]; then
+        lerror "param filepath is required"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_not_exists "$filepath"; then
+        lerror "file($filepath) is not exists"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_not_file "$filepath"; then
+        lerror "file($filepath) is not a file"
+        return "$SHELL_FALSE"
+    fi
+
+    # 这个实现不了 sudo
+    # data="$(</dev/stdin)"
+
+    cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cat "$filepath" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function fs::file::write() {
+    local filepath
+    local is_sudo
+    local password
+    local data
+    local param
+    local is_force="${SHELL_FALSE}"
+    local temp
+
+    ldebug "params=$*"
+
+    for param in "$@"; do
+        case "$param" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param" is_sudo || return "$SHELL_FALSE"
+            ;;
+        -p=* | --password=*)
+            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
+            ;;
+        --force | --force=*)
+            parameter::parse_bool --default=y --option="$param" is_force || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v filepath ]; then
+                filepath="$param"
+                continue
+            fi
+
+            if [ ! -v data ]; then
+                data="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v filepath ]; then
+        lerror "param filepath is required"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -v data ]; then
+        lerror "param data is required"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_exists "$filepath"; then
+        if [ "$is_force" -ne "$SHELL_TRUE" ]; then
+            lerror "write file($filepath) failed, it is exists"
+            return "$SHELL_FALSE"
+        fi
+        # 存在，并且指定可以覆盖
+        if fs::path::is_not_file "$filepath"; then
+            lerror "file($filepath) is not a file"
+            return "$SHELL_FALSE"
+        fi
+    fi
+
+    temp="$(fs::path::dirname "$filepath")" || return "$SHELL_FALSE"
+    if fs::path::is_not_exists "$temp"; then
+        ldebug "file($filepath) parent directory is not exists, create it..."
+        cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mkdir -p "{{$temp}}" || return "$SHELL_FALSE"
+        ldebug "create file($filepath) parent directory success"
+    fi
+
+    cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- echo "${data}" ">>" "$filepath" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}

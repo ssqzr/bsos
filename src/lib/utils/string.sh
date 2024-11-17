@@ -63,6 +63,22 @@ function string::is_not_empty() {
     return "$SHELL_TRUE"
 }
 
+function string::is_equal() {
+    local src1="$1"
+    shift
+    local src2="$1"
+    shift
+
+    if [ "$src1" == "$src2" ]; then
+        return "$SHELL_TRUE"
+    fi
+    return "$SHELL_FALSE"
+}
+
+function string::is_not_equal() {
+    ! string::is_equal "$@"
+}
+
 function string::length() {
     local data="$1"
     echo "${#data}"
@@ -286,6 +302,40 @@ function string::find() {
 
     echo "-1"
     return "$SHELL_FALSE"
+}
+
+function string::is_starts_with() {
+    local data="$1"
+    shift
+    local prefix="$1"
+    shift
+
+    if [ "${data:0:${#prefix}}" == "$prefix" ]; then
+        return "$SHELL_TRUE"
+    fi
+
+    return "$SHELL_FALSE"
+}
+
+function string::is_not_starts_with() {
+    ! string::is_starts_with "$@"
+}
+
+function string::is_ends_with() {
+    local data="$1"
+    shift
+    local suffix="$1"
+    shift
+
+    if [ "${data:${#data}-${#suffix}}" == "$suffix" ]; then
+        return "$SHELL_TRUE"
+    fi
+
+    return "$SHELL_FALSE"
+}
+
+function string::is_not_ends_with() {
+    ! string::is_ends_with "$@"
 }
 
 ######################################### 下面是单元测试代码 #########################################
@@ -838,6 +888,11 @@ function TEST::string::split_with::split_with_one_char() {
     utest::assert_equal "${res[1]}" " b"
     utest::assert_equal "${res[2]}" "c"
 
+    res=()
+    string::split_with res "abc,123,!@#" ","
+    utest::assert $?
+    utest::assert_equal "${res[*]}" "abc 123 !@#"
+
 }
 
 function TEST::string::split_with::split_with_two_char() {
@@ -934,6 +989,58 @@ function TEST::string::find() {
     utest::assert_equal "$(string::find "$str" "a" -52 -51)" 0
     utest::assert_equal "$(string::find "$str" "a" -52 -52)" -1
 
+}
+
+function TEST::string::is_starts_with() {
+    string::is_starts_with "" ""
+    utest::assert $?
+
+    string::is_starts_with "abc" ""
+    utest::assert $?
+
+    string::is_starts_with "abc" "a"
+    utest::assert $?
+
+    string::is_starts_with "abc" "ab"
+    utest::assert $?
+
+    string::is_starts_with "" "abcd"
+    utest::assert_fail $?
+
+    string::is_starts_with "abc" "ac"
+    utest::assert_fail $?
+
+    string::is_starts_with "abc" "aa"
+    utest::assert_fail $?
+
+    string::is_starts_with "abc" "abcd"
+    utest::assert_fail $?
+}
+
+function TEST::string::is_ends_with() {
+    string::is_ends_with "" ""
+    utest::assert $?
+
+    string::is_ends_with "abc" ""
+    utest::assert $?
+
+    string::is_ends_with "abc" "c"
+    utest::assert $?
+
+    string::is_ends_with "abc" "bc"
+    utest::assert $?
+
+    string::is_ends_with "" "abcd"
+    utest::assert_fail $?
+
+    string::is_ends_with "abc" "ac"
+    utest::assert_fail $?
+
+    string::is_ends_with "abc" "cc"
+    utest::assert_fail $?
+
+    string::is_ends_with "abc" "aabc"
+    utest::assert_fail $?
 }
 
 function string::_main() {

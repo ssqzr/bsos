@@ -14,6 +14,72 @@ source "${SCRIPT_DIR_3cd455df}/print.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_3cd455df}/utest.sh"
 
+function array::is_array() {
+    local -n array_f15f98ea="$1"
+    shift
+
+    if [[ "$(declare -p "${!array_f15f98ea}")" =~ "declare -a" ]]; then
+        return "$SHELL_TRUE"
+    else
+        return "$SHELL_FALSE"
+    fi
+}
+
+function array::is_not_array() {
+    ! array::is_array "$@"
+}
+
+function array::is_associative_array() {
+    local -n array_f15f98ea="$1"
+    shift
+
+    if [[ "$(declare -p "${!array_f15f98ea}")" =~ "declare -A" ]]; then
+        return "$SHELL_TRUE"
+    else
+        return "$SHELL_FALSE"
+    fi
+}
+
+function array::is_not_associative_array() {
+    ! array::is_associative_array "$@"
+}
+
+# 将数组的下标转换成正数
+# 如果长度等于0，则返回 $SHELL_FALSE
+# 如果转换后的下标大于数组的长度，则返回 $SHELL_FALSE
+function array::convert_index() {
+    local -n array_116f5914=$1
+    shift
+    local index_116f5914="$1"
+    shift
+
+    local length_116f5914
+    local res_index_116f5914="$index_116f5914"
+
+    length_116f5914="$(array::length "${!array_116f5914}")"
+
+    if [ "${length_116f5914}" -eq "0" ]; then
+        echo "${res_index_116f5914}"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ "${index_116f5914}" -lt "0" ]; then
+        # -x % x = 0
+        res_index_116f5914=$((index_116f5914 % length_116f5914))
+        if [ "${res_index_116f5914}" -lt "0" ]; then
+            res_index_116f5914=$((res_index_116f5914 + length_116f5914))
+        fi
+    fi
+
+    if [ "${res_index_116f5914}" -ge "${length_116f5914}" ]; then
+        echo "${res_index_116f5914}"
+        return "$SHELL_FALSE"
+    fi
+
+    echo "${res_index_116f5914}"
+    return "$SHELL_TRUE"
+}
+
 function array::print() {
     # 虽然是局部变量，但是引用的名字不能和参数的名字一样
     local -n array_3828487c=$1
@@ -61,28 +127,25 @@ function array::is_not_contain() {
     ! array::is_contain "$@"
 }
 
-# 通过下标获取数组元素
-# 下标支持负数
+# 获取指定下标的元素
+# 说明：
+#   1. 下标支持负数
+#   2. 如果下标超出范围，删除失败
+#   3. 使用命令替换和管道符，引用的原数组不会被修改。本函数本意也不会修改原数组，所以可以结合使用。
+# 位置参数：
+#   1. 数组的引用
+#   2. 下标
+# 标准输出： 获取的值
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function array::get() {
     local -n array_0181bda3=$1
     shift
     local index_0181bda3=$1
     shift
 
-    local length_0181bda3
-    local min_index_0181bda3
-
-    length_0181bda3=$(array::length "${!array_0181bda3}") || return "$SHELL_FALSE"
-
-    ((min_index_0181bda3 = 0 - length_0181bda3))
-
-    if array::is_empty "${!array_0181bda3}"; then
-        return "$SHELL_FALSE"
-    fi
-
-    if [ "${index_0181bda3}" -lt "${min_index_0181bda3}" ] || [ "${index_0181bda3}" -ge "${length_0181bda3}" ]; then
-        return "$SHELL_FALSE"
-    fi
+    index_0181bda3=$(array::convert_index "${!array_0181bda3}" "${index_0181bda3}") || return "$SHELL_FALSE"
 
     echo "${array_0181bda3[${index_0181bda3}]}"
     return "$SHELL_TRUE"
@@ -150,6 +213,16 @@ function array::dedup() {
     return "$SHELL_TRUE"
 }
 
+# 删除数组中相等的元素
+# 说明：
+#   1. 使用引用传递数组，会修改原数组，所以不要使用命令替换和管道符，否则原数组不会被修改
+# 位置参数：
+#   1. 数组的引用
+#   2. 要删除的元素
+# 标准输出： 无
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function array::remove() {
     local -n array_6338e158=$1
     local remove_item_6338e158="$2"
@@ -164,30 +237,34 @@ function array::remove() {
     array_6338e158=("${new_array_6338e158[@]}")
 }
 
+# 删除指定下标的元素
+# 说明：
+#   1. 下标支持负数
+#   2. 如果下标超出范围，删除失败
+#   3. 使用引用传递数组，会修改原数组，所以不要使用命令替换和管道符，否则原数组不会被修改
+# 位置参数：
+#   1. 数组的引用
+#   2. 下标
+# 标准输出： 无
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function array::remove_at() {
-    local -n array_a6fe79c9=$1
-    local index_a6fe79c9="$2"
+    local -n old_a6fe79c9="$1"
+    shift
+    local -n array_a6fe79c9="$1"
+    shift
+    local index_a6fe79c9="$1"
+    shift
 
-    local length_a6fe79c9
-    local min_index_a6fe79c9
+    index_a6fe79c9=$(array::convert_index "${!array_a6fe79c9}" "${index_a6fe79c9}") || return "$SHELL_FALSE"
 
-    length_a6fe79c9=$(array::length "${!array_a6fe79c9}") || return "$SHELL_FALSE"
+    # shellcheck disable=SC2034
+    old_a6fe79c9="$(array::get "${!array_a6fe79c9}" "${index_a6fe79c9}")"
 
-    ((min_index_a6fe79c9 = 0 - length_a6fe79c9))
+    array_a6fe79c9=("${array_a6fe79c9[@]::${index_a6fe79c9}}" "${array_a6fe79c9[@]:((index_a6fe79c9 + 1))}")
 
-    if array::is_empty "${!array_a6fe79c9}"; then
-        return "$SHELL_FALSE"
-    fi
-
-    if [ "${index_a6fe79c9}" -lt "${min_index_a6fe79c9}" ] || [ "${index_a6fe79c9}" -ge "${length_a6fe79c9}" ]; then
-        return "$SHELL_FALSE"
-    fi
-
-    if [ "${index_a6fe79c9}" -lt "0" ]; then
-        index_a6fe79c9=$((length_a6fe79c9 + index_a6fe79c9))
-    fi
-
-    array_a6fe79c9=("${array_a6fe79c9[@]::${index_a6fe79c9}}" "${array_a6fe79c9[@]:${index_a6fe79c9}+1}")
+    return "$SHELL_TRUE"
 }
 
 function array::remove_empty() {
@@ -386,22 +463,31 @@ function array::insert() {
     shift
     local item_7a7653c6="$1"
     shift
+
     local length_7a7653c6
 
     length_7a7653c6="$(array::length "${!array_7a7653c6}")"
-    if [ "$index_7a7653c6" -lt "0" ] || [ "$index_7a7653c6" -gt "${length_7a7653c6}" ]; then
-        lerror "index is out of range, index=${index_7a7653c6}, length=${length_7a7653c6}"
+
+    if [ "$length_7a7653c6" -eq "0" ]; then
+        if [ "$index_7a7653c6" -gt "0" ]; then
+            return "$SHELL_FALSE"
+        fi
+        array_7a7653c6=("${item_7a7653c6}")
+        return "$SHELL_TRUE"
+    fi
+
+    # 长度大于0
+    if [ "${index_7a7653c6}" -lt "0" ]; then
+        # -x % x = 0
+        index_7a7653c6=$((index_7a7653c6 % length_7a7653c6))
+        if [ "${index_7a7653c6}" -lt "0" ]; then
+            index_7a7653c6=$((index_7a7653c6 + length_7a7653c6))
+        fi
+    fi
+
+    # 可以等于字符串长度
+    if [ "$index_7a7653c6" -gt "${length_7a7653c6}" ]; then
         return "$SHELL_FALSE"
-    fi
-
-    if [ "$index_7a7653c6" -eq "0" ]; then
-        array::lpush "${!array_7a7653c6}" "$item_7a7653c6" || return "$SHELL_FALSE"
-        return "$SHELL_TRUE"
-    fi
-
-    if [ "$index_7a7653c6" -eq "${length_7a7653c6}" ]; then
-        array::rpush "${!array_7a7653c6}" "$item_7a7653c6" || return "$SHELL_FALSE"
-        return "$SHELL_TRUE"
     fi
 
     array_7a7653c6=("${array_7a7653c6[@]:0:index_7a7653c6}" "$item_7a7653c6" "${array_7a7653c6[@]:index_7a7653c6}")
@@ -410,6 +496,75 @@ function array::insert() {
 }
 
 ###################################### 下面是测试代码 ######################################
+function TEST::array::is_array() {
+    local arr
+
+    array::is_array arr
+    utest::assert_fail $?
+
+    arr=()
+    array::is_array arr
+    utest::assert $?
+
+    arr=(1 2 3)
+    array::is_array arr
+    utest::assert $?
+
+    arr=()
+    local -n arr2="arr"
+    array::is_array "${!arr2}"
+    utest::assert $?
+    array::is_array arr2
+    utest::assert $?
+    # shellcheck disable=SC2034
+    local -n arr3=arr2
+    array::is_array arr3
+    utest::assert $?
+
+    local str=""
+    array::is_array str
+    utest::assert_fail $?
+
+    # shellcheck disable=SC2034
+    local num=1
+    array::is_array num
+    utest::assert_fail $?
+}
+
+function TEST::array::convert_index() {
+    local arr=()
+    local index
+    index=$(array::convert_index arr 0)
+    utest::assert_fail $?
+    utest::assert_equal "$index" 0
+
+    arr=(1 2 3 4 5)
+    index=$(array::convert_index arr 5)
+    utest::assert_fail $?
+    utest::assert_equal "$index" 5
+
+    index=$(array::convert_index arr 6)
+    utest::assert_fail $?
+    utest::assert_equal "$index" 6
+
+    arr=(1)
+    utest::assert_equal "$(array::convert_index arr 0)" 0
+
+    arr=(1 2 3 4 5)
+    utest::assert_equal "$(array::convert_index arr 0)" 0
+    utest::assert_equal "$(array::convert_index arr 1)" 1
+    utest::assert_equal "$(array::convert_index arr 2)" 2
+    utest::assert_equal "$(array::convert_index arr 3)" 3
+    utest::assert_equal "$(array::convert_index arr 4)" 4
+    utest::assert_equal "$(array::convert_index arr -1)" 4
+    utest::assert_equal "$(array::convert_index arr -2)" 3
+    utest::assert_equal "$(array::convert_index arr -3)" 2
+    utest::assert_equal "$(array::convert_index arr -4)" 1
+    utest::assert_equal "$(array::convert_index arr -5)" 0
+    utest::assert_equal "$(array::convert_index arr -6)" 4
+    utest::assert_equal "$(array::convert_index arr -10)" 0
+    utest::assert_equal "$(array::convert_index arr -23)" 2
+}
 
 function TEST::array::length() {
     local arr
@@ -481,8 +636,9 @@ function TEST::array::get() {
     utest::assert_equal "$(array::get arr -3)" 3
     utest::assert_equal "$(array::get arr -4)" 2
     utest::assert_equal "$(array::get arr -5)" 1
-    array::get arr -6
-    utest::assert_fail $?
+    utest::assert_equal "$(array::get arr -6)" 5
+    utest::assert_equal "$(array::get arr -7)" 4
+    utest::assert_equal "$(array::get arr -10)" 1
 
     utest::assert_equal "$(array::get arr 0)" 1
     utest::assert_equal "$(array::get arr 1)" 2
@@ -884,12 +1040,13 @@ function TEST::array::join_with::two_char() {
 function TEST::array::insert() {
     local arr=()
 
-    array::insert arr -1 1>/dev/null
-    utest::assert_fail $?
-
     array::insert arr 1 1>/dev/null
     utest::assert_fail $?
 
+    array::insert arr -123 1
+    utest::assert_equal "${arr[*]}" "1"
+
+    arr=()
     array::insert arr 0 1
     utest::assert_equal "${arr[*]}" "1"
 
@@ -902,11 +1059,21 @@ function TEST::array::insert() {
     array::insert arr 1 4
     utest::assert_equal "${arr[*]}" "3 4 1 2"
 
-    array::insert arr -1 1>/dev/null
-    utest::assert_fail $?
+    array::insert arr 4 6
+    utest::assert_equal "${arr[*]}" "3 4 1 2 6"
 
-    array::insert arr 5 1>/dev/null
-    utest::assert_fail $?
+    array::insert arr -1 1
+    utest::assert_equal "${arr[*]}" "3 4 1 2 1 6"
+
+    array::insert arr -6 1
+    utest::assert_equal "${arr[*]}" "1 3 4 1 2 1 6"
+
+    array::insert arr -8 9
+    utest::assert_equal "${arr[*]}" "1 3 4 1 2 1 9 6"
+
+    array::insert arr -10 3
+    utest::assert_equal "${arr[*]}" "1 3 4 1 2 1 3 9 6"
+
 }
 
 function TEST::array::remove() {
@@ -919,16 +1086,26 @@ function TEST::array::remove() {
 
 function TEST::array::remove_at() {
     local arr=("1" "2" "3" "1" "4" "5" "6" "7")
-    array::remove_at arr 0
+
+    array::remove_at REF_PLACEHOLDER arr 0
     utest::assert_equal "${arr[*]}" "2 3 1 4 5 6 7"
-    array::remove_at arr 1
+    utest::assert_equal "$REF_PLACEHOLDER" "1"
+
+    array::remove_at REF_PLACEHOLDER arr 1
     utest::assert_equal "${arr[*]}" "2 1 4 5 6 7"
-    array::remove_at arr -1
+    utest::assert_equal "$REF_PLACEHOLDER" "3"
+
+    array::remove_at REF_PLACEHOLDER arr -1
     utest::assert_equal "${arr[*]}" "2 1 4 5 6"
-    array::remove_at arr -5
+    utest::assert_equal "$REF_PLACEHOLDER" "7"
+
+    array::remove_at REF_PLACEHOLDER arr -5
     utest::assert_equal "${arr[*]}" "1 4 5 6"
-    array::remove_at arr -2
+    utest::assert_equal "$REF_PLACEHOLDER" "2"
+
+    array::remove_at REF_PLACEHOLDER arr -2
     utest::assert_equal "${arr[*]}" "1 4 6"
+    utest::assert_equal "$REF_PLACEHOLDER" "5"
 }
 
 function TEST::array::copy() {

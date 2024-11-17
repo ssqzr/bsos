@@ -409,6 +409,7 @@ function parameter::parse_array() {
 
 function TEST::parameter::parse_value() {
     local value
+    local option
 
     parameter::parse_value value
     utest::assert_fail $?
@@ -446,10 +447,56 @@ function TEST::parameter::parse_value() {
     utest::assert $?
     utest::assert_equal "$value" "abc"
 
+    # 测试值包含空格
+    parameter::parse_value value "--xx=abc def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc def"
+
+    option="abc def"
+    parameter::parse_value value "--xx=${option}"
+    utest::assert $?
+    utest::assert_equal "$value" "abc def"
+
+    option="abc def"
+    parameter::parse_value value --xx="${option}"
+    utest::assert $?
+    utest::assert_equal "$value" "abc def"
+
+    # 测试值包含=
+    parameter::parse_value value "--xx=abc=def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc=def"
+
+    # 测试值包含 --
+    parameter::parse_value value "--xx=abc--def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc--def"
+
+    # 测试值包含 #
+    parameter::parse_value value "--xx=abc#def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc#def"
+
+    # 测试值包含 *
+    parameter::parse_value value "--xx=abc*def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc*def"
+
+    # 测试值包含 /
+    parameter::parse_value value "--xx=abc/def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc/def"
+
+    # 测试值包含 \
+    parameter::parse_value value "--xx=abc\def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc\def"
+
 }
 
 function TEST::parameter::parse_string() {
     local value
+    local option
 
     value=""
     parameter::parse_string value
@@ -490,6 +537,27 @@ function TEST::parameter::parse_string() {
     parameter::parse_string --default="123" value --option="--abc="
     utest::assert $?
     utest::assert_equal "$value" "123"
+
+    value=""
+    parameter::parse_string --default="123" value --option="--abc="
+    utest::assert $?
+    utest::assert_equal "$value" "123"
+
+    # 测试值包含空格
+    parameter::parse_string value --option="--xx=abc def"
+    utest::assert $?
+    utest::assert_equal "$value" "abc def"
+
+    option="abc def"
+    parameter::parse_string value --option="--xx=${option}"
+    utest::assert $?
+    utest::assert_equal "$value" "abc def"
+
+    option="abc def"
+    parameter::parse_string value --option=--xx="${option}"
+    utest::assert $?
+    utest::assert_equal "$value" "abc def"
+
 }
 
 function TEST::parameter::parse_bool() {

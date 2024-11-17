@@ -106,16 +106,16 @@ function wlogout_wrap::init_monitor_info() {
     local temp
     local focused_monitor
 
-    focused_monitor=$(hyprland::hyprctl::monitors | cfg::array::filter_by_key_value --type="json" "focused" "true" | cfg::array::first) || return "$SHELL_FALSE"
+    focused_monitor=$(hyprland::hyprctl::monitors | yq '.[]|select(.focused == "true")' -o=json) || return "$SHELL_FALSE"
     if string::is_empty "$focused_monitor"; then
         lerror "get focused monitor failed"
         return "$SHELL_FALSE"
     fi
 
-    focused_monitor_width=$(cfg::map::get --type="json" "width" "$focused_monitor") || return "$SHELL_FALSE"
-    focused_monitor_height=$(cfg::map::get --type="json" "height" "$focused_monitor") || return "$SHELL_FALSE"
-    focused_monitor_transform=$(cfg::map::get --type="json" "transform" "$focused_monitor") || return "$SHELL_FALSE"
-    focused_monitor_scale=$(cfg::map::get --type="json" "scale" "$focused_monitor") || return "$SHELL_FALSE"
+    focused_monitor_width=$(echo "$focused_monitor" | yq '.width') || return "$SHELL_FALSE"
+    focused_monitor_height=$(echo "$focused_monitor" | yq '.height') || return "$SHELL_FALSE"
+    focused_monitor_transform=$(echo "$focused_monitor" | yq '.transform') || return "$SHELL_FALSE"
+    focused_monitor_scale=$(echo "$focused_monitor" | yq '.scale') || return "$SHELL_FALSE"
 
     ldebug "focused_monitor_width=${focused_monitor_width}"
     ldebug "focused_monitor_height=${focused_monitor_height}"
@@ -285,7 +285,7 @@ function wlogout_wrap::init_button_cycle_origin_xy() {
     while (($(array::length __buttons_center_of_cycle_xy) > 0)); do
         index=$(math::rand 0 $(($(array::length __buttons_center_of_cycle_xy) - 1))) || return "$SHELL_FALSE"
         temp+=("${__buttons_center_of_cycle_xy[$index]}")
-        array::remove_at __buttons_center_of_cycle_xy "$index"
+        array::remove_at REF_PLACEHOLDER __buttons_center_of_cycle_xy "$index"
     done
     __buttons_center_of_cycle_xy=("${temp[@]}")
 
