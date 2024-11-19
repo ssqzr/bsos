@@ -63,16 +63,40 @@ function log::level::_init() {
 
 function log::level::set() {
     local level="$1"
+    local level_temp
+
     if [ -z "$level" ]; then
         println_error --stream=stderr "invalid level: is empty"
         return "$SHELL_FALSE"
     fi
-    if string::is_not_integer "$level"; then
-        println_error --stream=stderr "invalid level: ${level} is not integer"
-        return "$SHELL_FALSE"
+
+    if string::is_integer "$level"; then
+        level_temp="$level"
+    else
+        case "${level}" in
+        info)
+            level_temp="${LOG_LEVEL_INFO}"
+            ;;
+        warn)
+            level_temp="${LOG_LEVEL_WARN}"
+            ;;
+        error)
+            level_temp="${LOG_LEVEL_ERROR}"
+            ;;
+        debug)
+            level_temp="${LOG_LEVEL_DEBUG}"
+            ;;
+        success)
+            level_temp="${LOG_LEVEL_SUCCESS}"
+            ;;
+        *)
+            println_error --stream=stderr "invalid level: ${level}"
+            return "$SHELL_FALSE"
+            ;;
+        esac
     fi
 
-    export __log_level="$level"
+    export __log_level="$level_temp"
 }
 
 function log::level::is_pass() {

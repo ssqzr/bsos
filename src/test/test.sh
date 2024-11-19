@@ -61,13 +61,38 @@ function test_runner::filter_by_function_name() {
 
 # https://stackoverflow.com/questions/4471364/how-do-i-list-the-functions-defined-in-my-shell
 function test_runner::run() {
-    local filter="${1:-TEST::}"
+    local filter
     local temp_array=()
     local temp_str
     local test_case=()
+    local log_level="${LOG_LEVEL_INFO}"
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --log-level=*)
+            parameter::parse_string --default="${LOG_LEVEL_INFO}" --option="$param" log_level || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            println_error "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -v filter ]; then
+                filter="$param"
+                continue
+            fi
+            println_error "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    filter="${filter:-TEST::}"
 
     log::handler::file_handler::register || exit 1
     log::handler::file_handler::set_log_file "${SRC_DIR}/../utest.log" || exit 1
+    log::level::set "$log_level" || exit 1
 
     # 找出所有有测试代码的文件
     temp_str=$(grep "^function TEST::" -rn "${SRC_DIR}" | awk -F ':' '{print $1}')
