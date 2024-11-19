@@ -1,0 +1,33 @@
+# electron 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinux.org/title/Electron[官方文档]
+
+
+
+
+## 问题记录
+
+### 基于 `electron` 的应用使用 `wayland`
+
+一些基于 `electron` 的应用使用 `xwayland` 的问题：
+
+- xref:../anytype/README.adoc#GTK-IM-MODULE[anytype 打字出现漏字]
+- xref:../anytype/README.adoc#copy-to-other[anytype 不能复制文本到其他软件]
+- xref:../fcitx5/README.adoc#GTK-IM-MODULE[chrome 输入中文时可能漏字]
+
+所以在 `wayland` 的环境下，最好默认是以 `wayland` 启动，然后有问题的再单独配置。
+
+https://wiki.archlinux.org/title/Wayland#Electron[Wayland Electron]
+
+修改如下配置文件可以配置所有基于 `electron` 的应用使用 `wayland` 。
+
+.${XDG_CONFIG_HOME}/electron-flags.conf
+[source,ini]
+----
+--ozone-platform-hint=auto
+--enable-wayland-ime
+----
+
+如果是其他版本的 `electron` 应用使用 `wayland` 有问题，可以修改对应版本的 `flags` 文件。

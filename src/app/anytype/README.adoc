@@ -44,3 +44,42 @@ xdg-settings
 AUR 的软件包 anytype-bin 就是使用 AppImage 打包的，安装后直接运行即可。
 
 [.red]#但是运行后会花屏，暂时没搜到解决方案。#
+
+[#GTK-IM-MODULE]
+### 打字出现漏字
+
+参考： 
+
+- xref:../fcitx5/README.adoc#GTK-IM-MODULE[chrome 输入中文时可能漏字]
+- https://fcitx-im.org/wiki/Using_Fcitx_5_on_Wayland#GTK_IM_MODULE[GTK_IM_MODULE]
+
+原因是去掉了 `GTK_IM_MODULE=fcitx` 环境变量。
+
+修改如下配置文件：
+
+.${XDG_CONFIG_HOME}/gtk-3.0/settings.ini
+[source,ini]
+----
+[Settings]
+gtk-im-module=fcitx
+----
+
+[#copy-to-other]
+### 不能复制文本到其他软件
+
+原因是 `anytype` 是 `xwayland` 的方式启动，而其他软件是 `wayland` 启动。
+
+将 `anytype` 的启动方式修改为 `wayland` 就可以了。
+
+修改为 `wayland` 启动后，<<GTK-IM-MODULE>> 的问题也解决了，不用修改 `gtk-3.0` 的配置。
+
+通过 wayland 启动修改如下配置文件：
+
+.${XDG_CONFIG_HOME}/electron-flags.conf
+[source,ini]
+----
+--ozone-platform-hint=auto
+--enable-wayland-ime
+----
+
+这个是针对所有 `electron` 应用。

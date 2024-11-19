@@ -2,7 +2,7 @@
 
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 # shellcheck disable=SC2034
-SCRIPT_DIR_a58d6eb7="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
+SCRIPT_DIR_0201b24e="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
@@ -12,55 +12,59 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
-function anytype::trait::package_manager() {
-    echo "yay"
+function electron::trait::package_manager() {
+    echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
-function anytype::trait::package_name() {
-    echo "anytype-electron-bin"
+function electron::trait::package_name() {
+    echo "electron"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
-function anytype::trait::description() {
-    package_manager::package_description "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)"
+function electron::trait::description() {
+    package_manager::package_description "$(electron::trait::package_manager)" "$(electron::trait::package_name)" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
-function anytype::trait::install_guide() {
+function electron::trait::install_guide() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的前置操作，比如下载源代码
-function anytype::trait::pre_install() {
+function electron::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的操作
-function anytype::trait::install() {
-    package_manager::install "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)" || return "${SHELL_FALSE}"
+function electron::trait::install() {
+    # 暂时不用安装，只是修改配置
+    # package_manager::install "$(electron::trait::package_manager)" "$(electron::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
-function anytype::trait::post_install() {
+function electron::trait::post_install() {
+    fs::file::copy --force "${SCRIPT_DIR_0201b24e}/electron-flags.conf" "${XDG_CONFIG_HOME}/electron-flags.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
-function anytype::trait::pre_uninstall() {
+function electron::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
 # 卸载的操作
-function anytype::trait::uninstall() {
-    package_manager::uninstall "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)" || return "${SHELL_FALSE}"
+function electron::trait::uninstall() {
+    # package_manager::uninstall "$(electron::trait::package_manager)" "$(electron::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的后置操作，比如删除临时文件
-function anytype::trait::post_uninstall() {
+function electron::trait::post_uninstall() {
+    fs::file::delete "${XDG_CONFIG_HOME}/electron-flags.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -71,8 +75,8 @@ function anytype::trait::post_uninstall() {
 # - 更新的操作和版本无关，也就是说所有版本更新方法都一样
 # - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
 # - 更新的指责和包管理器类似，只负责更新
-function anytype::trait::upgrade() {
-    package_manager::upgrade "$(anytype::trait::package_manager)" "$(anytype::trait::package_name)" || return "${SHELL_FALSE}"
+function electron::trait::upgrade() {
+    # package_manager::upgrade "$(electron::trait::package_manager)" "$(electron::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -81,14 +85,14 @@ function anytype::trait::upgrade() {
 # 1. Hyprland 的插件需要在Hyprland运行时才可以启动
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
-function anytype::trait::fixme() {
+function electron::trait::fixme() {
     return "${SHELL_TRUE}"
 }
 
 # fixme 的逆操作
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
-function anytype::trait::unfixme() {
+function electron::trait::unfixme() {
     return "${SHELL_TRUE}"
 }
 
@@ -98,24 +102,14 @@ function anytype::trait::unfixme() {
 # 或者有一些依赖的包不仅安装就可以了，它自身也需要进行额外的配置。
 # 因此还是需要为一些特殊场景添加依赖
 # NOTE: 这里的依赖包是必须安装的，并且在安装本程序前进行安装
-function anytype::trait::dependencies() {
+function electron::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
     # "pacman:vim"
     # "yay:vim"
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
-
     local apps=()
-
-    # NOTE: anytype 依赖 jack，当没有安装jack相关的包时，默认是安装jack2
-    # 但是安装pipewire需要安装pipewire-jack，它和jack2冲突
-    # 所以如果anytype先安装，会因为依赖关系安装jack2，然后再安装pipewire-jack时因为冲突而安装失败
-    # 所以强制将anytype对jack的依赖安装pipewire-jack
-    apps+=("pacman:pipewire-jack")
-
-    apps+=("custom:electron")
-
     array::print apps
     return "${SHELL_TRUE}"
 }
@@ -124,14 +118,14 @@ function anytype::trait::dependencies() {
 # 例如程序的插件、主题等。
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
-function anytype::trait::features() {
+function electron::trait::features() {
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"
 }
 
-function anytype::trait::main() {
-    return "$SHELL_TRUE"
+function electron::trait::main() {
+    return "${SHELL_TRUE}"
 }
 
-anytype::trait::main
+electron::trait::main
