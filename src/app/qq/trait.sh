@@ -46,6 +46,7 @@ function qq::trait::install() {
 
 # 安装的后置操作，比如写配置文件
 function qq::trait::post_install() {
+    fs::file::copy --force "$SCRIPT_DIR_34ae8c54/flatpak/overrides/com.qq.QQ" "${XDG_DATA_HOME}/flatpak/overrides/com.qq.QQ" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -62,6 +63,7 @@ function qq::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function qq::trait::post_uninstall() {
+    fs::file::delete "${XDG_DATA_HOME}/flatpak/overrides/com.qq.QQ" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
