@@ -40,7 +40,7 @@ function hyprfocus::trait::pre_install() {
 
 # 安装的操作
 function hyprfocus::trait::install() {
-    if ! hyprland::hyprctl::is_can_connect; then
+    if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
         return "${SHELL_TRUE}"
     fi
@@ -64,7 +64,7 @@ function hyprfocus::trait::install() {
 
 # 安装的后置操作，比如写配置文件
 function hyprfocus::trait::post_install() {
-    if ! hyprland::hyprctl::is_can_connect; then
+    if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
         return "${SHELL_TRUE}"
     fi
@@ -85,7 +85,7 @@ function hyprfocus::trait::pre_uninstall() {
 
 # 卸载的操作
 function hyprfocus::trait::uninstall() {
-    if ! hyprland::hyprctl::is_can_connect; then
+    if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not uninstall hyprfocus plugin"
         return "${SHELL_TRUE}"
     fi
@@ -97,7 +97,7 @@ function hyprfocus::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function hyprfocus::trait::post_uninstall() {
-    if ! hyprland::hyprctl::is_can_connect; then
+    if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_uninstall hyprfocus plugin"
         return "${SHELL_TRUE}"
     fi
@@ -119,7 +119,7 @@ function hyprfocus::trait::post_uninstall() {
 # - 更新的指责和包管理器类似，只负责更新
 function hyprfocus::trait::upgrade() {
     # FIXME: 现在更新总是失败，因为和 hyprland 的版本不配套
-    # if ! hyprland::hyprctl::is_can_connect; then
+    # if hyprland::hyprctl::instance::is_not_can_connect; then
     #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not upgrade hyprfocus plugin"
     #     return "${SHELL_TRUE}"
     # fi

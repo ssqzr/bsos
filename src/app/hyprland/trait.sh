@@ -17,7 +17,9 @@ function hyprland::trait::config::install() {
     local files
     local filename
 
-    hyprland::hyprctl::autoreload::disable || return "${SHELL_FALSE}"
+    if hyprland::hyprctl::self::caller "is_can_connect"; then
+        hyprland::hyprctl::self::caller "autoreload::disable" || return "${SHELL_FALSE}"
+    fi
 
     # 先备份配置
     fs::directory::safe_delete "${BUILD_TEMP_DIR}/hypr" || return "${SHELL_FALSE}"
@@ -47,7 +49,9 @@ function hyprland::trait::config::install() {
         done
     fi
 
-    hyprland::hyprctl::autoreload::enable || return "${SHELL_FALSE}"
+    if hyprland::hyprctl::self::caller "is_can_connect"; then
+        hyprland::hyprctl::self::caller "autoreload::enable" || return "${SHELL_FALSE}"
+    fi
     return "${SHELL_TRUE}"
 }
 
@@ -80,7 +84,7 @@ function hyprland::settings::monitor() {
 }
 
 function hyprland::hyprpm::install() {
-    if ! hyprland::hyprctl::is_can_connect; then
+    if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprpm"
         return "${SHELL_TRUE}"
     fi
@@ -148,8 +152,8 @@ function hyprland::trait::post_install() {
     hyprland::trait::xdg_desktop_portal::install || return "${SHELL_FALSE}"
 
     hyprland::settings::cursors || return "${SHELL_FALSE}"
-    if hyprland::hyprctl::is_can_connect; then
-        hyprland::hyprctl::reload || return "$SHELL_FALSE"
+    if hyprland::hyprctl::self::caller "is_can_connect"; then
+        hyprland::hyprctl::self::caller "reload" || return "$SHELL_FALSE"
     fi
 
     return "${SHELL_TRUE}"

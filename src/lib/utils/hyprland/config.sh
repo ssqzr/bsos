@@ -67,8 +67,8 @@ function hyprland::config::add() {
 
     fs::file::copy --force "$filepath" "${dst}" || return "$SHELL_FALSE"
 
-    if hyprland::hyprctl::is_can_connect; then
-        hyprland::hyprctl::reload || return "$SHELL_FALSE"
+    if hyprland::hyprctl::self::caller "is_can_connect"; then
+        hyprland::hyprctl::self::caller "reload" || return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
 }
@@ -94,8 +94,8 @@ function hyprland::config::remove() {
     filepath=$(hyprland::config::filepath "$index" "$filename") || return "$SHELL_FALSE"
     fs::file::delete "${filepath}" || return "$SHELL_FALSE"
 
-    if hyprland::hyprctl::is_can_connect; then
-        hyprland::hyprctl::reload || return "$SHELL_FALSE"
+    if hyprland::hyprctl::self::caller "is_can_connect"; then
+        hyprland::hyprctl::self::caller "reload" || return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
 }

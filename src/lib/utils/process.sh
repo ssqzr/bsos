@@ -50,3 +50,11 @@ function process::kill_by_name() {
     linfo "kill process($process_name) success"
     return "$SHELL_TRUE"
 }
+
+function process::get_username() {
+    local pid="$1"
+
+    ps -o uname= -p "$pid"
+
+    return "$SHELL_TRUE"
+}

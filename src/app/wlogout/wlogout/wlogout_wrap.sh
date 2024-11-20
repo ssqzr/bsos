@@ -106,7 +106,7 @@ function wlogout_wrap::init_monitor_info() {
     local temp
     local focused_monitor
 
-    focused_monitor=$(hyprland::hyprctl::monitors | yq '.[]|select(.focused == "true")' -o=json) || return "$SHELL_FALSE"
+    focused_monitor=$(hyprland::hyprctl::instance::monitors | yq '.[]|select(.focused == "true")' -o=json) || return "$SHELL_FALSE"
     if string::is_empty "$focused_monitor"; then
         lerror "get focused monitor failed"
         return "$SHELL_FALSE"
