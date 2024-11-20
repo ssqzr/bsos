@@ -4,3 +4,8 @@ include::../../../doc/base.adoc[]
 
 https://github.com/hyprwm/hypridle[官方文档]
 
+
+## 说明
+
+关于睡眠、休眠等的解释见 https://www.freedesktop.org/software/systemd/man/latest/systemd-sleep.conf.html[systemd-sleep.conf]。
+
