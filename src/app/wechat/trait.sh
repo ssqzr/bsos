@@ -46,6 +46,7 @@ function wechat::trait::install() {
 
 # 安装的后置操作，比如写配置文件
 function wechat::trait::post_install() {
+    hyprland::config::add 350 "${SCRIPT_DIR_62eb478d}/hyprland/wechat.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -62,6 +63,7 @@ function wechat::trait::uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function wechat::trait::post_uninstall() {
+    hyprland::config::remove "350" "wechat.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

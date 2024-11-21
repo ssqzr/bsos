@@ -4,3 +4,23 @@ include::../../../doc/base.adoc[]
 
 https://flathub.org/apps/com.tencent.WeChat[官方文档]
 
+
+## 问题记录
+
+### 不能以 wayland 启动
+
+flatpak 部署的，通过 wayland 启动失败。原因不明。
+
+### 截图快捷键没用
+
+[source]
+----
+# 测试不生效， ALT + a 是微信默认的截图快捷键
+# bind = ALT, a, pass, initialClass: ^(wechat)$
+----
+
+不知道为什么。
+
+### 通知没有声音
+
+不知道为什么
