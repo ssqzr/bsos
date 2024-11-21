@@ -566,7 +566,7 @@ flags: (if any)
 [v] will shallow since: Wed Oct 02 12:54:39 2024
 
 ✔ cloned
-[v] will run: cd /tmp/hyprpm/hyprland-lzw && git checkout 4520b30d498daca8079365bdb909a8dea38e8d55 2>&1
+[v] will run: cd /tmp/hyprpm/hyprland-xxx && git checkout 4520b30d498daca8079365bdb909a8dea38e8d55 2>&1
 [v] git returned (co): 致命错误：无法读取树（4520b30d498daca8079365bdb909a8dea38e8d55）
 
 ......

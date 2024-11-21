@@ -172,8 +172,6 @@ function develop::command::check_loop() {
 
 function develop::command::trait() {
 
-    manager::flags::develop::add || return "$SHELL_FALSE"
-
     local app_names
     local traits
 
@@ -240,7 +238,7 @@ function develop::command::trait() {
 }
 
 function develop::command::install() {
-    manager::flags::develop::add || return "$SHELL_FALSE"
+
     manager::flags::reuse_cache::add || return "$SHELL_FALSE"
 
     local app_names
@@ -304,6 +302,8 @@ function develop::command::install() {
 function develop::command() {
     local subcommand="$1"
     local command_params=("${@:2}")
+
+    manager::flags::develop::add || return "$SHELL_FALSE"
 
     case "${subcommand}" in
     "create" | "update" | "check_loop" | "install" | "trait")

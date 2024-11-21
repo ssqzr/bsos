@@ -360,9 +360,6 @@ function main::run() {
 $(debug::function::filename) [OPTIONS] <SUBCOMMAND> [SUBCOMMAND OPTIONS]
 
 OPTIONS:
-    --develop[=yes/no]      BOOL                                启用开发模式
-                                                                    不指定参数或者 --develop=false 表示不启用
-                                                                    --develop 或者 --develop=yes 表示启用
 
     --reuse-cache[=yes/no]  BOOL                                启用复用缓存
                                                                     不指定参数或者 --reuse-cache=false 表示不启用
@@ -430,25 +427,18 @@ SUBCOMMAND:
     # 先解析全局的参数
     for param in "$@"; do
         case "$param" in
-        --develop | --develop=*)
-            temp=""
-            parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
-            if [ "$temp" -eq "$SHELL_TRUE" ]; then
-                manager::flags::append "develop" || return "$SHELL_FALSE"
-            fi
-            ;;
         --reuse-cache | --reuse-cache=*)
             temp=""
             parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
             if [ "$temp" -eq "$SHELL_TRUE" ]; then
-                manager::flags::append "reuse_cache" || return "$SHELL_FALSE"
+                manager::flags::reuse_cache::add || return "$SHELL_FALSE"
             fi
             ;;
         --check-loop= | --check-loop=*)
             temp=""
             parameter::parse_bool --option="$param" temp || return "$SHELL_FALSE"
             if [ "$temp" -eq "$SHELL_TRUE" ]; then
-                manager::flags::append "check_loop" || return "$SHELL_FALSE"
+                manager::flags::check_loop::add || return "$SHELL_FALSE"
             fi
             ;;
         -h | --help)

@@ -152,7 +152,6 @@ function math::round() {
     local res
 
     res=$(awk "BEGIN{print $num+0.5}") || return "$SHELL_FALSE"
-    lerror "lzw_test res=$res"
     res=$(math::floor "$res") || return "$SHELL_FALSE"
     echo "$res"
 
