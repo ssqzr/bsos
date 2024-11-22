@@ -7,3 +7,151 @@ official_document_url[官方文档]
 ## 说明
 
 - https://wiki.archlinux.org/title/XDG_Base_Directory[XDG Base Directory]
+- https://wiki.archlinux.org/title/XDG_MIME_Applications[XDG MIME Applications]
+
+
+## 问题记录
+
+[#xdg-mime-query-filetype-wrong]
+### xdg-mime 查询的文件类型不符合预期
+
+安装 `virt-viewer` 后， `xdg-open xxx.vv` 的文件并不是通过 `virt-viewer` 打开的，而是通过 `vscode` 打开的。
+
+通过 `xdg-mime query filetype 文件路径` 查看文件的类型是 `text/plain` 。
+
+先说明如下情况：
+
+- `*.vv` 以 `vv` 结尾的文件是 `Proxmox VE` 打开 `spice` 时生成的文件，用于进行 `spice` 连接
+- `virt-viewer` 安装包里提供了 `/usr/share/mime/packages/virt-viewer-mime.xml` ，这个是定义 `*.vv` 的文件的 `mime` 类型是： `application/x-virt-viewer`
+- `virt-viewer` 安装包里提供了 `/usr/share/applications/remote-viewer.desktop` ，这个文件定义 `remote-viewer` 软件的桌面快捷方式，里面定义了它可以打开 `application/x-virt-viewer` 的文件类型
+- 执行 `sudo update-mime-database "/usr/share/mime"` 更新 `mime` 数据库。
+
+既然已经定义了 `.vv` 文件的文件类型以及打开此类型文件的程序，为什么查看到的文件类型还是 `text/plain` ，通过 `vscode` 打开呢？
+
+可以先 `man xdg-mime` 查看 `xdg-mime` 的手册。
+
+`xdg-mime` 是一个 `bash` 脚本，通过 `bash -x /usr/bin/xdg-mime query filetype xxx.vv` 可以看到最后是调用 `file` 命令。
+
+.bash -x /usr/bin/xdg-mime query filetype xxx.vv
+[source,bash]
+----
+❯ bash -x /usr/bin/xdg-mime query filetype /mnt/temp/download/pve-spice.vv
++ check_common_commands query filetype /mnt/temp/download/pve-spice.vv
++ '[' 3 -gt 0 ']'
++ parm=query
++ shift
++ case "$parm" in
++ '[' 2 -gt 0 ']'
++ parm=filetype
++ shift
++ case "$parm" in
++ '[' 1 -gt 0 ']'
++ parm=/mnt/temp/download/pve-spice.vv
++ shift
++ case "$parm" in
++ '[' 0 -gt 0 ']'
++ '[' -z '' ']'
++ unset XDG_UTILS_DEBUG_LEVEL
++ '[' 0 -lt 1 ']'
++ xdg_redirect_output=' > /dev/null 2> /dev/null'
++ '[' xquery '!=' x ']'
++ mode=
++ action=
++ filename=
++ mimetype=
++ case $1 in
++ shift
++ '[' -z filetype ']'
++ case $1 in
++ action=info
++ filename=/mnt/temp/download/pve-spice.vv
++ '[' -z /mnt/temp/download/pve-spice.vv ']'
++ case $filename in
++ check_input_file /mnt/temp/download/pve-spice.vv
++ '[' '!' -e /mnt/temp/download/pve-spice.vv ']'
++ '[' '!' -r /mnt/temp/download/pve-spice.vv ']'
+++ xdg_realpath /mnt/temp/download/pve-spice.vv
+++ '[' -z '' ']'
+++ command -v realpath
++++ realpath -- /
+++ lines=/
+++ '[' 0 = 0 ']'
+++ '[' / = / ']'
+++ XDG_UTILS_REALPATH_BACKEND=realpath
+++ unset lines
+++ '[' -e /mnt/temp/download/pve-spice.vv ']'
+++ case "$XDG_UTILS_REALPATH_BACKEND" in
+++ realpath -- /mnt/temp/download/pve-spice.vv
++ filename=/mnt/temp/download/pve-spice.vv
++ shift
++ '[' info = makedefault ']'
++ '[' info = info ']'
++ detectDE
++ unset GREP_OPTIONS
++ '[' -n Hyprland ']'
++ case "${XDG_CURRENT_DESKTOP}" in
++ '[' -z '' ']'
++ '[' -n '' ']'
++ '[' -n '' ']'
++ '[' -n '' ']'
++ dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager
++ xprop -root _DT_SAVE_MODE
++ grep ' = \"xfce4\"$'
++ xprop -root
++ grep -i '^xfce_desktop_window'
++ echo ''
++ grep -q '^Enlightenment'
++ '[' -n '' ']'
++ '[' -z '' ']'
++ case "$DESKTOP_SESSION" in
++ '[' -z '' ']'
++ case "$(uname 2> /dev/null)" in
+++ uname
++ grep -q microsoft /proc/version
++ '[' x = xgnome ']'
++ '[' -f /run/user/1000/flatpak-info ']'
++ '[' x = x ']'
++ '[' -x /usr/bin/file ']'
++ DE=generic
++ case "$DE" in
++ info_generic /mnt/temp/download/pve-spice.vv
++ mimetype --version
++ DEBUG 1 'Running file --brief --dereference --mime-type "/mnt/temp/download/pve-spice.vv"'
++ '[' -z '' ']'
++ return 0
++ /usr/bin/file --brief --dereference --mime-type /mnt/temp/download/pve-spice.vv
+text/plain
++ '[' 0 -eq 0 ']'
++ exit_success
++ '[' 0 -gt 0 ']'
++ exit 0
+
+----
+
+然后查看 `xdg-mime` 的源代码 `/usr/bin/xdg-mime` ，解析参数后，进入 `query filetype` 的业务代码
+
+- 解析参数后，进入 `query filetype` 的业务代码
+- 调用 `detectDE` 检测桌面环境，由于我用的是 `Hyprland` ，所以最后得到的结论是 `DE` 为空。
+- `DE` 为空，判断 `/usr/bin/file` 存在且可执行，于是就将 `DE` 赋值 `generic`
+- 调用 `info_generic` 函数进行查询，最后运行 `/usr/bin/file --brief --dereference --mime-type "$1"` 命令查看文件类型
+
+所以 `xdg-mime` 并没有使用注册的 `mime` 。
+
+`xdg-open` 也是 `bash` 脚本，分析源码：
+
+- 调用 `detectDE` 检测桌面环境，由于我用的是 `Hyprland` ，所以最后得到的结论是 `DE` 为空。
+- `DE` 为空，将 `DE` 赋值为 `generic`
+- 调用 `open_generic` 函数
+** 调用 `is_file_url_or_path` 判断是文件
+** 调用 `check_input_file` 检查路径是否存在和可读
+** 调用 `has_display` 判断是否有桌面管理器，这里判断是有的
+** 调用 `open_generic_xdg_mime` ， 参数 `filetype` 是调用 `xdg-mime query filetype` 查询的类型，这里是 `text/plain`
+*** 调用 `xdg-mime query default "$filetype"` 查询打开文件类型的应用程序的 `.desktop` 文件
+*** 调用 `search_desktop_file` 搜索和打开应用程序
+
+我这里设置 `text/plain` 类型的默认应用程序是 `vscode` ，所以最后通过 `vscode` 打开。
+
+分析下来就明白是 `xdg-mime` 不识别 `Hyprland` 桌面环境，并不能准确将文件和文件类型对应起来导致的。
+
+FIXME: 暂时没搜到好的解决办法。
+

@@ -1,0 +1,19 @@
+# virt_viewer 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://gitlab.com/virt-viewer/virt-viewer[官方文档]
+
+## 问题记录
+
+### 不要使用 flatpak 的包
+
+使用 `flatpak` 的包使用上不方便，不能关联打开 `.vv` 文件。
+
+需要自己设置 https://wiki.archlinux.org/title/XDG_MIME_Applications#New_MIME_types[`xdg-mime`] 。
+
+仓库里的有配套的类型定义文件。
+
+但是有类型定义文件也不能在打开 .vv 文件时自动识别到使用 virt-viewer 打开。
+
+原因见 xref:../xdg/README.adoc#xdg-mime-query-filetype-wrong[xdg-mime 查询的文件类型不符合预期]。
