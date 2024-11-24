@@ -72,11 +72,16 @@ function log::formatter::get_datetime_by_format() {
 }
 
 function log::formatter::get_pid() {
-    if [ -n "$BASHPID" ]; then
-        echo "$BASHPID"
-    else
-        echo $$
-    fi
+    # https://unix.stackexchange.com/a/62232
+    # - $BASHPID 是当前进程的 pid
+    # - $$ 是 shell 的 pid，不是当前进程的 pid。
+    # - $PPID 是 shell 父进程的进程 ID 。也就是 $$ 的父进程 ID 。
+    # zsh(12) -> scriptA(34) -> command substitution -> command substitution($PPID=12, $$=34, $BASHPID=56)
+    # zsh(12) -> scriptA(34) -> command substitution -> command substitution($PPID=12, $$=34, $BASHPID=56) -> sub scriptB($PPID=34, $$=78, $BASHPID=78)
+    # 使用命令替换时，本意并不是运行子进程，这个是 bash 的机制，本意只是封装函数和调用函数。
+    # 调用子 shell 时，本意是运行子进程，这个时候子 shell 打印自己的日志。
+    # 所以使用 $$ 是比较合理的
+    echo $$
     return "$SHELL_TRUE"
 }
 
