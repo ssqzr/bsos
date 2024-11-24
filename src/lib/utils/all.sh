@@ -22,7 +22,7 @@ source "${SCRIPT_DIR_cd871afe}/cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/array.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_cd871afe}/tui.sh"
+source "${SCRIPT_DIR_cd871afe}/tui/tui.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/cfg/cfg.sh"
 # shellcheck source=/dev/null

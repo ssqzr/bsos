@@ -341,7 +341,18 @@ function main::signal::handler_exit() {
     linfo "script exit, pid=$$, exit code=${code}"
 
     linfo "pkill child process..."
-    pkill -P "$$" || return "$SHELL_FALSE"
+    pkill -P "$$"
+    case "$?" in
+    0)
+        linfo "pkill child process success."
+        ;;
+    1)
+        linfo "no child process to pkill."
+        ;;
+    *)
+        lerror "pkill child process failed. exit code=$?"
+        ;;
+    esac
     manager::base::disable_no_password || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }

@@ -19,6 +19,8 @@ SCRIPT_DIR_4947c3c0="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_4947c3c0}/../constant.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_4947c3c0}/../print.sh"
 
 # 判断是否是整数，正负整数都是整数
 function math::is_integer() {
@@ -162,11 +164,11 @@ function math::_check_accuracy() {
     local accuracy="$1"
     shift
     if math::is_not_integer "$accuracy"; then
-        lerror "param accuracy($accuracy) must be integer"
+        println_error --stream=stderr "param accuracy($accuracy) must be integer"
         return "$SHELL_FALSE"
     fi
     if math::lt "$accuracy" 0; then
-        lerror "param accuracy($accuracy) must be greater than or equal to 0"
+        println_error --stream=stderr "param accuracy($accuracy) must be greater than or equal to 0"
         return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
@@ -259,7 +261,7 @@ function math::div() {
     local res
 
     if [ "$divisor" = "0" ]; then
-        lerror "the divisor cannot be 0"
+        println_error --stream=stderr "the divisor cannot be 0"
         return "$SHELL_FALSE"
     fi
 
@@ -318,7 +320,7 @@ function math::sqrt() {
     shift
 
     if math::lt "$num" 0; then
-        lerror "param num($num) < 0"
+        println_error --stream=stderr "param num($num) < 0"
         return "$SHELL_FALSE"
     fi
 

@@ -4,6 +4,8 @@
 SCRIPT_DIR_23248a22="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck disable=SC1091
+source "${SCRIPT_DIR_23248a22}/../lib/utils/all.sh"
+# shellcheck disable=SC1091
 source "${SCRIPT_DIR_23248a22}/base.sh"
 
 function manager::flow::apps::do_command() {
@@ -46,9 +48,14 @@ function manager::flow::apps::do_command() {
 # - 通过包管理器更新系统
 # - 更新所有应用
 function manager::flow::upgrade_system() {
+    local exit_code=0
     # 先更新系统
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system first..."
-    package_manager::upgrade_all_pm || return "$SHELL_FALSE"
+    tui::components::spinner::main --title="upgrade system..." exit_code package_manager::upgrade_all_pm || return "$SHELL_FALSE"
+    if [ $exit_code -ne "$SHELL_TRUE" ]; then
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system failed."
+        return "$SHELL_FALSE"
+    fi
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "upgrade system success."
 
     return "$SHELL_TRUE"
@@ -77,6 +84,12 @@ function manager::flow::install::install() {
 
     # 运行安装指引
     manager::flow::apps::do_command "install_guide" || return "$SHELL_FALSE"
+
+    tui::confirm "Install Wizard completed. Next Step?"
+    if [ "$?" -ne "$SHELL_TRUE" ]; then
+        lwarn "install wizard completed, user canceled continue."
+        return "$SHELL_FALSE"
+    fi
 
     # 运行安装
     manager::flow::apps::do_command "pre_install" || return "$SHELL_FALSE"

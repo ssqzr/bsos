@@ -167,7 +167,7 @@ function cfg::utils::_parse_common_parameter() {
             temp_params_7cc07bcb+=("$param_7cc07bcb")
             ;;
         *)
-            if [ ! -v path_7cc07bcb ]; then
+            if [ ! -R path_7cc07bcb ]; then
                 path_7cc07bcb="$param_7cc07bcb"
                 continue
             fi
@@ -177,7 +177,7 @@ function cfg::utils::_parse_common_parameter() {
         esac
     done
 
-    if [ ! -v path_7cc07bcb ]; then
+    if [ ! -R path_7cc07bcb ]; then
         lerror "param path is required"
         return "${SHELL_FALSE}"
     fi

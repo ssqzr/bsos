@@ -205,7 +205,8 @@ include::doc/assets/bsos_architecture.excalidraw[]
 │   └── print.sh
 │       └── utest.sh
 │           ├── array.sh
-│           └── string.sh
+│           ├── string.sh
+│           └── math.sh
 │               └── log.sh
 │                   └── parameter.sh
 │                       ├── cmd.sh
@@ -466,7 +467,7 @@ SUBCOMMAND:
 
 ## TODO
 
-* [ ] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
+* [*] 使用 https://github.com/charmbracelet/gum?tab=readme-ov-file#spin[gum spin] 来执行耗时的任务，避免假卡住的现象
 * [*] pywal 的使用
 * [*] hypridle 的使用
 * [*] hyprlock 的使用
@@ -499,10 +500,11 @@ SUBCOMMAND:
 * [ ] zsh 库的 string 库怎么复用 bash 库。
 * [*] 单元测试支持测试某个文件、某个测试等细粒度操作。
 * [*] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
-* [ ] 提供命令行的帮助信息
+* [*] 提供命令行的帮助信息
 * [ ] xref:src/app/yazi/README.adoc#yazi-file-chooser[yazi 实现文件选择器的功能]
 * [*] xref:src/app/hyprland/README.adoc#hyprland-zoom-abnormal[hyprland放大功能异常]
 * [ ] https://github.com/Slackadays/Clipboard[部署 Clipboard]，只能用于命令行？？还没想好怎么使用
+* [ ] 将项目的名称 `bsos` 从代码中剥离
 
 ## 引用
 

@@ -8,15 +8,17 @@ fi
 SCRIPT_DIR_825f52f6="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_825f52f6}/constant.sh"
+source "${SCRIPT_DIR_825f52f6}/../constant.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_825f52f6}/print.sh"
+source "${SCRIPT_DIR_825f52f6}/../print.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_825f52f6}/log/log.sh"
+source "${SCRIPT_DIR_825f52f6}/../log/log.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_825f52f6}/string.sh"
+source "${SCRIPT_DIR_825f52f6}/../string.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_825f52f6}/array.sh"
+source "${SCRIPT_DIR_825f52f6}/../array.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_825f52f6}/components/all.sh"
 
 __exit_code_ctrl_c=130
 

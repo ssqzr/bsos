@@ -63,6 +63,7 @@ function manager::base::check_root_user() {
 
 # 简单的单例，防止重复运行
 function manager::base::lock() {
+    # /tmp 和 /var/tmp 的区别： https://unix.stackexchange.com/a/30504
     local lock_file="/tmp/bsos.lock"
     exec 99>"$lock_file"
     flock -n 99

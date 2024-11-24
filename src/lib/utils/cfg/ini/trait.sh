@@ -976,12 +976,12 @@ function cfg::trait::ini::array::update_all() {
                 continue
             fi
 
-            if [ ! -v new_ece25cf2 ]; then
+            if [ ! -R new_ece25cf2 ]; then
                 new_ece25cf2="$param_ece25cf2"
                 continue
             fi
 
-            if [ ! -v data_ece25cf2 ]; then
+            if [ ! -R data_ece25cf2 ]; then
                 data_ece25cf2="$param_ece25cf2"
                 continue
             fi
@@ -997,12 +997,12 @@ function cfg::trait::ini::array::update_all() {
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -v new_ece25cf2 ]; then
+    if [ ! -R new_ece25cf2 ]; then
         lerror "param new is required"
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -v data_ece25cf2 ]; then
+    if [ ! -R data_ece25cf2 ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi

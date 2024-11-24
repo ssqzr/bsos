@@ -60,6 +60,7 @@ function parameter::parse_string() {
     local max_length_b7f786d2
     local default_b7f786d2
     local option_b7f786d2
+    local -n enum_b7f786d2
 
     local temp_str_b7f786d2
 
@@ -98,6 +99,9 @@ function parameter::parse_string() {
         --option=*)
             option_b7f786d2="${param_b7f786d2#*=}"
             ;;
+        --enum=*)
+            enum_b7f786d2="${param_b7f786d2#*=}"
+            ;;
         -*)
             lerror "unknown option $param_b7f786d2"
             return "$SHELL_FALSE"
@@ -128,6 +132,11 @@ function parameter::parse_string() {
         return "$SHELL_FALSE"
     fi
 
+    if [ -R enum_b7f786d2 ] && array::is_not_array "${!enum_b7f786d2}"; then
+        lerror --caller-frame="1" "param(--enum) is not array"
+        return "$SHELL_FALSE"
+    fi
+
     if [ -n "$min_length_b7f786d2" ] && [ -n "$max_length_b7f786d2" ] && [ "$min_length_b7f786d2" -gt "$max_length_b7f786d2" ]; then
         lerror --caller-frame="1" "param min($min_length_b7f786d2) gt max($max_length_b7f786d2)"
         return "$SHELL_FALSE"
@@ -144,6 +153,13 @@ function parameter::parse_string() {
         # 参数限定不能为空
         lerror --caller-frame="1" "check option(${option_b7f786d2}) string type failed, string limit no empty, current value is empty"
         return "$SHELL_FALSE"
+    fi
+
+    if [ -R enum_b7f786d2 ]; then
+        if array::is_not_contain "${!enum_b7f786d2}" "${temp_str_b7f786d2}"; then
+            lerror --caller-frame="1" "check option(${option_b7f786d2}) string type failed, value is not in enum(${enum_b7f786d2[*]})"
+            return "$SHELL_FALSE"
+        fi
     fi
 
     if [ -n "$min_length_b7f786d2" ] && [ "$(string::length "${temp_str_b7f786d2}")" -lt "$min_length_b7f786d2" ]; then
@@ -557,6 +573,19 @@ function TEST::parameter::parse_string() {
     parameter::parse_string value --option=--xx="${option}"
     utest::assert $?
     utest::assert_equal "$value" "abc def"
+
+    # 测试枚举
+    local enum=("abc" "def")
+    parameter::parse_string value --option=--name=abc --enum=enum
+    utest::assert $?
+    utest::assert_equal "$value" "abc"
+
+    # shellcheck disable=SC2034
+    local enum=("abc" "def")
+    value=""
+    parameter::parse_string value --option=--name=xyz --enum=enum
+    utest::assert_fail $?
+    utest::assert_equal "$value" ""
 
 }
 

@@ -32,7 +32,7 @@ function manager::cache::generate_top_apps() {
     # 先清空安装列表
     config::cache::top_apps::clean || return "$SHELL_FALSE"
 
-    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top install app list, it take a long time..."
+    linfo "generate top install app list, it take a long time..."
 
     if manager::flags::develop::is_exists; then
         linfo "is in develop mode, not add prior install apps to top app list"
@@ -92,7 +92,7 @@ function manager::cache::generate_top_apps() {
         config::cache::top_apps::rpush_unique "$item" || return "$SHELL_FALSE"
     done
 
-    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top install app list success"
+    lsuccess "generate top install app list success"
 
     return "$SHELL_TRUE"
 }
@@ -103,12 +103,17 @@ function manager::cache::generate_exclude_apps() {
 
     local item_83764fdc
 
+    linfo "generate exclude app."
+
     # 每次都重新生成
     config::cache::exclude_apps::clean || return "$SHELL_FALSE"
 
     for item_83764fdc in "${exclude_apps_83764fdc[@]}"; do
         config::cache::exclude_apps::rpush_unique "$item_83764fdc" || return "$SHELL_FALSE"
     done
+
+    linfo "generate exclude app success."
+
     return "$SHELL_TRUE"
 }
 
@@ -180,7 +185,7 @@ function manager::cache::generate_apps_relation() {
     local pm_app
     local item_dependencies=()
 
-    linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate apps relation infomation, it take a long time..."
+    linfo "generate apps relation infomation, it take a long time..."
 
     for app_path in "${SRC_ROOT_DIR}/app"/*; do
         app_name=$(basename "${app_path}")
@@ -210,7 +215,7 @@ function manager::cache::generate_apps_relation() {
         done
     done
 
-    lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate apps relation map success."
+    lsuccess "generate apps relation map success."
 
     return "$SHELL_TRUE"
 }
@@ -221,22 +226,27 @@ function manager::cache::do() {
     local -n exclude_pm_apps_096d6b8f=$1
     shift
 
+    local exit_code_096d6b8f=0
+
     if ! manager::flags::reuse_cache::is_exists; then
         linfo "no reuse cache, delete all cache"
         config::cache::delete || return "$SHELL_FALSE"
     fi
 
     if config::cache::apps::is_not_exists; then
-        manager::cache::generate_apps_relation || return "$SHELL_FALSE"
+        tui::components::spinner::main --title="generate apps relation. It may take a long time..." exit_code_096d6b8f manager::cache::generate_apps_relation || return "$SHELL_FALSE"
+        if [ "$exit_code_096d6b8f" -ne "$SHELL_TRUE" ]; then
+            lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate apps relation failed."
+            return "$SHELL_FALSE"
+        fi
     fi
 
     # 指定 include_pm_apps_096d6b8f 参数时，必须重新生成
-    if array::is_not_empty "${!include_pm_apps_096d6b8f}"; then
-        manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
-    else
-        if config::cache::top_apps::is_not_exists; then
-            # 生成需要处理的应用列表
-            manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
+    if array::is_not_empty "${!include_pm_apps_096d6b8f}" || config::cache::top_apps::is_not_exists; then
+        tui::components::spinner::main --title="generate top apps. It may take a long time..." exit_code_096d6b8f manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
+        if [ "$exit_code_096d6b8f" -ne "$SHELL_TRUE" ]; then
+            lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top apps failed."
+            return "$SHELL_FALSE"
         fi
     fi
 
