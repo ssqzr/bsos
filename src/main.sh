@@ -338,7 +338,10 @@ function main::_do_main() {
 
 function main::signal::handler_exit() {
     local code="$1"
-    linfo "exit code: ${code}"
+    linfo "script exit, pid=$$, exit code=${code}"
+
+    linfo "pkill child process..."
+    pkill -P "$$" || return "$SHELL_FALSE"
     manager::base::disable_no_password || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
@@ -424,6 +427,9 @@ SUBCOMMAND:
 
 "
 
+    # 单例
+    manager::base::lock || return "$SHELL_FALSE"
+
     # 先解析全局的参数
     for param in "$@"; do
         case "$param" in
@@ -459,18 +465,6 @@ SUBCOMMAND:
         remain_params=("install")
     fi
 
-    # 第一步就是检查用户，不然可能会污染环境
-    manager::base::check_root_user || return "$SHELL_FALSE"
-
-    # 其次设置日志的路径，尽量记录日志
-    log_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/main.log"
-    log::handler::file_handler::register || return "$SHELL_FALSE"
-    log::handler::file_handler::set_log_file "${log_filepath}" || return "$SHELL_FALSE"
-    log::level::set "$LOG_LEVEL_DEBUG" || return "$SHELL_FALSE"
-
-    # 单例
-    manager::base::lock || return "$SHELL_FALSE"
-
     # 设置记录执行命令的文件路径
     cmd_history_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/cmd.history"
     rm -f "${cmd_history_filepath}" || return "$SHELL_FALSE"
@@ -503,9 +497,18 @@ SUBCOMMAND:
 }
 
 function main::wrap_run() {
+    # 第一步就是检查用户，不然可能会污染环境
+    manager::base::check_root_user || return "$SHELL_FALSE"
+
+    # 其次设置日志的路径，尽量记录日志
+    log_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/main.log"
+    log::handler::file_handler::register || return "$SHELL_FALSE"
+    log::handler::file_handler::set_log_file "${log_filepath}" || return "$SHELL_FALSE"
+    log::level::set "$LOG_LEVEL_DEBUG" || return "$SHELL_FALSE"
+
     main::run "$@"
     if [ $? -eq "$SHELL_FALSE" ]; then
-        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "something is wrong, please check log."
+        lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "something is wrong, please check log file: ${log_filepath}"
         return "$SHELL_FALSE"
     fi
 }
