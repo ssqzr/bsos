@@ -70,8 +70,8 @@ function pacman::trait::post_install() {
     # 使用 @ 替换掉 / ，避免路径里的 / 需要被转移
     # 添加国内的源
     # Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
-    grep "mirrors.tuna.tsinghua.edu.cn" "/etc/pacman.d/mirrorlist" >/dev/null
-    if [ "$?" == "$SHELL_FALSE" ]; then
+    grep -q "mirrors.tuna.tsinghua.edu.cn" "/etc/pacman.d/mirrorlist"
+    if [ "$?" != "${SHELL_TRUE}" ]; then
         cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"sed -i '0,/^[# ]*Server/s@@Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/\\\$repo/os/\\\$arch\n&@' /etc/pacman.d/mirrorlist\"" || return "${SHELL_FALSE}"
     fi
 

@@ -20,10 +20,11 @@ source "${SCRIPT_DIR_1839760f}/yay.sh"
 # 这里简单处理
 # pacman pamac yay都是使用同一个锁文件
 # flatpak 不需要处理，暂时没发现锁的问题
-function package_manager::_clean_lock() {
+function package_manager::clean_lock() {
     local pacman_lock_file="/var/lib/pacman/db.lck"
 
     if [ ! -e "$pacman_lock_file" ]; then
+        ldebug "lock file($pacman_lock_file) not exists, ignore clean."
         return "$SHELL_TRUE"
     fi
 
@@ -46,7 +47,11 @@ function package_manager::_clean_lock() {
 
     lwarn "file($pacman_lock_file) is not in use, clean lock file"
 
-    fs::file::delete --sudo "$pacman_lock_file" || return "$SHELL_FALSE"
+    if which sudo >/dev/null 2>&1; then
+        fs::file::delete --sudo "$pacman_lock_file" || return "$SHELL_FALSE"
+    else
+        cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "'rm -f \"${pacman_lock_file}\"'" || return "$SHELL_FALSE"
+    fi
     return "$SHELL_TRUE"
 }
 
@@ -66,7 +71,7 @@ function package_manager::_run_command() {
         lexit "$CODE_USAGE"
     fi
 
-    package_manager::_clean_lock || return "$SHELL_FALSE"
+    package_manager::clean_lock || return "$SHELL_FALSE"
 
     ldebug "package_manager=${package_manager} command=${command} params=${params[*]}"
     package_manager::"${package_manager}"::"${command}" "${params[@]}" || return "$SHELL_FALSE"

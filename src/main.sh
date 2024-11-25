@@ -61,6 +61,8 @@ function main::install_core_dependencies() {
 }
 
 function main::must_do() {
+    # 清理锁
+    package_manager::clean_lock || return "$SHELL_FALSE"
 
     # 先安装全局都需要的包
     main::install_core_dependencies || return "$SHELL_FALSE"
