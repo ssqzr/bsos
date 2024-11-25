@@ -56,6 +56,11 @@ function gnome_keyring::trait::post_install() {
     local line
     local found=""
 
+    fs::file::delete "${tmp_pam_login_file}" || return "${SHELL_FALSE}"
+
+    # 先清理历史残留的
+    cmd::run_cmd_with_history --sudo -- sed -i -e "'/pam_gnome_keyring.so/d'" /etc/pam.d/login || return "${SHELL_FALSE}"
+
     while read -r line; do
         # 空行和注释行直接处理
         if [ -z "${line}" ]; then
