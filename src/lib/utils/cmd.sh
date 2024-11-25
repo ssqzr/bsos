@@ -52,6 +52,25 @@ function cmd::_default_stderr_handler() {
     cat 1>&2
 }
 
+# 对字符串进行脱敏处理
+function cmd::desensitize() {
+    local -n sensitive_251527cd="$1"
+    shift
+    local data_251527cd="$1"
+    shift
+
+    local length_251527cd
+    local index__251527cd
+
+    length_251527cd=$(array::length sensitive_251527cd) || return "$SHELL_FALSE"
+    for ((index__251527cd = 0; index__251527cd < length_251527cd; index__251527cd++)); do
+        data_251527cd="${data_251527cd//"${sensitive_251527cd[index__251527cd]}"/******}"
+    done
+
+    echo "$data_251527cd"
+    return "$SHELL_TRUE"
+}
+
 # 函数的返回结果是命令的执行结果
 # stdout_handler 和 stderr_handler 的返回结果并不影响函数的返回结果
 # NOTE: 如果命令的部分需要转义，可以将字符串用 {{}} 包裹起来
@@ -71,6 +90,9 @@ function cmd::run_cmd() {
     local temp_str
     local index
     local exit_code
+    local sensitive=()
+    # 脱敏后的命令字符串
+    local desensitize_cmds_str=""
 
     for param in "$@"; do
         if [ "$is_parse_self" == "$SHELL_FALSE" ]; then
@@ -106,6 +128,10 @@ function cmd::run_cmd() {
         --record | --record=*)
             parameter::parse_bool --option="$param" is_record_cmd || return "$SHELL_FALSE"
             ;;
+        --sensitive=*)
+            # 敏感的字符串
+            parameter::parse_array --option="$param" sensitive || return "$SHELL_FALSE"
+            ;;
         *)
             lerror "unknown option $param"
             return "$SHELL_FALSE"
@@ -127,6 +153,10 @@ function cmd::run_cmd() {
         return "$SHELL_FALSE"
     fi
 
+    if string::is_not_empty "$password"; then
+        array::rpush_unique sensitive "$password" || return "$SHELL_FALSE"
+    fi
+
     for ((index = 0; index < "${#cmds[@]}"; index++)); do
         temp_str="${cmds[$index]}"
         if [ "${#temp_str}" -ge 4 ] && [ "${temp_str:0:2}" == "{{" ] && [ "${temp_str: -2}" == "}}" ]; then
@@ -136,6 +166,7 @@ function cmd::run_cmd() {
         fi
     done
 
+    desensitize_cmds_str="$(cmd::desensitize sensitive "${cmds[*]}")" || return "$SHELL_FALSE"
     if [ "$is_record_cmd" -eq "$SHELL_TRUE" ]; then
         temp_str=""
         if [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -n "$password" ]; then
@@ -143,11 +174,11 @@ function cmd::run_cmd() {
         elif [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -z "$password" ]; then
             temp_str="sudo"
         fi
-        echo "${temp_str} ${cmds[*]}" >>"${__cmd_history_filepath}"
+        echo "${temp_str} ${desensitize_cmds_str}" >>"${__cmd_history_filepath}"
     fi
 
     if [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -z "$password" ]; then
-        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), password=$password, cmd=sudo bash -c ${cmds[*]}"
+        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), cmd=sudo bash -c ${desensitize_cmds_str}"
 
         # https://stackoverflow.com/questions/9112979/pipe-stdout-and-stderr-to-two-different-processes-in-shell-script
         # shellcheck disable=SC2024
@@ -155,14 +186,14 @@ function cmd::run_cmd() {
         exit_code=$?
 
     elif [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -n "$password" ]; then
-        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), password=******, cmd=printf ****** | sudo -S bash -c ${cmds[*]}"
+        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), password=******, cmd=printf ****** | sudo -S bash -c ${desensitize_cmds_str}"
 
         # shellcheck disable=SC2024
         { printf "%s" "$password" | sudo -S bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
         exit_code=$?
 
     else
-        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), cmd=bash -c ${cmds[*]}"
+        ldebug "start run cmd, is_sudo=$(string::print_yes_no "$is_sudo"), cmd=bash -c ${desensitize_cmds_str}"
 
         { bash -c "${cmds[*]}" > >(${stdout_handler} "${stdout_handler_params[@]}" 3>&-) 2> >(${stderr_handler} "${stderr_handler_params[@]}" 1>&3 3>&-) 3>&-; } 3>&1
         exit_code=$?
@@ -248,6 +279,29 @@ function cmd::run_cmd_retry_three() {
 }
 
 ##################################### 以下是测试代码 #####################################
+
+function TEST::cmd::desensitize() {
+    local sensitive=()
+
+    # 空字符串不会脱敏
+    sensitive=("")
+    utest::assert_equal "$(cmd::desensitize sensitive "hello world")" "hello world"
+
+    sensitive=("abc")
+    utest::assert_equal "$(cmd::desensitize sensitive "hello world")" "hello world"
+    utest::assert_equal "$(cmd::desensitize sensitive "hello abcworld")" "hello ******world"
+    utest::assert_equal "$(cmd::desensitize sensitive "hello abcabcabworld")" "hello ************abworld"
+
+    sensitive=("abc" "123")
+    utest::assert_equal "$(cmd::desensitize sensitive "hello world")" "hello world"
+    utest::assert_equal "$(cmd::desensitize sensitive "hello abcworld")" "hello ******world"
+    utest::assert_equal "$(cmd::desensitize sensitive "hell123o abcworld")" "hell******o ******world"
+
+    # 特殊字符
+    # shellcheck disable=SC2034
+    sensitive=("${UTEST_CHAR_SPECIAL}")
+    utest::assert_equal "$(cmd::desensitize sensitive "hello world ${UTEST_CHAR_SPECIAL}")" "hello world ******"
+}
 
 function TEST::cmd::run_cmd::simple() {
     local output

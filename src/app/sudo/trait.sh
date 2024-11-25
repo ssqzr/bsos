@@ -41,7 +41,7 @@ function sudo::trait::pre_install() {
 # 安装的操作
 function sudo::trait::do_install() {
     # 执行 su 需要输入密码
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -S --needed --noconfirm  $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -S --needed --noconfirm  $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -65,7 +65,7 @@ function sudo::trait::do_uninstall() {
     fi
 
     # 执行 su 需要输入密码
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -R --noconfirm $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -R --noconfirm $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

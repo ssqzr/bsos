@@ -21,7 +21,7 @@ function pacman::trait::enable_multilib() {
     fi
 
     # 此时 sudo 还没安装，无法使用
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c $'"sed -i -e \'\$a\[multilib]\' -e \'\$a\Include = /etc/pacman.d/mirrorlist\' "/etc/pacman.conf""' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c $'"sed -i -e \'\$a\[multilib]\' -e \'\$a\Include = /etc/pacman.d/mirrorlist\' "/etc/pacman.conf""' || return "${SHELL_FALSE}"
 
     linfo "enable multilib success"
     return "${SHELL_TRUE}"
@@ -72,12 +72,12 @@ function pacman::trait::post_install() {
     # Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
     grep -q "mirrors.tuna.tsinghua.edu.cn" "/etc/pacman.d/mirrorlist"
     if [ "$?" != "${SHELL_TRUE}" ]; then
-        cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"sed -i '0,/^[# ]*Server/s@@Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/\\\$repo/os/\\\$arch\n&@' /etc/pacman.d/mirrorlist\"" || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"sed -i '0,/^[# ]*Server/s@@Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/\\\$repo/os/\\\$arch\n&@' /etc/pacman.d/mirrorlist\"" || return "${SHELL_FALSE}"
     fi
 
     # 更新软件数据库
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start update pacman database..."
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Sy --noconfirm"\" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Sy --noconfirm"\" || return "${SHELL_FALSE}"
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "update pacman database success."
     return "${SHELL_TRUE}"
 }

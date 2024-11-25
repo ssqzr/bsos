@@ -50,7 +50,7 @@ function package_manager::clean_lock() {
     if which sudo >/dev/null 2>&1; then
         fs::file::delete --sudo "$pacman_lock_file" || return "$SHELL_FALSE"
     else
-        cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "'rm -f \"${pacman_lock_file}\"'" || return "$SHELL_FALSE"
+        cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c "'rm -f \"${pacman_lock_file}\"'" || return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
 }

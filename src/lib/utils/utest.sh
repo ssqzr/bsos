@@ -15,6 +15,15 @@ source "${SCRIPT_DIR_00577440}/print.sh"
 declare UTEST_RESULT_FAILED="failed"
 declare UTEST_RESULT_SUCCESS="success"
 
+# shellcheck disable=SC2034
+declare UTEST_CHAR_ALPHABETIC=$'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+# shellcheck disable=SC2034
+declare UTEST_CHAR_DIGIT=$'0123456789'
+# shellcheck disable=SC2034
+declare UTEST_CHAR_SPECIAL=$'!@#$%^&*()_+-=[]{}\|;:,.<>/?"'"'"
+# shellcheck disable=SC2034
+declare UTEST_CHAR_ALL=${UTEST_CHAR_ALPHABETIC}${UTEST_CHAR_DIGIT}${UTEST_CHAR_SPECIAL}
+
 function utest::printf_result() {
     local result="$1"
     case "$result" in

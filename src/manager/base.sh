@@ -117,8 +117,8 @@ function manager::base::enable_no_password() {
     username=$(os::user::name)
     local filepath="/etc/sudoers.d/10-${username}"
     linfo "enable user(${username}) no password to run sudo"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) NOPASSWD:ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) NOPASSWD:ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"
     linfo "enable user(${username}) no password to run sudo success"
 
     # 设置当前组内的用户执行pamac不需要输入密码
@@ -127,9 +127,9 @@ function manager::base::enable_no_password() {
     linfo "enable no password for group(${group_name}) to run pamac"
     local src_filepath="${SRC_ROOT_DIR}/assets/polkit/10-pamac.rules"
     filepath="/etc/polkit-1/rules.d/10-pamac.rules"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'cp -f \""${src_filepath}"\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'sed -i \"s/usergroup/"${group_name}"/g\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'mkdir -p \""$(dirname "${filepath}")"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'cp -f \""${src_filepath}"\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'sed -i \"s/usergroup/"${group_name}"/g\" \""${filepath}"\"\' || return "${SHELL_FALSE}"
     linfo "enable no password for group(${group_name}) to run pamac success"
 
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "enable no password success"
@@ -147,12 +147,12 @@ function manager::base::disable_no_password() {
     username=$(os::user::name)
     local filepath="/etc/sudoers.d/10-${username}"
     linfo "disable no password for user(${username})"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'echo \""${username}" ALL=\(ALL\) ALL\" \> "${filepath}"\' || return "${SHELL_FALSE}"
     linfo "disable no password for user(${username}) success"
 
     filepath="/etc/polkit-1/rules.d/10-pamac.rules"
     linfo "disable no password for pamac, delete filepath=${filepath}"
-    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \'rm -f \""${filepath}"\"\' || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sensitive="${ROOT_PASSWORD}" -- printf "${ROOT_PASSWORD}" "|" su - root -c \'rm -f \""${filepath}"\"\' || return "${SHELL_FALSE}"
     linfo "disable no password for pamac success"
 
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "disable no password success"
