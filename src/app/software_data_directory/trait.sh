@@ -32,16 +32,16 @@ function software_data_directory::trait::description() {
 # 后续安装的时候会用到的配置
 function software_data_directory::trait::install_guide() {
     local data_root
+    local default_filepath="${HOME}/software"
 
     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "You should format the disk and mount it first" || return "${SHELL_FALSE}"
 
-    data_root=$(tui::input_optional "directory path" "The data root directory for all software: ") || return "$SHELL_FALSE"
+    data_root=$(tui::input_optional "Default: ${default_filepath}" "The data root directory for all software: " "${default_filepath}") || return "$SHELL_FALSE"
 
     data_root=$(string::trim "${data_root}")
 
     if string::is_empty "${data_root}"; then
-        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "The data root directory for all software is not set"
-        return "${SHELL_TRUE}"
+        data_root="${default_filepath}"
     fi
 
     data_root=$(fs::path::realpath "${data_root}") || return "${SHELL_FALSE}"

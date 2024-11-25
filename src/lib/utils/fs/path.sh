@@ -22,6 +22,11 @@ source "${SCRIPT_DIR_c005add3}/../parameter.sh"
 function fs::path::realpath() {
     local filepath="$1"
     local realpath
+
+    if string::is_starts_with "$filepath" "~"; then
+        filepath="${HOME}${filepath:1}"
+    fi
+
     realpath=$(realpath -m -s "$filepath")
     echo "$realpath"
     return "$SHELL_TRUE"
@@ -159,4 +164,20 @@ function fs::path::random_path() {
     path="$parent/$random_name"
     echo "$path"
     return "$SHELL_TRUE"
+}
+
+################################################### 下面是测试代码 ###################################################
+
+function TEST::fs::path::realpath() {
+    # 测试相对路径
+    utest::assert_equal "$(fs::path::realpath "a/b/c")" "${PWD}/a/b/c"
+    utest::assert_equal "$(fs::path::realpath "../../")" "$(dirname "$(dirname "$PWD")")"
+
+    # 测试 . 和 ..
+    utest::assert_equal "$(fs::path::realpath "/a/././b/c/d/../..")" "/a/b"
+    utest::assert_equal "$(fs::path::realpath "/a/././b/c/d/./.")" "/a/b/c/d"
+
+    # 测试 ~
+    utest::assert_equal "$(fs::path::realpath $'~/a/b/c')" "${HOME}/a/b/c"
+
 }
