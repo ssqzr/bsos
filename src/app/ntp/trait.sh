@@ -11,12 +11,6 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
-function ntp::settings::restart_service() {
-    cmd::run_cmd_with_history --sudo -- systemctl enable systemd-timesyncd.service || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history --sudo -- systemctl restart systemd-timesyncd.service || return "${SHELL_FALSE}"
-    return "${SHELL_TRUE}"
-}
-
 function ntp::settings::clean() {
     cmd::run_cmd_with_history --sudo -- sed -i "'/^NTP=ntp.aliyun.com ntp.tuna.tsinghua.edu.cn/d'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history --sudo -- sed -i "'s/^# __backup__flag__ \\(.*\\)/\\1/g'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
@@ -69,14 +63,21 @@ function ntp::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function ntp::trait::post_install() {
     ntp::settings::change || return "${SHELL_FALSE}"
-    ntp::settings::restart_service || return "${SHELL_FALSE}"
+
+    # 确保是开机启动
+    systemctl::enable "systemd-timesyncd.service" || return "${SHELL_FALSE}"
+    systemctl::restart "systemd-timesyncd.service" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
 function ntp::trait::pre_uninstall() {
     ntp::settings::clean || return "${SHELL_FALSE}"
-    ntp::settings::restart_service || return "${SHELL_FALSE}"
+
+    # 这个服务预装在系统，即使执行卸载操作我也不认为应该关闭
+    # 确保是开机启动
+    systemctl::enable "systemd-timesyncd.service" || return "${SHELL_FALSE}"
+    systemctl::restart "systemd-timesyncd.service" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
