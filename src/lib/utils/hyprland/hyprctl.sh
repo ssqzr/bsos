@@ -31,7 +31,10 @@ function hyprland::hyprctl::instance::all() {
 
     local temp_d2d9c003
 
-    temp_d2d9c003=$(hyprctl instances | grep instance | awk '{print $2}' | awk -F ':' '{print $1}')
+    # FIXME: 当 /run/user/1000/hypr 目录不存在时，执行 hyprctl 会出错
+    # https://github.com/hyprwm/Hyprland/issues/8579
+    temp_d2d9c003=$(hyprctl instances -j 2> >(lwrite)) || return "$SHELL_FALSE"
+    temp_d2d9c003=$(echo "${temp_d2d9c003}" | grep instance | awk -F '"' '{print $4}')
 
     array::readarray instances_d2d9c003 <<<"${temp_d2d9c003}"
 
@@ -43,7 +46,8 @@ function hyprland::hyprctl::instance::pid() {
 
     local pid
 
-    pid=$(hyprctl instances -j | yq ".[] | select(.instance == \"${instance}\") | .pid") || return "$SHELL_FALSE"
+    pid="$(hyprctl instances -j)" || return "$SHELL_FALSE"
+    pid=$(echo "${pid}" | yq ".[] | select(.instance == \"${instance}\") | .pid") || return "$SHELL_FALSE"
 
     echo "$pid"
 
@@ -62,9 +66,7 @@ function hyprland::hyprctl::instance::all_by_username() {
     local pid_22de1eba
     local process_username_22de1eba
 
-    temp_22de1eba=$(hyprctl instances | grep instance | awk '{print $2}' | awk -F ':' '{print $1}')
-
-    array::readarray all_22de1eba <<<"${temp_22de1eba}"
+    hyprland::hyprctl::instance::all all_22de1eba || return "$SHELL_FALSE"
 
     instances_22de1eba=()
     for temp_22de1eba in "${all_22de1eba[@]}"; do
@@ -89,7 +91,7 @@ function hyprland::hyprctl::instance::version() {
     fi
 
     local temp_str
-    temp_str=$(hyprctl -j version "${instance_params[@]}")
+    temp_str=$(hyprctl -j version "${instance_params[@]}") || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "get hyprland version failed, instance=${instance}, err=${temp_str}"
         return "$SHELL_FALSE"
@@ -109,7 +111,8 @@ function hyprland::hyprctl::instance::version::tag() {
         instance_params+=("-i" "$instance")
     fi
 
-    tag=$(hyprctl -j version "${instance_params[@]}" | yq '.tag') || return "$SHELL_FALSE"
+    tag=$(hyprctl -j version "${instance_params[@]}") || return "$SHELL_FALSE"
+    tag=$(echo "$tag" | yq '.tag') || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "get hyprland version tag failed, instance=${instance}, err=${tag}"
         return "$SHELL_FALSE"
@@ -213,7 +216,7 @@ function hyprland::hyprctl::instance::monitors() {
         instance_params+=("-i" "$instance")
     fi
 
-    value=$(hyprctl -j monitors "${instance_params[@]}")
+    value=$(hyprctl -j monitors "${instance_params[@]}") || return "$SHELL_FALSE"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "get hyprland monitors failed, instance=${instance}, err=${value}"
         return "$SHELL_FALSE"
