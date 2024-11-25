@@ -137,7 +137,13 @@ function cmd::run_cmd() {
     done
 
     if [ "$is_record_cmd" -eq "$SHELL_TRUE" ]; then
-        echo "${cmds[*]}" >>"${__cmd_history_filepath}"
+        temp_str=""
+        if [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -n "$password" ]; then
+            temp_str=$'printf "%s" "******" | sudo -S'
+        elif [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -z "$password" ]; then
+            temp_str="sudo"
+        fi
+        echo "${temp_str} ${cmds[*]}" >>"${__cmd_history_filepath}"
     fi
 
     if [ "$is_sudo" -eq "$SHELL_TRUE" ] && [ -z "$password" ]; then

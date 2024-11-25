@@ -46,9 +46,9 @@ function locale::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function locale::trait::post_install() {
-    cmd::run_cmd_with_history -- sudo sed -i -e "'s/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/'" -e "'s/^#zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/'" "/etc/locale.gen" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- sudo locale-gen
-    cmd::run_cmd_with_history -- sudo localectl set-locale LANG=zh_CN.UTF-8
+    cmd::run_cmd_with_history --sudo -- sed -i -e "'s/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/'" -e "'s/^#zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/'" "/etc/locale.gen" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- locale-gen
+    cmd::run_cmd_with_history --sudo -- localectl set-locale LANG=zh_CN.UTF-8
     return "${SHELL_TRUE}"
 }
 
@@ -65,9 +65,9 @@ function locale::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function locale::trait::post_uninstall() {
-    cmd::run_cmd_with_history -- sudo sed -i -e "'s/^en_US.UTF-8 UTF-8/#en_US.UTF-8 UTF-8/'" -e "'s/^zh_CN.UTF-8 UTF-8/#zh_CN.UTF-8 UTF-8/'" "/etc/locale.gen" || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- sudo locale-gen
-    cmd::run_cmd_with_history -- sudo localectl set-locale LANG=C.UTF-8
+    cmd::run_cmd_with_history --sudo -- sed -i -e "'s/^en_US.UTF-8 UTF-8/#en_US.UTF-8 UTF-8/'" -e "'s/^zh_CN.UTF-8 UTF-8/#zh_CN.UTF-8 UTF-8/'" "/etc/locale.gen" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- locale-gen
+    cmd::run_cmd_with_history --sudo -- localectl set-locale LANG=C.UTF-8
     return "${SHELL_TRUE}"
 }
 

@@ -29,7 +29,7 @@ function systemctl::is_not_exists() {
 }
 
 function systemctl::manager_state::reload() {
-    cmd::run_cmd_with_history -- sudo systemctl daemon-reload
+    cmd::run_cmd_with_history --sudo -- systemctl daemon-reload
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "systemctl daemon-reload failed"
         return "$SHELL_FALSE"
@@ -67,7 +67,7 @@ function systemctl::is_enabled() {
 # systemctl -q 可以不输出任何信息，但是还是将输出记录到日志，方便排查问题
 function systemctl::enable() {
     local unit="$1"
-    cmd::run_cmd_with_history -- sudo systemctl enable "$unit"
+    cmd::run_cmd_with_history --sudo -- systemctl enable "$unit"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "systemctl enable $unit failed"
         return "$SHELL_FALSE"
@@ -79,7 +79,7 @@ function systemctl::enable() {
 # 重复 disable 不会报错，返回码也是0
 function systemctl::disable() {
     local unit="$1"
-    cmd::run_cmd_with_history -- sudo systemctl disable "$unit"
+    cmd::run_cmd_with_history --sudo -- systemctl disable "$unit"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "systemctl disable $unit failed"
         return "$SHELL_FALSE"
@@ -91,7 +91,7 @@ function systemctl::disable() {
 # 重复 start 不会报错，返回码也是0
 function systemctl::start() {
     local unit="$1"
-    cmd::run_cmd_with_history -- sudo systemctl start "$unit"
+    cmd::run_cmd_with_history --sudo -- systemctl start "$unit"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "systemctl start $unit failed"
         return "$SHELL_FALSE"
@@ -103,7 +103,7 @@ function systemctl::start() {
 # 重复 stop 不会报错，返回码也是0
 function systemctl::stop() {
     local unit="$1"
-    cmd::run_cmd_with_history -- sudo systemctl stop "$unit"
+    cmd::run_cmd_with_history --sudo -- systemctl stop "$unit"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "systemctl stop $unit failed"
         return "$SHELL_FALSE"
@@ -115,7 +115,7 @@ function systemctl::stop() {
 # 重复 restart 不会报错，返回码也是0
 function systemctl::restart() {
     local unit="$1"
-    cmd::run_cmd_with_history -- sudo systemctl restart "$unit"
+    cmd::run_cmd_with_history --sudo -- systemctl restart "$unit"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "systemctl restart $unit failed"
         return "$SHELL_FALSE"

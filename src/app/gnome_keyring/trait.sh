@@ -50,7 +50,7 @@ function gnome_keyring::trait::post_install() {
     # https://wiki.archlinuxcn.org/wiki/GNOME/Keyring#%E7%94%A8PAM%E7%9A%84%E6%96%B9%E6%B3%95
     # https://stackoverflow.com/questions/37909388/append-line-after-last-match-with-sed
     # 本来想使用sed解决的，但是网上给的方案都没有说明，出现问题也不好排查
-    # cmd::run_cmd_with_history -- sudo sed -i -e "'1h;1!H;$!d;x;s/.*auth [^\n]*/&\nauth optional pam_gnome_keyring.so/'" -e "'1h;1!H;$!d;x;s/.*session [^\n]*/&\nsession optional pam_gnome_keyring.so auto_start/'" /etc/pam.d/login || return "${SHELL_FALSE}"
+    # cmd::run_cmd_with_history --sudo -- sed -i -e "'1h;1!H;$!d;x;s/.*auth [^\n]*/&\nauth optional pam_gnome_keyring.so/'" -e "'1h;1!H;$!d;x;s/.*session [^\n]*/&\nsession optional pam_gnome_keyring.so auto_start/'" /etc/pam.d/login || return "${SHELL_FALSE}"
     local tmp_pam_login_file="${BUILD_TEMP_DIR}/login.tmp"
 
     local line
@@ -80,7 +80,7 @@ function gnome_keyring::trait::post_install() {
 
     done </etc/pam.d/login
 
-    cmd::run_cmd_with_history -- sudo cp -f "${tmp_pam_login_file}" /etc/pam.d/login || return "${SHELL_FALSE}"
+    fs::file::copy --sudo --force "${tmp_pam_login_file}" /etc/pam.d/login
 
     return "${SHELL_TRUE}"
 }
@@ -98,7 +98,7 @@ function gnome_keyring::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function gnome_keyring::trait::post_uninstall() {
-    cmd::run_cmd_with_history -- sudo sed -i -e "'/pam_gnome_keyring.so/d'" /etc/pam.d/login || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- sed -i -e "'/pam_gnome_keyring.so/d'" /etc/pam.d/login || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

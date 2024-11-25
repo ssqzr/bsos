@@ -15,7 +15,7 @@ function android_develop::settings::agree_license() {
     local sdkmanager="/opt/android-sdk/cmdline-tools/latest/bin/sdkmanager"
 
     # 同意许可协议
-    cmd::run_cmd_with_history -- yes "|" sudo "${sdkmanager}" --licenses || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo -- "${sdkmanager}" --licenses || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

@@ -50,8 +50,6 @@ function systemd_resolved::trait::post_install() {
     # 遇到问题： dial tcp: lookup proxy.golang.org on [::1]:53: read udp [::1]:50493->[::1]:53: read: connection refused
     # https://github.com/Jguer/yay/issues/2262/
     # app 放到 sudo 前操作，因此 sudo 无法使用
-    # cmd::run_cmd_with_history -- sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || return "${SHELL_FALSE}"
-    # cmd::run_cmd_with_history -- sudo systemctl restart systemd-resolved.service || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf\"" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c "\"systemctl restart systemd-resolved.service\"" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

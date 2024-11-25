@@ -53,7 +53,6 @@ function swap::trait::swap::edit_fstab() {
     local swap_filepath
     swap_filepath=$(swap::trait::swap::filepath) || return "${SHELL_FALSE}"
 
-    # cmd::run_cmd_with_history -- echo "'${swap_filepath} none swap defaults 0 0'" "|" sudo tee -a "/etc/fstab" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history --sudo -- sed -i -e "'\$a${swap_filepath} none swap defaults 0 0'" "/etc/fstab" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

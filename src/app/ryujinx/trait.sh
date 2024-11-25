@@ -53,7 +53,7 @@ function ryujinx::trait::post_install() {
     # cmd::run_cmd_with_history -- 7z x "$firmware_filepath" -o"${BUILD_TEMP_DIR}/Firmware" || return "${SHELL_FALSE}"
     # cmd::run_cmd_with_history -- find "${BUILD_TEMP_DIR}/Firmware" -mindepth 1 -maxdepth 1 -exec cp -rf {} "${ryujinx_config_dir}/" "\;" || return "${SHELL_FALSE}"
 
-    cmd::run_cmd_with_history -- echo "vm.max_map_count=524288" "|" sudo tee "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- echo "vm.max_map_count=524288" ">" "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
 
     hyprland::config::add "350" "${SCRIPT_DIR_b3956090}/ryujinx.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -73,7 +73,7 @@ function ryujinx::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function ryujinx::trait::post_uninstall() {
     # cmd::run_cmd_with_history -- rm -rf "${HOME}/.var/app/org.ryujinx.Ryujinx"
-    cmd::run_cmd_with_history -- sudo rm -f "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
+    fs::file::delete --sudo "/etc/sysctl.d/ryujinx.conf" || return "${SHELL_FALSE}"
 
     hyprland::config::remove "350" "ryujinx.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

@@ -12,22 +12,22 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function ntp::settings::restart_service() {
-    cmd::run_cmd_with_history -- sudo systemctl enable systemd-timesyncd.service || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- sudo systemctl restart systemd-timesyncd.service || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- systemctl enable systemd-timesyncd.service || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- systemctl restart systemd-timesyncd.service || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 function ntp::settings::clean() {
-    cmd::run_cmd_with_history -- sudo sed -i "'/^NTP=ntp.aliyun.com ntp.tuna.tsinghua.edu.cn/d'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- sudo sed -i "'s/^# __backup__flag__ \\(.*\\)/\\1/g'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- sed -i "'/^NTP=ntp.aliyun.com ntp.tuna.tsinghua.edu.cn/d'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- sed -i "'s/^# __backup__flag__ \\(.*\\)/\\1/g'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 function ntp::settings::change() {
     ntp::settings::clean || return "${SHELL_FALSE}"
 
-    cmd::run_cmd_with_history -- sudo sed -i "'s/^\\(NTP=.*\\)/# __backup__flag__ \\1/g'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- sudo sed -i "'/\\[Time\\]/a\\NTP=ntp.aliyun.com ntp.tuna.tsinghua.edu.cn'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- sed -i "'s/^\\(NTP=.*\\)/# __backup__flag__ \\1/g'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- sed -i "'/\\[Time\\]/a\\NTP=ntp.aliyun.com ntp.tuna.tsinghua.edu.cn'" /etc/systemd/timesyncd.conf || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }

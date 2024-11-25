@@ -13,13 +13,13 @@ source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function timezone::settings::restart() {
     # --systohc 将硬件时钟调整为与目前的系统时钟一致。
-    cmd::run_cmd_with_history -- sudo hwclock --systohc || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- hwclock --systohc || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
 
 function timezone::settings::clean() {
-    cmd::run_cmd_with_history -- sudo rm -f /etc/localtime || return "${SHELL_FALSE}"
+    fs::file::delete --sudo /etc/localtime || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -32,8 +32,8 @@ function timezone::settings::do() {
         return "${SHELL_FALSE}"
     else
         timezone::settings::clean || return "${SHELL_FALSE}"
-        # cmd::run_cmd_with_history -- sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime || return "${SHELL_FALSE}"
-        cmd::run_cmd_with_history -- sudo timedatectl set-timezone "${timezone}" || return "${SHELL_FALSE}"
+        # cmd::run_cmd_with_history --sudo -- ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime || return "${SHELL_FALSE}"
+        cmd::run_cmd_with_history --sudo -- timedatectl set-timezone "${timezone}" || return "${SHELL_FALSE}"
     fi
     return "${SHELL_TRUE}"
 }

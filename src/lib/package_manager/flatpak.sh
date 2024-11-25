@@ -30,7 +30,7 @@ function package_manager::flatpak::install() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- sudo flatpak install -y "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history --sudo -- flatpak install -y "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::flatpak::uninstall() {
@@ -46,7 +46,7 @@ function package_manager::flatpak::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history -- sudo flatpak uninstall -y "$package" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo -- flatpak uninstall -y "$package" || return "$SHELL_FALSE"
 }
 
 function package_manager::flatpak::package_description() {
@@ -67,9 +67,9 @@ function package_manager::flatpak::upgrade() {
     local app="$1"
 
     if [ -z "$app" ]; then
-        cmd::run_cmd_with_history -- sudo flatpak update -y || return "$SHELL_FALSE"
+        cmd::run_cmd_with_history --sudo -- flatpak update -y || return "$SHELL_FALSE"
     else
-        cmd::run_cmd_with_history -- sudo flatpak update -y "$app" || return "$SHELL_FALSE"
+        cmd::run_cmd_with_history --sudo -- flatpak update -y "$app" || return "$SHELL_FALSE"
     fi
     return "$SHELL_TRUE"
 }

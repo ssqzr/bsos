@@ -88,7 +88,7 @@ function zsh::trait::post_install() {
     # https://wiki.archlinux.org/title/zsh#Making_Zsh_your_default_shell
     local username
     username=$(os::user::name)
-    cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/zsh "${username}"
+    cmd::run_cmd_with_history --sudo -- chsh -s /usr/bin/zsh "${username}"
 
     return "${SHELL_TRUE}"
 }
@@ -111,7 +111,7 @@ function zsh::trait::post_uninstall() {
     fs::directory::safe_delete "$XDG_CONFIG_HOME/zsh" || return "$SHELL_FALSE"
     local username
     username=$(os::user::name)
-    cmd::run_cmd_with_history -- sudo chsh -s /usr/bin/bash "${username}"
+    cmd::run_cmd_with_history --sudo -- chsh -s /usr/bin/bash "${username}"
     return "${SHELL_TRUE}"
 }
 
