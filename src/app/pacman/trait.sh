@@ -11,6 +11,22 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
+# https://wiki.archlinux.org/title/Official_repositories#multilib
+# multilib 包含着32位的软件和链接库，可以用于在64位系统上运行和构建32位软件
+function pacman::trait::enable_multilib() {
+    grep -q "^\[multilib\]" "/etc/pacman.conf"
+    if [ "$?" == "$SHELL_TRUE" ]; then
+        linfo "multilib is already enabled"
+        return "${SHELL_TRUE}"
+    fi
+
+    # 此时 sudo 还没安装，无法使用
+    cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c $'"sed -i -e \'\$a\[multilib]\' -e \'\$a\Include = /etc/pacman.d/mirrorlist\' "/etc/pacman.conf""' || return "${SHELL_FALSE}"
+
+    linfo "enable multilib success"
+    return "${SHELL_TRUE}"
+}
+
 # 指定使用的包管理器
 function pacman::trait::package_manager() {
     echo "pacman"
@@ -35,6 +51,20 @@ function pacman::trait::install_guide() {
 
 # 安装的前置操作，比如下载源代码
 function pacman::trait::pre_install() {
+    return "${SHELL_TRUE}"
+}
+
+# 安装的操作
+function pacman::trait::do_install() {
+    # 系统自带了，不用安装
+    # package_manager::install "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+# 安装的后置操作，比如写配置文件
+function pacman::trait::post_install() {
+    pacman::trait::enable_multilib || return "${SHELL_FALSE}"
+
     # https://stackoverflow.com/questions/31869731/what-is-the-meaning-of-0-xxx-in-sed
     # https://stackoverflow.com/questions/30386483/command-to-insert-lines-before-first-match
     # 使用 @ 替换掉 / ，避免路径里的 / 需要被转移
@@ -49,19 +79,6 @@ function pacman::trait::pre_install() {
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "start update pacman database..."
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -Sy --noconfirm"\" || return "${SHELL_FALSE}"
     lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "update pacman database success."
-
-    return "${SHELL_TRUE}"
-}
-
-# 安装的操作
-function pacman::trait::do_install() {
-    # 系统自带了，不用安装
-    # package_manager::install "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
-    return "${SHELL_TRUE}"
-}
-
-# 安装的后置操作，比如写配置文件
-function pacman::trait::post_install() {
     return "${SHELL_TRUE}"
 }
 
