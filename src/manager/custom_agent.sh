@@ -117,6 +117,32 @@ function manager::custom_agent::command::pre_install() {
     linfo "app(${PM_APP_NAME}) pre_install success"
 }
 
+function manager::custom_agent::command::install() {
+    manager::custom_agent::command::pre_install || return "$SHELL_FALSE"
+
+    "${app_name}::trait::do_install" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) install success"
+
+    "${app_name}::trait::post_install" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) post_install success"
+
+    return "${SHELL_TRUE}"
+}
+
+function manager::custom_agent::command::uninstall() {
+
+    "${app_name}::trait::pre_uninstall" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) pre_uninstall success"
+
+    "${app_name}::trait::do_uninstall" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) uninstall success"
+
+    "${app_name}::trait::post_uninstall" || return "$SHELL_FALSE"
+    linfo "app(${PM_APP_NAME}) post_uninstall success"
+
+    return "${SHELL_TRUE}"
+}
+
 function manager::custom_agent::main() {
     local app_name="$1"
     local command="$2"
@@ -151,7 +177,15 @@ function manager::custom_agent::main() {
         manager::custom_agent::command::pre_install || return "$SHELL_FALSE"
         ;;
 
-    "description" | "install" | "post_install" | "pre_uninstall" | "uninstall" | "post_uninstall" | "upgrade" | "fixme" | "unfixme" | "dependencies" | "features")
+    "install")
+        manager::custom_agent::command::install || return "$SHELL_FALSE"
+        ;;
+
+    "uninstall")
+        manager::custom_agent::command::uninstall || return "$SHELL_FALSE"
+        ;;
+
+    "description" | "do_install" | "post_install" | "pre_uninstall" | "do_uninstall" | "post_uninstall" | "upgrade" | "fixme" | "unfixme" | "dependencies" | "features")
         "${app_name}::trait::${command}"
         if [ $? -ne "$SHELL_TRUE" ]; then
             lerror "run ${app_name}::trait::${command} failed"

@@ -38,7 +38,7 @@ function fcitx5::trait::pre_install() {
 }
 
 # 安装的操作
-function fcitx5::trait::install() {
+function fcitx5::trait::do_install() {
     package_manager::install "$(fcitx5::trait::package_manager)" "$(fcitx5::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -63,7 +63,7 @@ function fcitx5::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function fcitx5::trait::uninstall() {
+function fcitx5::trait::do_uninstall() {
     package_manager::uninstall "$(fcitx5::trait::package_manager)" "$(fcitx5::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

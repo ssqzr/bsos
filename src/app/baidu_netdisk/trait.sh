@@ -39,7 +39,7 @@ function baidu_netdisk::trait::pre_install() {
 }
 
 # 安装的操作
-function baidu_netdisk::trait::install() {
+function baidu_netdisk::trait::do_install() {
     package_manager::install "$(baidu_netdisk::trait::package_manager)" "$(baidu_netdisk::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -57,7 +57,7 @@ function baidu_netdisk::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function baidu_netdisk::trait::uninstall() {
+function baidu_netdisk::trait::do_uninstall() {
     package_manager::uninstall "$(baidu_netdisk::trait::package_manager)" "$(baidu_netdisk::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

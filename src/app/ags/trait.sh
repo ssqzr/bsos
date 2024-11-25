@@ -38,7 +38,7 @@ function ags::trait::pre_install() {
 }
 
 # 安装的操作
-function ags::trait::install() {
+function ags::trait::do_install() {
     package_manager::install "$(ags::trait::package_manager)" "$(ags::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -54,7 +54,7 @@ function ags::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function ags::trait::uninstall() {
+function ags::trait::do_uninstall() {
     package_manager::uninstall "$(ags::trait::package_manager)" "$(ags::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -41,7 +41,7 @@ function all_direct_pm::trait::pre_install() {
 }
 
 # 安装的操作
-function all_direct_pm::trait::install() {
+function all_direct_pm::trait::do_install() {
     return "${SHELL_TRUE}"
 }
 
@@ -56,7 +56,7 @@ function all_direct_pm::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function all_direct_pm::trait::uninstall() {
+function all_direct_pm::trait::do_uninstall() {
     return "${SHELL_TRUE}"
 }
 

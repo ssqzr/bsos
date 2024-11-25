@@ -39,7 +39,7 @@ function ardour::trait::pre_install() {
 }
 
 # 安装的操作
-function ardour::trait::install() {
+function ardour::trait::do_install() {
     package_manager::install "$(ardour::trait::package_manager)" "$(ardour::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -60,7 +60,7 @@ function ardour::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function ardour::trait::uninstall() {
+function ardour::trait::do_uninstall() {
     package_manager::uninstall "$(ardour::trait::package_manager)" "$(ardour::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

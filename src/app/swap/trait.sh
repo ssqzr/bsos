@@ -94,7 +94,7 @@ function swap::trait::pre_install() {
 }
 
 # 安装的操作
-function swap::trait::install() {
+function swap::trait::do_install() {
     # package_manager::install "$(swap::trait::package_manager)" "$(swap::trait::package_name)" || return "${SHELL_FALSE}"
 
     local swap_filepath
@@ -148,7 +148,7 @@ function swap::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function swap::trait::uninstall() {
+function swap::trait::do_uninstall() {
     # package_manager::uninstall "$(swap::trait::package_manager)" "$(swap::trait::package_name)" || return "${SHELL_FALSE}"
     local swap_filepath
 

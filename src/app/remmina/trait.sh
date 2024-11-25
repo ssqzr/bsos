@@ -39,7 +39,7 @@ function remmina::trait::pre_install() {
 }
 
 # 安装的操作
-function remmina::trait::install() {
+function remmina::trait::do_install() {
     package_manager::install "$(remmina::trait::package_manager)" "$(remmina::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -55,7 +55,7 @@ function remmina::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function remmina::trait::uninstall() {
+function remmina::trait::do_uninstall() {
     package_manager::uninstall "$(remmina::trait::package_manager)" "$(remmina::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

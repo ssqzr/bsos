@@ -40,7 +40,7 @@ function cursor::trait::pre_install() {
 }
 
 # 安装的操作
-function cursor::trait::install() {
+function cursor::trait::do_install() {
     # package_manager::install "$(cursor::trait::package_manager)" "$(cursor::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function cursor::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function cursor::trait::uninstall() {
+function cursor::trait::do_uninstall() {
     # package_manager::uninstall "$(cursor::trait::package_manager)" "$(cursor::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

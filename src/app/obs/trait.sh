@@ -39,7 +39,7 @@ function obs::trait::pre_install() {
 }
 
 # 安装的操作
-function obs::trait::install() {
+function obs::trait::do_install() {
     package_manager::install "$(obs::trait::package_manager)" "$(obs::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -64,7 +64,7 @@ function obs::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function obs::trait::uninstall() {
+function obs::trait::do_uninstall() {
     package_manager::uninstall "$(obs::trait::package_manager)" "$(obs::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

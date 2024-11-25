@@ -60,7 +60,7 @@ function software_data_directory::trait::pre_install() {
 }
 
 # 安装的操作
-function software_data_directory::trait::install() {
+function software_data_directory::trait::do_install() {
     # package_manager::install "$(software_data_directory::trait::package_manager)" "$(software_data_directory::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -76,7 +76,7 @@ function software_data_directory::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function software_data_directory::trait::uninstall() {
+function software_data_directory::trait::do_uninstall() {
     # package_manager::uninstall "$(software_data_directory::trait::package_manager)" "$(software_data_directory::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

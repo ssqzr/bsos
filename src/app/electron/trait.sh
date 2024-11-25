@@ -39,7 +39,7 @@ function electron::trait::pre_install() {
 }
 
 # 安装的操作
-function electron::trait::install() {
+function electron::trait::do_install() {
     # 暂时不用安装，只是修改配置
     # package_manager::install "$(electron::trait::package_manager)" "$(electron::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -57,7 +57,7 @@ function electron::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function electron::trait::uninstall() {
+function electron::trait::do_uninstall() {
     # package_manager::uninstall "$(electron::trait::package_manager)" "$(electron::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

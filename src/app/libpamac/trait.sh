@@ -44,7 +44,7 @@ function libpamac::trait::pre_install() {
 }
 
 # 安装的操作
-function libpamac::trait::install() {
+function libpamac::trait::do_install() {
 
     local pkgbuild_filepath
     pkgbuild_filepath="$(libpamac::trait::_src_directory)/PKGBUILD"
@@ -71,7 +71,7 @@ function libpamac::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function libpamac::trait::uninstall() {
+function libpamac::trait::do_uninstall() {
     package_manager::uninstall "$(libpamac::trait::package_manager)" "$(libpamac::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

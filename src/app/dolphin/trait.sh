@@ -39,7 +39,7 @@ function dolphin::trait::pre_install() {
 }
 
 # 安装的操作
-function dolphin::trait::install() {
+function dolphin::trait::do_install() {
     package_manager::install "$(dolphin::trait::package_manager)" "$(dolphin::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function dolphin::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function dolphin::trait::uninstall() {
+function dolphin::trait::do_uninstall() {
     package_manager::uninstall "$(dolphin::trait::package_manager)" "$(dolphin::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

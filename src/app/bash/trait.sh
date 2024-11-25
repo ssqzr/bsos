@@ -50,7 +50,7 @@ function bash::trait::pre_install() {
 }
 
 # 安装的操作
-function bash::trait::install() {
+function bash::trait::do_install() {
     # 内置有，不用重复安装
     # package_manager::install "$(bash::trait::package_manager)" "$(bash::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -68,7 +68,7 @@ function bash::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function bash::trait::uninstall() {
+function bash::trait::do_uninstall() {
     # 内置的就不卸载了
     # package_manager::uninstall "$(bash::trait::package_manager)" "$(bash::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

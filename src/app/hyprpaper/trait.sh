@@ -39,7 +39,7 @@ function hyprpaper::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprpaper::trait::install() {
+function hyprpaper::trait::do_install() {
     package_manager::install "$(hyprpaper::trait::package_manager)" "$(hyprpaper::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function hyprpaper::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprpaper::trait::uninstall() {
+function hyprpaper::trait::do_uninstall() {
     package_manager::uninstall "$(hyprpaper::trait::package_manager)" "$(hyprpaper::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

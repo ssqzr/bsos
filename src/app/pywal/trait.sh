@@ -39,7 +39,7 @@ function pywal::trait::pre_install() {
 }
 
 # 安装的操作
-function pywal::trait::install() {
+function pywal::trait::do_install() {
     package_manager::install "$(pywal::trait::package_manager)" "$(pywal::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function pywal::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function pywal::trait::uninstall() {
+function pywal::trait::do_uninstall() {
     package_manager::uninstall "$(pywal::trait::package_manager)" "$(pywal::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

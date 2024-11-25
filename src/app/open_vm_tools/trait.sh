@@ -45,7 +45,7 @@ function open_vm_tools::trait::pre_install() {
 }
 
 # 安装的操作
-function open_vm_tools::trait::install() {
+function open_vm_tools::trait::do_install() {
     if ! os::is_vmware; then
         return "$SHELL_TRUE"
     fi
@@ -81,7 +81,7 @@ function open_vm_tools::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function open_vm_tools::trait::uninstall() {
+function open_vm_tools::trait::do_uninstall() {
     if ! os::is_vmware; then
         return "$SHELL_TRUE"
     fi

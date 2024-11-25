@@ -39,7 +39,7 @@ function qq::trait::pre_install() {
 }
 
 # 安装的操作
-function qq::trait::install() {
+function qq::trait::do_install() {
     package_manager::install "$(qq::trait::package_manager)" "$(qq::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function qq::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function qq::trait::uninstall() {
+function qq::trait::do_uninstall() {
     package_manager::uninstall "$(qq::trait::package_manager)" "$(qq::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

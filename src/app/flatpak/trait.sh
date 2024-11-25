@@ -39,7 +39,7 @@ function flatpak::trait::pre_install() {
 }
 
 # 安装的操作
-function flatpak::trait::install() {
+function flatpak::trait::do_install() {
     package_manager::install "$(flatpak::trait::package_manager)" "$(flatpak::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -57,7 +57,7 @@ function flatpak::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function flatpak::trait::uninstall() {
+function flatpak::trait::do_uninstall() {
     package_manager::uninstall "$(flatpak::trait::package_manager)" "$(flatpak::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

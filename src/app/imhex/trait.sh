@@ -39,7 +39,7 @@ function imhex::trait::pre_install() {
 }
 
 # 安装的操作
-function imhex::trait::install() {
+function imhex::trait::do_install() {
     package_manager::install "$(imhex::trait::package_manager)" "$(imhex::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function imhex::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function imhex::trait::uninstall() {
+function imhex::trait::do_uninstall() {
     package_manager::uninstall "$(imhex::trait::package_manager)" "$(imhex::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

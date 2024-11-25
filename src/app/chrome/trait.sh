@@ -55,7 +55,7 @@ function chrome::trait::pre_install() {
 }
 
 # 安装的操作
-function chrome::trait::install() {
+function chrome::trait::do_install() {
     package_manager::install "$(chrome::trait::package_manager)" "$(chrome::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -78,7 +78,7 @@ function chrome::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function chrome::trait::uninstall() {
+function chrome::trait::do_uninstall() {
     package_manager::uninstall "$(chrome::trait::package_manager)" "$(chrome::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

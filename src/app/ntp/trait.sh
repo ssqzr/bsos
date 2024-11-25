@@ -60,7 +60,7 @@ function ntp::trait::pre_install() {
 }
 
 # 安装的操作
-function ntp::trait::install() {
+function ntp::trait::do_install() {
     # 服务预装在系统，不用安装
     # package_manager::install "$(ntp::trait::package_manager)" "$(ntp::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -81,7 +81,7 @@ function ntp::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function ntp::trait::uninstall() {
+function ntp::trait::do_uninstall() {
     # 服务预装在系统，不用卸载
     # package_manager::uninstall "$(ntp::trait::package_manager)" "$(ntp::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

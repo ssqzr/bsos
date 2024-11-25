@@ -54,7 +54,7 @@ function pacman::trait::pre_install() {
 }
 
 # 安装的操作
-function pacman::trait::install() {
+function pacman::trait::do_install() {
     # 系统自带了，不用安装
     # package_manager::install "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -71,7 +71,7 @@ function pacman::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function pacman::trait::uninstall() {
+function pacman::trait::do_uninstall() {
     # 系统自带的，不卸载
     # package_manager::uninstall "$(pacman::trait::package_manager)" "$(pacman::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

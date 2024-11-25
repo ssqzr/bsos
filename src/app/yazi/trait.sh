@@ -38,7 +38,7 @@ function yazi::trait::pre_install() {
 }
 
 # 安装的操作
-function yazi::trait::install() {
+function yazi::trait::do_install() {
     package_manager::install "$(yazi::trait::package_manager)" "$(yazi::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -63,7 +63,7 @@ function yazi::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function yazi::trait::uninstall() {
+function yazi::trait::do_uninstall() {
     package_manager::uninstall "$(yazi::trait::package_manager)" "$(yazi::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

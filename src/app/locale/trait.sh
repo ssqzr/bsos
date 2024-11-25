@@ -39,7 +39,7 @@ function locale::trait::pre_install() {
 }
 
 # 安装的操作
-function locale::trait::install() {
+function locale::trait::do_install() {
     # package_manager::install "$(locale::trait::package_manager)" "$(locale::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function locale::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function locale::trait::uninstall() {
+function locale::trait::do_uninstall() {
     # package_manager::uninstall "$(locale::trait::package_manager)" "$(locale::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

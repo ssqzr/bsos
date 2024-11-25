@@ -193,7 +193,7 @@ function storage::trait::pre_install() {
 }
 
 # 安装的操作
-function storage::trait::install() {
+function storage::trait::do_install() {
     # package_manager::install "$(storage::trait::package_manager)" "$(storage::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -209,7 +209,7 @@ function storage::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function storage::trait::uninstall() {
+function storage::trait::do_uninstall() {
     # package_manager::uninstall "$(storage::trait::package_manager)" "$(storage::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

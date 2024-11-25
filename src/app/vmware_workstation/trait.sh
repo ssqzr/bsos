@@ -38,7 +38,7 @@ function vmware_workstation::trait::pre_install() {
 }
 
 # 安装的操作
-function vmware_workstation::trait::install() {
+function vmware_workstation::trait::do_install() {
     package_manager::install "$(vmware_workstation::trait::package_manager)" "$(vmware_workstation::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -62,7 +62,7 @@ function vmware_workstation::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function vmware_workstation::trait::uninstall() {
+function vmware_workstation::trait::do_uninstall() {
     package_manager::uninstall "$(vmware_workstation::trait::package_manager)" "$(vmware_workstation::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

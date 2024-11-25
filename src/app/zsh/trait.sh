@@ -72,7 +72,7 @@ function zsh::trait::pre_install() {
 }
 
 # 安装的操作
-function zsh::trait::install() {
+function zsh::trait::do_install() {
     package_manager::install "$(zsh::trait::package_manager)" "$(zsh::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
@@ -99,7 +99,7 @@ function zsh::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function zsh::trait::uninstall() {
+function zsh::trait::do_uninstall() {
     package_manager::uninstall "$(zsh::trait::package_manager)" "$(zsh::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }

@@ -39,7 +39,7 @@ function cavasik::trait::pre_install() {
 }
 
 # 安装的操作
-function cavasik::trait::install() {
+function cavasik::trait::do_install() {
     package_manager::install "$(cavasik::trait::package_manager)" "$(cavasik::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -61,7 +61,7 @@ function cavasik::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function cavasik::trait::uninstall() {
+function cavasik::trait::do_uninstall() {
     package_manager::uninstall "$(cavasik::trait::package_manager)" "$(cavasik::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -113,7 +113,7 @@ function power_management::trait::pre_install() {
 }
 
 # 安装的操作
-function power_management::trait::install() {
+function power_management::trait::do_install() {
     # package_manager::install "$(power_management::trait::package_manager)" "$(power_management::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -131,7 +131,7 @@ function power_management::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function power_management::trait::uninstall() {
+function power_management::trait::do_uninstall() {
     # package_manager::uninstall "$(power_management::trait::package_manager)" "$(power_management::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

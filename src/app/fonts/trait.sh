@@ -38,7 +38,7 @@ function fonts::trait::pre_install() {
 }
 
 # 安装的操作
-function fonts::trait::install() {
+function fonts::trait::do_install() {
     package_manager::install "$(fonts::trait::package_manager)" "$(fonts::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -54,7 +54,7 @@ function fonts::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function fonts::trait::uninstall() {
+function fonts::trait::do_uninstall() {
     package_manager::uninstall "$(fonts::trait::package_manager)" "$(fonts::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

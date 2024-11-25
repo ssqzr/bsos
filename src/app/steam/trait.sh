@@ -39,7 +39,7 @@ function steam::trait::pre_install() {
 }
 
 # 安装的操作
-function steam::trait::install() {
+function steam::trait::do_install() {
     package_manager::install "$(steam::trait::package_manager)" "$(steam::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function steam::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function steam::trait::uninstall() {
+function steam::trait::do_uninstall() {
     package_manager::uninstall "$(steam::trait::package_manager)" "$(steam::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

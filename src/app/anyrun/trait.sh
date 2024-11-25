@@ -38,7 +38,7 @@ function anyrun::trait::pre_install() {
 }
 
 # 安装的操作
-function anyrun::trait::install() {
+function anyrun::trait::do_install() {
     package_manager::install "$(anyrun::trait::package_manager)" "$(anyrun::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -57,7 +57,7 @@ function anyrun::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function anyrun::trait::uninstall() {
+function anyrun::trait::do_uninstall() {
     package_manager::uninstall "$(anyrun::trait::package_manager)" "$(anyrun::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -38,7 +38,7 @@ function pkgfile::trait::pre_install() {
 }
 
 # 安装的操作
-function pkgfile::trait::install() {
+function pkgfile::trait::do_install() {
     package_manager::install "$(pkgfile::trait::package_manager)" "$(pkgfile::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
@@ -67,7 +67,7 @@ function pkgfile::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function pkgfile::trait::uninstall() {
+function pkgfile::trait::do_uninstall() {
     package_manager::uninstall "$(pkgfile::trait::package_manager)" "$(pkgfile::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }

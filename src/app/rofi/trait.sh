@@ -39,7 +39,7 @@ function rofi::trait::pre_install() {
 }
 
 # 安装的操作
-function rofi::trait::install() {
+function rofi::trait::do_install() {
     package_manager::install "$(rofi::trait::package_manager)" "$(rofi::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -59,7 +59,7 @@ function rofi::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function rofi::trait::uninstall() {
+function rofi::trait::do_uninstall() {
     package_manager::uninstall "$(rofi::trait::package_manager)" "$(rofi::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

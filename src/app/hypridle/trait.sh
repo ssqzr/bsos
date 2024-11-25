@@ -39,7 +39,7 @@ function hypridle::trait::pre_install() {
 }
 
 # 安装的操作
-function hypridle::trait::install() {
+function hypridle::trait::do_install() {
     package_manager::install "$(hypridle::trait::package_manager)" "$(hypridle::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -64,7 +64,7 @@ function hypridle::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hypridle::trait::uninstall() {
+function hypridle::trait::do_uninstall() {
     package_manager::uninstall "$(hypridle::trait::package_manager)" "$(hypridle::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

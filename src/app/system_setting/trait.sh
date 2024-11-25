@@ -42,7 +42,7 @@ function system_setting::trait::pre_install() {
 }
 
 # 安装的操作
-function system_setting::trait::install() {
+function system_setting::trait::do_install() {
     # package_manager::install "$(system_setting::trait::package_manager)" "$(system_setting::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function system_setting::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function system_setting::trait::uninstall() {
+function system_setting::trait::do_uninstall() {
     # package_manager::uninstall "$(system_setting::trait::package_manager)" "$(system_setting::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

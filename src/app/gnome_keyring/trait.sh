@@ -40,7 +40,7 @@ function gnome_keyring::trait::pre_install() {
 }
 
 # 安装的操作
-function gnome_keyring::trait::install() {
+function gnome_keyring::trait::do_install() {
     package_manager::install "$(gnome_keyring::trait::package_manager)" "$(gnome_keyring::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -91,7 +91,7 @@ function gnome_keyring::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function gnome_keyring::trait::uninstall() {
+function gnome_keyring::trait::do_uninstall() {
     package_manager::uninstall "$(gnome_keyring::trait::package_manager)" "$(gnome_keyring::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

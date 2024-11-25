@@ -39,7 +39,7 @@ function thunderbird::trait::pre_install() {
 }
 
 # 安装的操作
-function thunderbird::trait::install() {
+function thunderbird::trait::do_install() {
     package_manager::install "$(thunderbird::trait::package_manager)" "$(thunderbird::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function thunderbird::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function thunderbird::trait::uninstall() {
+function thunderbird::trait::do_uninstall() {
     package_manager::uninstall "$(thunderbird::trait::package_manager)" "$(thunderbird::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

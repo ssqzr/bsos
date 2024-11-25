@@ -92,9 +92,7 @@ function manager::flow::install::install() {
     fi
 
     # 运行安装
-    manager::flow::apps::do_command "pre_install" || return "$SHELL_FALSE"
     manager::flow::apps::do_command "install" || return "$SHELL_FALSE"
-    manager::flow::apps::do_command "post_install" || return "$SHELL_FALSE"
 
     # 运行 app 的 fixme 钩子
     manager::flow::apps::do_command "fixme" || return "$SHELL_FALSE"
@@ -125,9 +123,7 @@ function manager::flow::uninstall::pre_uninstall() {
 
 function manager::flow::uninstall::uninstall() {
     # 运行卸载
-    manager::flow::apps::do_command "pre_uninstall" "true" || return "$SHELL_FALSE"
     manager::flow::apps::do_command "uninstall" "true" || return "$SHELL_FALSE"
-    manager::flow::apps::do_command "post_uninstall" "true" || return "$SHELL_FALSE"
 
     manager::flow::apps::do_command "unfixme" "true" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"

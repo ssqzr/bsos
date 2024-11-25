@@ -38,7 +38,7 @@ function ssh::trait::pre_install() {
 }
 
 # 安装的操作
-function ssh::trait::install() {
+function ssh::trait::do_install() {
     package_manager::install "$(ssh::trait::package_manager)" "$(ssh::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -62,7 +62,7 @@ function ssh::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function ssh::trait::uninstall() {
+function ssh::trait::do_uninstall() {
     package_manager::uninstall "$(ssh::trait::package_manager)" "$(ssh::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -38,7 +38,7 @@ function ryujinx::trait::pre_install() {
 }
 
 # 安装的操作
-function ryujinx::trait::install() {
+function ryujinx::trait::do_install() {
     package_manager::install "$(ryujinx::trait::package_manager)" "$(ryujinx::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -65,7 +65,7 @@ function ryujinx::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function ryujinx::trait::uninstall() {
+function ryujinx::trait::do_uninstall() {
     package_manager::uninstall "$(ryujinx::trait::package_manager)" "$(ryujinx::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

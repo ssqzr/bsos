@@ -39,7 +39,7 @@ function wlogout::trait::pre_install() {
 }
 
 # 安装的操作
-function wlogout::trait::install() {
+function wlogout::trait::do_install() {
     package_manager::install "$(wlogout::trait::package_manager)" "$(wlogout::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -61,7 +61,7 @@ function wlogout::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function wlogout::trait::uninstall() {
+function wlogout::trait::do_uninstall() {
     package_manager::uninstall "$(wlogout::trait::package_manager)" "$(wlogout::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

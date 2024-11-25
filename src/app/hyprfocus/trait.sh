@@ -39,7 +39,7 @@ function hyprfocus::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprfocus::trait::install() {
+function hyprfocus::trait::do_install() {
     if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
         return "${SHELL_TRUE}"
@@ -84,7 +84,7 @@ function hyprfocus::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprfocus::trait::uninstall() {
+function hyprfocus::trait::do_uninstall() {
     if hyprland::hyprctl::instance::is_not_can_connect; then
         lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not uninstall hyprfocus plugin"
         return "${SHELL_TRUE}"

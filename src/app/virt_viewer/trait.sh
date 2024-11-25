@@ -39,7 +39,7 @@ function virt_viewer::trait::pre_install() {
 }
 
 # 安装的操作
-function virt_viewer::trait::install() {
+function virt_viewer::trait::do_install() {
     package_manager::install "$(virt_viewer::trait::package_manager)" "$(virt_viewer::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -61,7 +61,7 @@ function virt_viewer::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function virt_viewer::trait::uninstall() {
+function virt_viewer::trait::do_uninstall() {
     package_manager::uninstall "$(virt_viewer::trait::package_manager)" "$(virt_viewer::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

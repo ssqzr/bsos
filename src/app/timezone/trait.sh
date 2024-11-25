@@ -76,7 +76,7 @@ function timezone::trait::pre_install() {
 }
 
 # 安装的操作
-function timezone::trait::install() {
+function timezone::trait::do_install() {
     # package_manager::install "$(timezone::trait::package_manager)" "$(timezone::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -96,7 +96,7 @@ function timezone::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function timezone::trait::uninstall() {
+function timezone::trait::do_uninstall() {
     # package_manager::uninstall "$(timezone::trait::package_manager)" "$(timezone::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -38,7 +38,7 @@ function pot::trait::pre_install() {
 }
 
 # 安装的操作
-function pot::trait::install() {
+function pot::trait::do_install() {
     package_manager::install "$(pot::trait::package_manager)" "$(pot::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function pot::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function pot::trait::uninstall() {
+function pot::trait::do_uninstall() {
     package_manager::uninstall "$(pot::trait::package_manager)" "$(pot::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

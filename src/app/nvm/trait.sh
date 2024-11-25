@@ -39,7 +39,7 @@ function nvm::trait::pre_install() {
 }
 
 # 安装的操作
-function nvm::trait::install() {
+function nvm::trait::do_install() {
     package_manager::install "$(nvm::trait::package_manager)" "$(nvm::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -59,7 +59,7 @@ function nvm::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function nvm::trait::uninstall() {
+function nvm::trait::do_uninstall() {
     package_manager::uninstall "$(nvm::trait::package_manager)" "$(nvm::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

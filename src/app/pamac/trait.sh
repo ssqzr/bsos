@@ -41,7 +41,7 @@ function pamac::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
-function pamac::trait::install() {
+function pamac::trait::do_install() {
 
     cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(pamac::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
@@ -73,7 +73,7 @@ function pamac::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-function pamac::trait::uninstall() {
+function pamac::trait::do_uninstall() {
     package_manager::uninstall "$(pamac::trait::package_manager)" "$(pamac::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

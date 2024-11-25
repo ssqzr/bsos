@@ -39,7 +39,7 @@ function hyprpicker::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprpicker::trait::install() {
+function hyprpicker::trait::do_install() {
     package_manager::install "$(hyprpicker::trait::package_manager)" "$(hyprpicker::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function hyprpicker::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprpicker::trait::uninstall() {
+function hyprpicker::trait::do_uninstall() {
     package_manager::uninstall "$(hyprpicker::trait::package_manager)" "$(hyprpicker::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -39,7 +39,7 @@ function onlyoffice::trait::pre_install() {
 }
 
 # 安装的操作
-function onlyoffice::trait::install() {
+function onlyoffice::trait::do_install() {
     package_manager::install "$(onlyoffice::trait::package_manager)" "$(onlyoffice::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -55,7 +55,7 @@ function onlyoffice::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function onlyoffice::trait::uninstall() {
+function onlyoffice::trait::do_uninstall() {
     package_manager::uninstall "$(onlyoffice::trait::package_manager)" "$(onlyoffice::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

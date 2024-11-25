@@ -39,7 +39,7 @@ function okular::trait::pre_install() {
 }
 
 # 安装的操作
-function okular::trait::install() {
+function okular::trait::do_install() {
     package_manager::install "$(okular::trait::package_manager)" "$(okular::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -55,7 +55,7 @@ function okular::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function okular::trait::uninstall() {
+function okular::trait::do_uninstall() {
     package_manager::uninstall "$(okular::trait::package_manager)" "$(okular::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

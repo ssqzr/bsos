@@ -38,7 +38,7 @@ function systemd_resolved::trait::pre_install() {
 }
 
 # 安装的操作
-function systemd_resolved::trait::install() {
+function systemd_resolved::trait::do_install() {
     # package_manager::pacman::install "$(systemd_resolved::trait::package_name)" || return "${SHELL_FALSE}"
     # https://wiki.archlinux.org/title/systemd-resolved
     # systemd-resolved is a part of the systemd package that is installed by default.
@@ -63,7 +63,7 @@ function systemd_resolved::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function systemd_resolved::trait::uninstall() {
+function systemd_resolved::trait::do_uninstall() {
     # package_manager::pacman::uninstall "$(systemd_resolved::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

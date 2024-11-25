@@ -39,7 +39,7 @@ function bluetooth::trait::pre_install() {
 }
 
 # 安装的操作
-function bluetooth::trait::install() {
+function bluetooth::trait::do_install() {
     package_manager::install "$(bluetooth::trait::package_manager)" "$(bluetooth::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -57,7 +57,7 @@ function bluetooth::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function bluetooth::trait::uninstall() {
+function bluetooth::trait::do_uninstall() {
     package_manager::uninstall "$(bluetooth::trait::package_manager)" "$(bluetooth::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -95,7 +95,7 @@ function grub::trait::pre_install() {
 }
 
 # 安装的操作
-function grub::trait::install() {
+function grub::trait::do_install() {
     # 安装系统已经安装了
     # package_manager::install "$(grub::trait::package_manager)" "$(grub::trait::package_name)" || return "${SHELL_FALSE}"
 
@@ -120,7 +120,7 @@ function grub::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function grub::trait::uninstall() {
+function grub::trait::do_uninstall() {
     # 不卸载，卸载系统就引导不了了
     return "${SHELL_TRUE}"
 }

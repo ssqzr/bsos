@@ -38,7 +38,7 @@ function fzf::trait::pre_install() {
 }
 
 # 安装的操作
-function fzf::trait::install() {
+function fzf::trait::do_install() {
     package_manager::install "$(fzf::trait::package_manager)" "$(fzf::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function fzf::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function fzf::trait::uninstall() {
+function fzf::trait::do_uninstall() {
     package_manager::uninstall "$(fzf::trait::package_manager)" "$(fzf::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

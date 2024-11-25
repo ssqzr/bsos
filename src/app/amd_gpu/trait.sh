@@ -38,7 +38,7 @@ function amd_gpu::trait::pre_install() {
 }
 
 # 安装的操作
-function amd_gpu::trait::install() {
+function amd_gpu::trait::do_install() {
     package_manager::install "$(amd_gpu::trait::package_manager)" "$(amd_gpu::trait::package_name)" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
@@ -55,7 +55,7 @@ function amd_gpu::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function amd_gpu::trait::uninstall() {
+function amd_gpu::trait::do_uninstall() {
     package_manager::uninstall "$(amd_gpu::trait::package_manager)" "$(amd_gpu::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -39,7 +39,7 @@ function sudo::trait::pre_install() {
 }
 
 # 安装的操作
-function sudo::trait::install() {
+function sudo::trait::do_install() {
     # 执行 su 需要输入密码
     cmd::run_cmd_with_history -- printf "${ROOT_PASSWORD}" "|" su - root -c \""pacman -S --needed --noconfirm  $(sudo::trait::package_name)"\" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -56,7 +56,7 @@ function sudo::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function sudo::trait::uninstall() {
+function sudo::trait::do_uninstall() {
     # 判断 sudo 是否安装
     # which "$(sudo::trait::package_name)" >/dev/null 2>&1 # which 命令可能没有安装
     if [ -f "/usr/bin/$(sudo::trait::package_name)" ]; then

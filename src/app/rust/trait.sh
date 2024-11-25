@@ -39,7 +39,7 @@ function rust::trait::pre_install() {
 }
 
 # 安装的操作
-function rust::trait::install() {
+function rust::trait::do_install() {
     package_manager::install "$(rust::trait::package_manager)" "$(rust::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -62,7 +62,7 @@ function rust::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function rust::trait::uninstall() {
+function rust::trait::do_uninstall() {
     package_manager::uninstall "$(rust::trait::package_manager)" "$(rust::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

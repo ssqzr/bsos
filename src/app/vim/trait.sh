@@ -39,7 +39,7 @@ function vim::trait::pre_install() {
 }
 
 # 安装的操作
-function vim::trait::install() {
+function vim::trait::do_install() {
     package_manager::install "$(vim::trait::package_manager)" "$(vim::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -56,7 +56,7 @@ function vim::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function vim::trait::uninstall() {
+function vim::trait::do_uninstall() {
     package_manager::uninstall "$(vim::trait::package_manager)" "$(vim::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -39,7 +39,7 @@ function template::trait::pre_install() {
 }
 
 # 安装的操作
-function template::trait::install() {
+function template::trait::do_install() {
     package_manager::install "$(template::trait::package_manager)" "$(template::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -55,7 +55,7 @@ function template::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function template::trait::uninstall() {
+function template::trait::do_uninstall() {
     package_manager::uninstall "$(template::trait::package_manager)" "$(template::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -39,7 +39,7 @@ function wacom::trait::pre_install() {
 }
 
 # 安装的操作
-function wacom::trait::install() {
+function wacom::trait::do_install() {
     # 系统默认安装，不需要安装
     # package_manager::install "$(wacom::trait::package_manager)" "$(wacom::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -57,7 +57,7 @@ function wacom::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function wacom::trait::uninstall() {
+function wacom::trait::do_uninstall() {
     # 系统默认安装，不需要卸载
     # package_manager::uninstall "$(wacom::trait::package_manager)" "$(wacom::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

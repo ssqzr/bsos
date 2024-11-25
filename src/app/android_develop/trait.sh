@@ -101,7 +101,7 @@ function android_develop::trait::pre_install() {
 }
 
 # 安装的操作
-function android_develop::trait::install() {
+function android_develop::trait::do_install() {
     # package_manager::install "$(android_develop::trait::package_manager)" "$(android_develop::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -123,7 +123,7 @@ function android_develop::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function android_develop::trait::uninstall() {
+function android_develop::trait::do_uninstall() {
     # package_manager::uninstall "$(android_develop::trait::package_manager)" "$(android_develop::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

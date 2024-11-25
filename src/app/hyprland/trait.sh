@@ -137,7 +137,7 @@ function hyprland::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprland::trait::install() {
+function hyprland::trait::do_install() {
     package_manager::install "$(hyprland::trait::package_manager)" "$(hyprland::trait::package_name)" || return "${SHELL_FALSE}"
 
     hyprland::hyprpm::install || return "${SHELL_FALSE}"
@@ -165,7 +165,7 @@ function hyprland::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprland::trait::uninstall() {
+function hyprland::trait::do_uninstall() {
     package_manager::uninstall "$(hyprland::trait::package_manager)" "$(hyprland::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

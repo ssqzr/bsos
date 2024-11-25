@@ -39,7 +39,7 @@ function hyprlock::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprlock::trait::install() {
+function hyprlock::trait::do_install() {
     package_manager::install "$(hyprlock::trait::package_manager)" "$(hyprlock::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function hyprlock::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprlock::trait::uninstall() {
+function hyprlock::trait::do_uninstall() {
     package_manager::uninstall "$(hyprlock::trait::package_manager)" "$(hyprlock::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

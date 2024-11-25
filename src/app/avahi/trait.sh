@@ -39,7 +39,7 @@ function avahi::trait::pre_install() {
 }
 
 # 安装的操作
-function avahi::trait::install() {
+function avahi::trait::do_install() {
     package_manager::install "$(avahi::trait::package_manager)" "$(avahi::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -67,7 +67,7 @@ function avahi::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function avahi::trait::uninstall() {
+function avahi::trait::do_uninstall() {
     package_manager::uninstall "$(avahi::trait::package_manager)" "$(avahi::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

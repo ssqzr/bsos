@@ -38,7 +38,7 @@ function audio::trait::pre_install() {
 }
 
 # 安装的操作
-function audio::trait::install() {
+function audio::trait::do_install() {
     package_manager::install "$(audio::trait::package_manager)" "$(audio::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function audio::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function audio::trait::uninstall() {
+function audio::trait::do_uninstall() {
     package_manager::uninstall "$(audio::trait::package_manager)" "$(audio::trait::package_name)" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"

@@ -38,7 +38,7 @@ function swaync::trait::pre_install() {
 }
 
 # 安装的操作
-function swaync::trait::install() {
+function swaync::trait::do_install() {
     package_manager::install "$(swaync::trait::package_manager)" "$(swaync::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -60,7 +60,7 @@ function swaync::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function swaync::trait::uninstall() {
+function swaync::trait::do_uninstall() {
     package_manager::uninstall "$(swaync::trait::package_manager)" "$(swaync::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

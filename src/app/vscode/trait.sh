@@ -52,7 +52,7 @@ function vscode::trait::pre_install() {
 }
 
 # 安装的操作
-function vscode::trait::install() {
+function vscode::trait::do_install() {
     package_manager::install "$(vscode::trait::package_manager)" "$(vscode::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -72,7 +72,7 @@ function vscode::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function vscode::trait::uninstall() {
+function vscode::trait::do_uninstall() {
     package_manager::uninstall "$(vscode::trait::package_manager)" "$(vscode::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

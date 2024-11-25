@@ -39,7 +39,7 @@ function localsend::trait::pre_install() {
 }
 
 # 安装的操作
-function localsend::trait::install() {
+function localsend::trait::do_install() {
     package_manager::install "$(localsend::trait::package_manager)" "$(localsend::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -68,7 +68,7 @@ function localsend::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function localsend::trait::uninstall() {
+function localsend::trait::do_uninstall() {
     package_manager::uninstall "$(localsend::trait::package_manager)" "$(localsend::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

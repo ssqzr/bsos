@@ -39,7 +39,7 @@ function hyprcursor::trait::pre_install() {
 }
 
 # 安装的操作
-function hyprcursor::trait::install() {
+function hyprcursor::trait::do_install() {
     # 不用安装，会作为 Hyprland 的自动依赖而被安装
     # package_manager::install "$(hyprcursor::trait::package_manager)" "$(hyprcursor::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
@@ -57,7 +57,7 @@ function hyprcursor::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function hyprcursor::trait::uninstall() {
+function hyprcursor::trait::do_uninstall() {
     # 不用卸载，会作为 Hyprland 的自动依赖而被卸载
     # package_manager::uninstall "$(hyprcursor::trait::package_manager)" "$(hyprcursor::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

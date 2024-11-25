@@ -62,7 +62,7 @@ function flutter::trait::pre_install() {
 }
 
 # 安装的操作
-function flutter::trait::install() {
+function flutter::trait::do_install() {
     # package_manager::install "$(flutter::trait::package_manager)" "$(flutter::trait::package_name)" || return "${SHELL_FALSE}"
     local src_dir
     src_dir="$(flutter::settings::install_dir)"
@@ -103,7 +103,7 @@ function flutter::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function flutter::trait::uninstall() {
+function flutter::trait::do_uninstall() {
     # package_manager::uninstall "$(flutter::trait::package_manager)" "$(flutter::trait::package_name)" || return "${SHELL_FALSE}"
     fs::directory::safe_delete "$(flutter::settings::install_dir)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"

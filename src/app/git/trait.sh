@@ -56,7 +56,7 @@ function git::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
-function git::trait::install() {
+function git::trait::do_install() {
     # 全局已经安装了，这里不安装了
     # package_manager::install "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
@@ -103,7 +103,7 @@ function git::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
-function git::trait::uninstall() {
+function git::trait::do_uninstall() {
     # 全局安装的，这里不处理卸载。
     # package_manager::uninstall "$(git::trait::package_manager)" "$(git::trait::package_name)" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"

@@ -71,7 +71,7 @@ function xdg::trait::pre_install() {
 }
 
 # 安装的操作
-function xdg::trait::install() {
+function xdg::trait::do_install() {
     # package_manager::pacman::install "$(xdg::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -91,7 +91,7 @@ function xdg::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function xdg::trait::uninstall() {
+function xdg::trait::do_uninstall() {
     # package_manager::pacman::uninstall "$(xdg::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

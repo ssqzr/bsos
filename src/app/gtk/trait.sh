@@ -40,7 +40,7 @@ function gtk::trait::pre_install() {
 }
 
 # 安装的操作
-function gtk::trait::install() {
+function gtk::trait::do_install() {
     # package_manager::install "$(gtk::trait::package_manager)" "$(gtk::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -59,7 +59,7 @@ function gtk::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function gtk::trait::uninstall() {
+function gtk::trait::do_uninstall() {
     # package_manager::uninstall "$(gtk::trait::package_manager)" "$(gtk::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

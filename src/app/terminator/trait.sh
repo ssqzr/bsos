@@ -39,7 +39,7 @@ function terminator::trait::pre_install() {
 }
 
 # 安装的操作
-function terminator::trait::install() {
+function terminator::trait::do_install() {
     package_manager::install "$(terminator::trait::package_manager)" "$(terminator::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
@@ -58,7 +58,7 @@ function terminator::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function terminator::trait::uninstall() {
+function terminator::trait::do_uninstall() {
     package_manager::uninstall "$(terminator::trait::package_manager)" "$(terminator::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }

@@ -45,7 +45,7 @@ function yay::trait::pre_install() {
 }
 
 # 安装的操作
-function yay::trait::install() {
+function yay::trait::do_install() {
     cmd::run_cmd_retry_three cmd::run_cmd_with_history -- cd "$(yay::trait::_src_directory)" "&&" makepkg --syncdeps --install --noconfirm --needed
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "makepkg $(yay::trait::package_name) failed."
@@ -65,7 +65,7 @@ function yay::trait::pre_uninstall() {
 }
 
 # 卸载的操作
-function yay::trait::uninstall() {
+function yay::trait::do_uninstall() {
     package_manager::uninstall "$(yay::trait::package_manager)" "$(yay::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
