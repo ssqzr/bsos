@@ -27,19 +27,19 @@ function git::trait::description() {
 function git::trait::install_guide() {
     local username
     username=$(os::user::name)
-    username=$(tui::input_required "used to git config --global user.name" "config git username: " "${username}") || return "$SHELL_FALSE"
+    username=$(tui::input_required "used to git config --global user.name" "config git user.name: " "${username}") || return "$SHELL_FALSE"
 
     local email
-    email=$(tui::input_required "used to git config --global user.email" "config git email: " "${email}") || return "$SHELL_FALSE"
+    email=$(tui::input_required "used to git config --global user.email" "config git user.email: " "${email}") || return "$SHELL_FALSE"
 
     local http_proxy
-    http_proxy=$(tui::input_optional "used to git config --global http.proxy" "config git http_proxy: ") || return "$SHELL_FALSE"
+    http_proxy=$(tui::input_optional "used to git config --global http.proxy" "config git http.proxy: ") || return "$SHELL_FALSE"
     if [ -z "${http_proxy}" ]; then
         lwarn "git config http_proxy will not be set"
     fi
 
     local https_proxy
-    https_proxy=$(tui::input_optional "used to git config --global https.proxy" "config git https_proxy: ") || return "$SHELL_FALSE"
+    https_proxy=$(tui::input_optional "used to git config --global https.proxy" "config git https.proxy: ") || return "$SHELL_FALSE"
     if [ -z "${https_proxy}" ]; then
         lwarn "git config https_proxy will not be set"
     fi
