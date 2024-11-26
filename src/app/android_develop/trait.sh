@@ -15,7 +15,7 @@ function android_develop::settings::agree_license() {
     local sdkmanager="/opt/android-sdk/cmdline-tools/latest/bin/sdkmanager"
 
     # 同意许可协议
-    cmd::run_cmd_with_history --sudo -- "${sdkmanager}" --licenses || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo -- yes "|" "${sdkmanager}" --licenses || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -30,9 +30,9 @@ function android_develop::settings::install_android_build_tools() {
     local sdkmanager="/opt/android-sdk/cmdline-tools/latest/bin/sdkmanager"
 
     # 安装build-tools
-    build_tool=$("${sdkmanager}" --list | grep build-tools | tail -n 1 | awk '{print $1}') || return "$SHELL_FALSE"
+    build_tool=$("${sdkmanager}" --list 2> >(lwrite) | grep build-tools | tail -n 1 | awk '{print $1}') || return "$SHELL_FALSE"
     build_tool=$(string::trim "$build_tool") || return "$SHELL_FALSE"
-    "${sdkmanager}" --list_installed | grep -q "$build_tool"
+    "${sdkmanager}" --list_installed 2> >(lwrite) | grep -q "$build_tool"
     if [ "$?" -eq "$SHELL_TRUE" ]; then
         ldebug "android build-tools($build_tool) is already installed."
     else
@@ -47,7 +47,7 @@ function android_develop::settings::install_android_platform_tools() {
     local platform_tools="platform-tools"
     local sdkmanager="/opt/android-sdk/cmdline-tools/latest/bin/sdkmanager"
 
-    "${sdkmanager}" --list_installed | grep -q "$platform_tools"
+    "${sdkmanager}" --list_installed 2> >(lwrite) | grep -q "$platform_tools"
     if [ "$?" -eq "$SHELL_TRUE" ]; then
         ldebug "android platform-tools($platform_tools) is already installed."
     else
@@ -62,7 +62,7 @@ function android_develop::settings::install_android_platform() {
     local platform="platforms;android-34"
     local sdkmanager="/opt/android-sdk/cmdline-tools/latest/bin/sdkmanager"
 
-    "${sdkmanager}" --list_installed | grep -q "$platform"
+    "${sdkmanager}" --list_installed 2> >(lwrite) | grep -q "$platform"
     if [ "$?" -eq "$SHELL_TRUE" ]; then
         ldebug "android platform($platform) is already installed."
     else
