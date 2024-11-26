@@ -228,7 +228,7 @@ function manager::cache::do() {
 
     local exit_code_096d6b8f=0
 
-    if ! manager::flags::reuse_cache::is_exists; then
+    if manager::flags::reuse_cache::is_not_exists; then
         linfo "no reuse cache, delete all cache"
         config::cache::delete || return "$SHELL_FALSE"
     fi

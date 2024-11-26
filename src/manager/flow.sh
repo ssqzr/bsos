@@ -85,10 +85,12 @@ function manager::flow::install::install() {
     # 运行安装指引
     manager::flow::apps::do_command "install_guide" || return "$SHELL_FALSE"
 
-    tui::confirm "Install Wizard completed. Next Step?"
-    if [ "$?" -ne "$SHELL_TRUE" ]; then
-        lwarn "install wizard completed, user canceled continue."
-        return "$SHELL_FALSE"
+    if manager::flags::continue_after_guide::is_not_exists; then
+        tui::confirm "Install Wizard completed. Next Step?"
+        if [ "$?" -ne "$SHELL_TRUE" ]; then
+            lwarn "install wizard completed, user canceled continue."
+            return "$SHELL_FALSE"
+        fi
     fi
 
     # 运行安装

@@ -10,15 +10,11 @@ SCRIPT_DIR_1319e232="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_1319e232}/../lib/utils/all.sh" || exit 1
 
-declare -r __valid_flags=("develop" "reuse_cache" "check_loop")
 declare __flags=()
 
 function manager::flags::append() {
     local flag="$1"
-    if ! array::is_contain __valid_flags "$flag"; then
-        lerror "flag($flag) is invalid"
-        return "${SHELL_FALSE}"
-    fi
+
     array::is_contain __flags "$flag" && return "${SHELL_TRUE}"
 
     __flags+=("$flag")
@@ -43,6 +39,10 @@ function manager::flags::reuse_cache::is_exists() {
     return "$SHELL_TRUE"
 }
 
+function manager::flags::reuse_cache::is_not_exists() {
+    ! manager::flags::reuse_cache::is_exists "$@"
+}
+
 function manager::flags::check_loop::add() {
     local flag="check_loop"
     manager::flags::append "$flag" || return "${SHELL_FALSE}"
@@ -55,6 +55,10 @@ function manager::flags::check_loop::is_exists() {
     return "$SHELL_TRUE"
 }
 
+function manager::flags::check_loop::is_not_exists() {
+    ! manager::flags::check_loop::is_exists "$@"
+}
+
 function manager::flags::develop::add() {
     local flag="develop"
     manager::flags::append "$flag" || return "${SHELL_FALSE}"
@@ -65,4 +69,24 @@ function manager::flags::develop::is_exists() {
     local flag="develop"
     manager::flags::is_exists "$flag" || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
+}
+
+function manager::flags::develop::is_not_exists() {
+    ! manager::flags::develop::is_exists "$@"
+}
+
+function manager::flags::continue_after_guide::add() {
+    local flag="continue_after_guide"
+    manager::flags::append "$flag" || return "${SHELL_FALSE}"
+    return "${SHELL_TRUE}"
+}
+
+function manager::flags::continue_after_guide::is_exists() {
+    local flag="continue_after_guide"
+    manager::flags::is_exists "$flag" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
+}
+
+function manager::flags::continue_after_guide::is_not_exists() {
+    ! manager::flags::continue_after_guide::is_exists "$@"
 }
