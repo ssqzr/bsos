@@ -26,6 +26,84 @@ source "${SCRIPT_DIR_8dac019e}/manager/utils.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
+# 输出帮助信息
+function main::help() {
+    local help=""
+
+    help="
+$(debug::function::filename) [OPTIONS] <SUBCOMMAND> [SUBCOMMAND OPTIONS]
+
+OPTIONS:
+
+    --reuse-cache[=yes/no]                                      启用复用缓存
+                                                                    不指定参数或者 --reuse-cache=false 表示不启用
+                                                                    --reuse-cache 或者 --reuse-cache=yes 表示启用
+
+    --check-loop[=yes/no]                                       启用检查循环依赖
+                                                                    不指定参数或者 --check-loop=false 表示不启用
+                                                                    --check-loop 或者 --check-loop=yes 表示启用
+
+    -h, --help                                                  显示帮助信息
+
+SUBCOMMAND:
+    install                                                     安装
+        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --continue-after-guide[=yes/no]                         安装向导完成后是否直接继续，不直接继续会弹框询问是否继续
+
+    uninstall                                                   卸载
+        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+
+    upgrade                                                     升级
+        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+
+    fixme                                                       修复安装时不能解决的问题
+                                                                    可能因为当时环境受限的原因，需要在特定环境下才可以执行的步骤。
+        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+
+    unfixme                                                     撤销修复
+        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
+
+    dev [DEV SUBCOMMAND] [DEV SUBCOMMAND OPTIONS]               开发协助命令
+        create                                                  根据模板创建部署应用的实现代码
+            --app=APP_NAME,APP_NAME,...                             创建的应用列表，使用 ',' 分割。参数可以指定多次。
+
+        update                                                  更新模板
+            --app=APP_NAME,APP_NAME,...                             更新模板的应用列表，使用 ',' 分割。参数可以指定多次。
+
+        check_loop                                              检查 APP 之间是否循环依赖
+
+        install                                                 测试应用的安装流程
+            --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                        没有指定 PACKAGE_MANAGER 时，默认是：custom
+            --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
+                                                                        没有指定 PACKAGE_MANAGER 时，默认是：custom
+
+        trait                                                   执行 APP 的 trait 函数
+            --app=APP_NAME,APP_NAME,...                             应用列表，使用 ',' 分割。参数可以指定多次。
+            --trait=TRAIT_NAME,TRAIT_NAME,...                       执行 trait 函数名列表，使用 ',' 分割。参数可以指定多次。
+
+    "
+
+    echo "${help}"
+
+    return "${SHELL_TRUE}"
+}
+
 # 这些模块是在所有模块安装前需要安装的，因为其他模块的安装都需要这些模块
 # 这些模块应该是没什么依赖的
 # 这些模块不需要用户确认，一定要求安装的，并且没有安装指引
@@ -378,77 +456,6 @@ function main::run() {
     local param
     local temp
 
-    local help=""
-
-    help="
-$(debug::function::filename) [OPTIONS] <SUBCOMMAND> [SUBCOMMAND OPTIONS]
-
-OPTIONS:
-
-    --reuse-cache[=yes/no]                                      启用复用缓存
-                                                                    不指定参数或者 --reuse-cache=false 表示不启用
-                                                                    --reuse-cache 或者 --reuse-cache=yes 表示启用
-
-    --check-loop[=yes/no]                                       启用检查循环依赖
-                                                                    不指定参数或者 --check-loop=false 表示不启用
-                                                                    --check-loop 或者 --check-loop=yes 表示启用
-
-    -h, --help                                                  显示帮助信息
-
-SUBCOMMAND:
-    install                                                     安装
-        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-        --continue-after-guide[=yes/no]                         安装向导完成后是否直接继续，不直接继续会弹框询问是否继续
-
-    uninstall                                                   卸载
-        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-
-    upgrade                                                     升级
-        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-
-    fixme                                                       修复安装时不能解决的问题
-                                                                    可能因为当时环境受限的原因，需要在特定环境下才可以执行的步骤。
-        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-
-    unfixme                                                     撤销修复
-        --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-        --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                    没有指定 PACKAGE_MANAGER 时，默认是：custom
-
-    dev [DEV SUBCOMMAND] [DEV SUBCOMMAND OPTIONS]               开发协助命令
-        create                                                  根据模板创建部署应用的实现代码
-            --app=APP_NAME,APP_NAME,...                             创建的应用列表，使用 ',' 分割。参数可以指定多次。
-
-        update                                                  更新模板
-            --app=APP_NAME,APP_NAME,...                             更新模板的应用列表，使用 ',' 分割。参数可以指定多次。
-
-        check_loop                                              检查 APP 之间是否循环依赖
-
-        install                                                 测试应用的安装流程
-            --app=[PACKAGE_MANAGER:]APP_NAME,...                    安装的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                        没有指定 PACKAGE_MANAGER 时，默认是：custom
-            --exclude-app=[PACKAGE_MANAGER:]APP_NAME,...            排除的应用列表，使用 ',' 分割。参数可以指定多次。
-                                                                        没有指定 PACKAGE_MANAGER 时，默认是：custom
-
-        trait                                                   执行 APP 的 trait 函数
-            --app=APP_NAME,APP_NAME,...                             应用列表，使用 ',' 分割。参数可以指定多次。
-            --trait=TRAIT_NAME,TRAIT_NAME,...                       执行 trait 函数名列表，使用 ',' 分割。参数可以指定多次。
-
-"
-
     # 单例
     manager::base::lock || return "$SHELL_FALSE"
 
@@ -470,7 +477,7 @@ SUBCOMMAND:
             fi
             ;;
         -h | --help)
-            echo -e "$help"
+            main::help || return "$SHELL_FALSE"
             return "$SHELL_TRUE"
             ;;
         -*)
