@@ -49,12 +49,14 @@ function obs::trait::post_install() {
     local username
     username=$(os::user::name) || return "${SHELL_FALSE}"
 
-    fs::directory::copy --force "$SCRIPT_DIR_743e254c/obs-studio" "$XDG_CONFIG_HOME/obs-studio" || return "${SHELL_FALSE}"
-
     # 更改配置
+    fs::file::copy --force "$SCRIPT_DIR_743e254c/obs-studio/global.ini" "$XDG_CONFIG_HOME/obs-studio/global.ini" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- sed -i -e "'s/__username__/${username}/g'" "$XDG_CONFIG_HOME/obs-studio/global.ini" || return "${SHELL_FALSE}"
 
-    fs::directory::move --force "$XDG_CONFIG_HOME/obs-studio/basic/profiles/username" "$XDG_CONFIG_HOME/obs-studio/basic/profiles/${username}" || return "${SHELL_FALSE}"
+    fs::directory::copy --force "$SCRIPT_DIR_743e254c/obs-studio/basic/profiles/username" "$XDG_CONFIG_HOME/obs-studio/basic/profiles/${username}" || return "${SHELL_FALSE}"
+
+    hyprland::config::add "350" "${SCRIPT_DIR_743e254c}/hyprland/obs.conf" || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
@@ -72,6 +74,9 @@ function obs::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function obs::trait::post_uninstall() {
     fs::directory::safe_delete "$XDG_CONFIG_HOME/obs-studio" || return "${SHELL_FALSE}"
+
+    hyprland::config::remove "350" "obs.conf" || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 
