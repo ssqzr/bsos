@@ -174,7 +174,13 @@ function grub::trait::dependencies() {
     # "yay:vim"
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
-    local apps=("pacman:os-prober")
+    local apps=()
+
+    apps+=("pacman:os-prober")
+
+    # 主题
+    apps+=("yay:grub-theme-whitesur-whitesur-1080p-git")
+
     array::print apps
     return "${SHELL_TRUE}"
 }
@@ -185,8 +191,7 @@ function grub::trait::dependencies() {
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function grub::trait::features() {
     local apps=()
-    # 主题
-    apps+=("yay:grub-theme-whitesur-whitesur-1080p-git")
+
     array::print apps
     return "${SHELL_TRUE}"
 }
