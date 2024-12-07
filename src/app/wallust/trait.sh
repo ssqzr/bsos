@@ -50,6 +50,9 @@ function wallust::trait::post_install() {
     fs::directory::copy --force "${SCRIPT_DIR_68b89e81}/wallust" "${XDG_CONFIG_HOME}/wallust" || return "${SHELL_FALSE}"
 
     zsh::config::add "350" "${SCRIPT_DIR_68b89e81}/wallust.zsh" || return "${SHELL_FALSE}"
+
+    # 先使用随机的颜色主题生成颜色主题配置文件，防止其他程序引用颜色主题配置文件时因为文件不存在而报错
+    cmd::run_cmd_with_history -- wallust theme -q -s random || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
