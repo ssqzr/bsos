@@ -16,18 +16,19 @@ source "${SCRIPT_DIR_b121320e}/utils.sh" || exit 1
 
 # 生成安装列表
 function manager::cache::generate_top_apps() {
-    local pm_apps=("${@}")
+    local -n pm_apps_6fef53f7="$1"
+    shift
 
-    local pm_app
-    local temp_str
-    local priority_apps=()
+    local pm_app_6fef53f7
+    local temp_str_6fef53f7
+    local priority_apps_6fef53f7=()
     # 被其他app依赖的app
-    local required_by=()
+    local required_by_6fef53f7=()
     # 没有被依赖的
-    local none_dependencies=()
-    local item
-    local app_path
-    local app_name
+    local none_dependencies_6fef53f7=()
+    local item_6fef53f7
+    local app_path_6fef53f7
+    local app_name_6fef53f7
 
     # 先清空安装列表
     config::cache::top_apps::clean || return "$SHELL_FALSE"
@@ -38,58 +39,58 @@ function manager::cache::generate_top_apps() {
         linfo "is in develop mode, not add prior install apps to top app list"
     else
         # 先处理优先安装的app
-        manager::base::prior_install_apps::all priority_apps || return "$SHELL_FALSE"
-        for pm_app in "${priority_apps[@]}"; do
-            config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
+        manager::base::prior_install_apps::all priority_apps_6fef53f7 || return "$SHELL_FALSE"
+        for pm_app_6fef53f7 in "${priority_apps_6fef53f7[@]}"; do
+            config::cache::top_apps::rpush_unique "$pm_app_6fef53f7" || return "$SHELL_FALSE"
         done
     fi
 
-    if array::is_not_empty pm_apps; then
-        linfo "only add ${pm_apps[*]} to top app list"
-        for pm_app in "${pm_apps[@]}"; do
-            config::cache::top_apps::rpush_unique "$pm_app" || return "$SHELL_FALSE"
+    if array::is_not_empty "${!pm_apps_6fef53f7}"; then
+        linfo "only add ${pm_apps_6fef53f7[*]} to top app list"
+        for pm_app_6fef53f7 in "${pm_apps_6fef53f7[@]}"; do
+            config::cache::top_apps::rpush_unique "$pm_app_6fef53f7" || return "$SHELL_FALSE"
         done
         return "$SHELL_TRUE"
     fi
 
-    for app_path in "${SRC_ROOT_DIR}/app"/*; do
-        app_name=$(basename "${app_path}")
-        pm_app="$(manager::utils::convert_app_name "${app_name}")" || return "$SHELL_FALSE"
+    for app_path_6fef53f7 in "${SRC_ROOT_DIR}/app"/*; do
+        app_name_6fef53f7=$(basename "${app_path_6fef53f7}")
+        pm_app_6fef53f7="$(manager::utils::convert_app_name "${app_name_6fef53f7}")" || return "$SHELL_FALSE"
 
-        if manager::base::core_apps::is_contain "$pm_app"; then
+        if manager::base::core_apps::is_contain "$pm_app_6fef53f7"; then
             continue
         fi
 
-        if ! array::is_contain required_by "$pm_app"; then
-            array::rpush_unique none_dependencies "$pm_app"
+        if ! array::is_contain required_by_6fef53f7 "$pm_app_6fef53f7"; then
+            array::rpush_unique none_dependencies_6fef53f7 "$pm_app_6fef53f7"
         fi
 
         # 获取它的依赖
         local dependencies
-        temp_str="$(manager::app::run_custom_manager "${pm_app}" "dependencies")"
-        array::readarray dependencies < <(echo "$temp_str")
+        temp_str_6fef53f7="$(manager::app::run_custom_manager "${pm_app_6fef53f7}" "dependencies")"
+        array::readarray dependencies < <(echo "$temp_str_6fef53f7")
 
-        local item
-        for item in "${dependencies[@]}"; do
-            array::remove none_dependencies "$item"
-            array::rpush_unique required_by "$item"
+        local item_6fef53f7
+        for item_6fef53f7 in "${dependencies[@]}"; do
+            array::remove none_dependencies_6fef53f7 "$item_6fef53f7"
+            array::rpush_unique required_by_6fef53f7 "$item_6fef53f7"
         done
 
         # 获取它的feature
         local features
-        temp_str="$(manager::app::run_custom_manager "${pm_app}" "features")"
-        array::readarray features < <(echo "$temp_str")
-        for item in "${features[@]}"; do
-            array::remove none_dependencies "$item"
-            array::rpush_unique required_by "$item"
+        temp_str_6fef53f7="$(manager::app::run_custom_manager "${pm_app_6fef53f7}" "features")"
+        array::readarray features < <(echo "$temp_str_6fef53f7")
+        for item_6fef53f7 in "${features[@]}"; do
+            array::remove none_dependencies_6fef53f7 "$item_6fef53f7"
+            array::rpush_unique required_by_6fef53f7 "$item_6fef53f7"
         done
     done
-    ldebug "none_dependencies: ${none_dependencies[*]}"
-    ldebug "required_by: ${required_by[*]}"
+    ldebug "none_dependencies_6fef53f7: ${none_dependencies_6fef53f7[*]}"
+    ldebug "required_by_6fef53f7: ${required_by_6fef53f7[*]}"
 
     # 生成安装列表
-    for item in "${none_dependencies[@]}"; do
-        config::cache::top_apps::rpush_unique "$item" || return "$SHELL_FALSE"
+    for item_6fef53f7 in "${none_dependencies_6fef53f7[@]}"; do
+        config::cache::top_apps::rpush_unique "$item_6fef53f7" || return "$SHELL_FALSE"
     done
 
     lsuccess "generate top install app list success"
@@ -243,18 +244,15 @@ function manager::cache::do() {
 
     # 指定 include_pm_apps_096d6b8f 参数时，必须重新生成
     if array::is_not_empty "${!include_pm_apps_096d6b8f}" || config::cache::top_apps::is_not_exists; then
-        tui::components::spinner::main --title="generate top apps. It may take a long time..." exit_code_096d6b8f manager::cache::generate_top_apps "${include_pm_apps_096d6b8f[@]}" || return "$SHELL_FALSE"
+        tui::components::spinner::main --title="generate top apps. It may take a long time..." exit_code_096d6b8f manager::cache::generate_top_apps "${!include_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
         if [ "$exit_code_096d6b8f" -ne "$SHELL_TRUE" ]; then
             lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top apps failed."
             return "$SHELL_FALSE"
         fi
     fi
 
-    # 指定 exclude_pm_apps_096d6b8f 参数时，必须重新生成
-    # exclude_pm_apps_096d6b8f 为空时，配置里是什么就是什么
-    if array::is_not_empty "${!exclude_pm_apps_096d6b8f}"; then
-        manager::cache::generate_exclude_apps "${!exclude_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
-    fi
+    # 每次都重新生成，因为没有提供清空的接口，缓存后想清空的话，需要手动删除配置。并且排除的应用不多，不会很耗时。
+    manager::cache::generate_exclude_apps "${!exclude_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
