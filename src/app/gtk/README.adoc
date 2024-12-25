@@ -41,5 +41,9 @@ gtk-cursor-theme-name=Bibata-Modern-Amber
 gtk-cursor-theme-name=Bibata-Modern-Amber
 ----
 
+## 输入法
 
+对于 GTK 应用程序，如果运行在 X11 或者 Xwayland 下，需要指定其输入法。
+
+具体的配置参考： https://fcitx-im.org/wiki/Using_Fcitx_5_on_Wayland#GTK_IM_MODULE[GTK_IM_MODULE]
 
