@@ -31,8 +31,6 @@ function hyprland::hyprctl::instance::all() {
 
     local temp_d2d9c003
 
-    # FIXME: 当 /run/user/1000/hypr 目录不存在时，执行 hyprctl 会出错
-    # https://github.com/hyprwm/Hyprland/issues/8579
     temp_d2d9c003=$(hyprctl instances -j 2> >(lwrite)) || return "$SHELL_FALSE"
     temp_d2d9c003=$(echo "${temp_d2d9c003}" | grep instance | awk -F '"' '{print $4}')
 
