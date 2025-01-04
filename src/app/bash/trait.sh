@@ -11,17 +11,6 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
-function bash::settings::lib::clean() {
-    local lib_dir="$HOME/.bash_lib"
-    fs::directory::safe_delete "${lib_dir}" || return "$SHELL_FALSE"
-}
-
-function bash::settings::lib::install() {
-    # bash 脚本的封装库拷贝到 HOME 目录供其他脚本使用
-    local lib_dir="$HOME/.bash_lib"
-    fs::directory::copy --force "${SRC_ROOT_DIR}/lib/utils" "${lib_dir}/utils" || return "$SHELL_FALSE"
-}
-
 # 指定使用的包管理器
 function bash::trait::package_manager() {
     echo "pacman"
@@ -58,7 +47,9 @@ function bash::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function bash::trait::post_install() {
-    bash::settings::lib::install || return "$SHELL_FALSE"
+    # ./README.adoc#install-directory
+    local install_dir="/usr/share/bsos/bash"
+    fs::directory::copy --sudo --force "${SRC_ROOT_DIR}/lib/utils" "${install_dir}/utils" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
@@ -76,7 +67,8 @@ function bash::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function bash::trait::post_uninstall() {
-    bash::settings::lib::clean || return "$SHELL_FALSE"
+    local install_dir="/usr/share/bsos/bash"
+    fs::directory::safe_delete --sudo "${install_dir}" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 

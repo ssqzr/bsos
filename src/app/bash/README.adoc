@@ -25,3 +25,48 @@ https://unix.stackexchange.com/questions/11376/what-does-double-dash-mean[What d
 grep -- -v file
 ----
 
+[#install-directory]
+### 关于将库文件拷贝到 /usr/share 目录下的考量
+
+最开始是将 `src/lib/utils` 下的 `bash` 库文件拷贝到 `$HOME/.bash_lib` 目录下。
+
+但是后面 `root` 用户也需要使用这些库文件，放到 `$HOME` 目录下就不妥了。
+
+因此需要将文件安装到系统目录下，至于安装到哪个目录下呢？？先查看下 `linux` 的目录规范。
+
+- https://refspecs.linuxfoundation.org/fhs.shtml[linuxfoundation FHS(Filesystem Hierarchy Standard)规范]
+- https://linux.die.net/man/7/hier[hier man手册]
+
+根据上面的介绍，应该是放在 `/usr` 目录下。因为我们写的库文件是用户层面的，非内核非系统的。
+
+我们先查看 `/usr` 目录的内容：
+
+[source,bash]
+----
+❯ ll /usr
+总计 460K
+drwxr-xr-x   8 root root 128K  1月 4日 13:02 bin
+drwxr-xr-x 557 root root  36K  1月 4日 13:02 include
+drwxr-xr-x 232 root root 244K  1月 4日 13:02 lib
+drwxr-xr-x  16 root root  20K  1月 4日 13:02 lib32
+lrwxrwxrwx   1 root root    3 11月21日 16:56 lib64 -> lib
+drwxr-xr-x  11 root root 4.0K 2024年 3月16日 local
+lrwxrwxrwx   1 root root    3 11月21日 16:56 sbin -> bin
+drwxr-xr-x 244 root root  12K  1月 2日 09:03 share
+drwxr-xr-x   7 root root 4.0K  1月 4日 13:02 src
+----
+
+- 不会是 `bin` 目录下，因为不是直接执行的执行文件
+- 不会是 `include` 目录下，因为不是类似 `C` 语言头文件类型的
+- 不会是 `lib*` 目录下，因为不是静态链接库或者动态链接库
+- 不会是 `sbin` 目录下，它就是 `bin` 目录的链接
+- 不会是 `src` 目录下，因为不是源代码
+- 不会是 `local` 目录下，它是供系统管理员在本地安装软件时使用。当系统软件更新时，它需要确保不被覆盖。
+- 选择 `share` 目录，因为我观察部分软件都是安装在这个目录下的，例如 `zsh` 。
+
+所以决定将 `src/lib/utils` 目录拷贝到 `/usr/share/bsos/bash` 目录下。
+
+`/usr/share/bsos` 是 `bsos` 整个项目的安装目录。
+
+其子目录 `bash` 是这个应用的安装目录。
+

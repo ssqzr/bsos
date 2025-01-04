@@ -29,7 +29,7 @@ if $is_develop_mode; then
     # 方便开发
     source_filepath="$src_dir/lib/utils/all.sh"
 else
-    source_filepath="$HOME/.bash_lib/utils/all.sh"
+    source_filepath="/usr/share/bsos/bash/utils/all.sh"
     if [ ! -e "$source_filepath" ]; then
         echo "path $source_filepath not exist"
         exit 1
