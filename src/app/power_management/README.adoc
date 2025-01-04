@@ -81,3 +81,32 @@ Since systemd v255 and mkinitcpio v38, when the system is running on UEFI, syste
 
 ____
 
+
+
+## 问题记录
+
+[#resume-network-problem]
+### 休眠恢复后网络不可访问
+
+电脑休眠恢复后出现网路不可访问的问题，重启网络服务可以解决。[.red]#原因暂时不清楚。#
+
+[source,bash]
+----
+sudo systemctl restart systemd-networkd.service
+----
+
+并不是休眠恢复就一定会出现，如果休眠后短时间内恢复，网络是正常的。[.red]#至于需要间隔多久的时间后恢复会出现网络的问题，暂时不清楚。#
+
+我们可以通过 https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Sleep_hooks[睡眠挂钩] 来解决问题。
+
+我觉得 https://wiki.archlinux.org/title/Power_management/Suspend_and_hibernate#Hooks_in_/usr/lib/systemd/system-sleep[脚本]的方式更灵活可控。
+
+任何自定义脚本的输出都将由 `systemd-suspend.service` 或 `systemd-hibernate.service` 或 `systemd-hybrid-sleep.service` 或 `systemd-suspend-then-hibernate.service` 记录。你可以在 `systemd` 的 `journalctl` 中看到它的输出：
+
+[source,bash]
+----
+journalctl -b -u systemd-suspend.service
+journalctl -b -u systemd-hibernate.service
+journalctl -b -u systemd-hybrid-sleep.service
+journalctl -b -u systemd-suspend-then-hibernate.service
+----

@@ -84,6 +84,50 @@ function power_management::trait::resume::undo_edit_mkinitcpio() {
     return "${SHELL_TRUE}"
 }
 
+function power_management::trait::sleep_hook::install() {
+    local files=()
+    local dst_dir="/usr/lib/systemd/system-sleep"
+    local src_dir="${SCRIPT_DIR_6bed2f74}/sleep_hook"
+
+    fs::directory::read files "${src_dir}" || return "$SHELL_FALSE"
+
+    for file in "${files[@]}"; do
+        if fs::path::is_not_file "$file"; then
+            lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "$file is not file, ignore"
+            continue
+        fi
+        fs::file::copy --sudo --force "$file" "${dst_dir}/$(fs::path::basename "$file")" || return "$SHELL_FALSE"
+    done
+
+    return "$SHELL_TRUE"
+}
+
+function power_management::trait::sleep_hook::uninstall() {
+    local files=()
+    local dst_dir="/usr/lib/systemd/system-sleep"
+    local src_dir="${SCRIPT_DIR_6bed2f74}/sleep_hook"
+    local dst_file
+
+    fs::directory::read files "$src_dir" || return "$SHELL_FALSE"
+
+    for file in "${files[@]}"; do
+        dst_file="${dst_dir}/$(fs::path::basename "$file")"
+        if fs::path::is_not_exists "${dst_file}"; then
+            ldebug "${dst_file} is not exists, ignore"
+            continue
+        fi
+
+        if fs::path::is_not_file "${dst_file}"; then
+            ldebug "${dst_file} is not file, ignore"
+            continue
+        fi
+
+        fs::file::delete --sudo "${dst_file}" || return "$SHELL_FALSE"
+    done
+
+    return "$SHELL_TRUE"
+}
+
 # 指定使用的包管理器
 function power_management::trait::package_manager() {
     echo "pacman"
@@ -122,6 +166,7 @@ function power_management::trait::do_install() {
 function power_management::trait::post_install() {
     power_management::trait::resume::edit_mkinitcpio || return "${SHELL_FALSE}"
     power_management::trait::mkinitcpio || return "${SHELL_FALSE}"
+    power_management::trait::sleep_hook::install || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -140,6 +185,7 @@ function power_management::trait::do_uninstall() {
 function power_management::trait::post_uninstall() {
     power_management::trait::resume::undo_edit_mkinitcpio || return "${SHELL_FALSE}"
     power_management::trait::mkinitcpio || return "${SHELL_FALSE}"
+    power_management::trait::sleep_hook::uninstall || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
