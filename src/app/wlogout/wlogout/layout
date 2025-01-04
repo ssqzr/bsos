@@ -28,7 +28,7 @@
 
 {
     "label": "suspend",
-    "action": "systemctl suspend",
+    "action": "systemctl suspend-then-hibernate",
     "text": "挂起",
     "keybind": "u"
 }
