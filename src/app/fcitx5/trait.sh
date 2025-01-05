@@ -54,6 +54,9 @@ function fcitx5::trait::post_install() {
     fs::file::copy --force "${SCRIPT_DIR_3ce25d5f}/root/home/__user__/.local/share/fcitx5/luna_pinyin.custom.yaml" "$XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml" || return "${SHELL_FALSE}"
 
     hyprland::config::add "350" "${SCRIPT_DIR_3ce25d5f}/fcitx5.conf" || return "${SHELL_FALSE}"
+
+    hyprland::hyprctl::self::caller "dispatch" "exec" "fcitx5" || return "${SHELL_FALSE}"
+
     return "${SHELL_TRUE}"
 }
 

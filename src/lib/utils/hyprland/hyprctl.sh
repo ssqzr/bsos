@@ -24,6 +24,7 @@ source "${SCRIPT_DIR_28e227a8}/../process.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_28e227a8}/../os.sh"
 
+# 获取所有 hyprland 实例
 function hyprland::hyprctl::instance::all() {
     # shellcheck disable=SC2034
     local -n instances_d2d9c003="$1"
@@ -39,6 +40,7 @@ function hyprland::hyprctl::instance::all() {
     return "$SHELL_TRUE"
 }
 
+# 获取 hyprland 实例的 pid
 function hyprland::hyprctl::instance::pid() {
     local instance="$1"
 
@@ -52,6 +54,7 @@ function hyprland::hyprctl::instance::pid() {
     return "$SHELL_TRUE"
 }
 
+# 获取当前用户的所有 hyprland 实例
 function hyprland::hyprctl::instance::all_by_username() {
     # shellcheck disable=SC2034
     local -n instances_22de1eba="$1"
@@ -78,11 +81,36 @@ function hyprland::hyprctl::instance::all_by_username() {
     return "$SHELL_TRUE"
 }
 
+# 获取 hyprland 实例版本
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 版本信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::version() {
-    local instance="$1"
-    shift
+    local instance
 
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -98,12 +126,38 @@ function hyprland::hyprctl::instance::version() {
     return "$SHELL_TRUE"
 }
 
+# 获取 hyprland 实例版本的 tag 信息
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 版本的 tag 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::version::tag() {
-    local instance="$1"
-    shift
+
+    local instance
 
     local tag
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -119,11 +173,17 @@ function hyprland::hyprctl::instance::version::tag() {
     return "$SHELL_TRUE"
 }
 
-# instance 为空获取当前实例
+# 检查 hyprland 实例是否可以连接
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 版本的 tag 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::is_can_connect() {
-    local instance="$1"
-
-    hyprland::hyprctl::instance::version "$instance" >/dev/null 2>&1 || return "$SHELL_FALSE"
+    hyprland::hyprctl::instance::version "$@" >/dev/null 2>&1 || return "$SHELL_FALSE"
     return "$SHELL_TRUE"
 }
 
@@ -131,11 +191,37 @@ function hyprland::hyprctl::instance::is_not_can_connect() {
     ! hyprland::hyprctl::instance::is_can_connect "$@"
 }
 
+# hyprland 实例重新加载
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 无
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::reload() {
-    local instance="$1"
-    shift
+
+    local instance
 
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -148,11 +234,36 @@ function hyprland::hyprctl::instance::reload() {
     return "$SHELL_TRUE"
 }
 
+# 禁用 hyprland 实例的自动加载功能
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 无
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::autoreload::disable() {
-    local instance="$1"
-    shift
+    local instance
 
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -165,11 +276,36 @@ function hyprland::hyprctl::instance::autoreload::disable() {
     return "$SHELL_TRUE"
 }
 
+# 启用 hyprland 实例的自动加载功能
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 无
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::autoreload::enable() {
-    local instance="$1"
-    shift
+    local instance
 
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -182,14 +318,48 @@ function hyprland::hyprctl::instance::autoreload::enable() {
     return "$SHELL_TRUE"
 }
 
+# 获取 hyprland 实例的 option 值
+# 说明：
+# 位置参数：
+#   option                          需要获取的 option
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 获取的 option 值
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::getoption() {
-    local option="$1"
-    shift
-    local instance="$1"
-    shift
+    local instance
+    local option
 
     local temp
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -v option ]; then
+                option="$param"
+                continue
+            fi
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    if [ ! -v option ]; then
+        lerror "param option is required"
+        return "${SHELL_FALSE}"
+    fi
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -204,11 +374,37 @@ function hyprland::hyprctl::instance::getoption() {
     return "$SHELL_TRUE"
 }
 
+# 获取 hyprland 实例的 monitors 信息
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 获取的 monitors 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
 function hyprland::hyprctl::instance::monitors() {
-    local instance="$1"
+    local instance
 
     local value
     local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
 
     if string::is_not_empty "$instance"; then
         instance_params+=("-i" "$instance")
@@ -225,32 +421,75 @@ function hyprland::hyprctl::instance::monitors() {
     return "$SHELL_TRUE"
 }
 
-function hyprland::hyprctl::self::caller() {
-    local caller="$1"
-    shift
-
-    local instances
+# hyprland 实例执行 dispatcher
+# 说明：
+# 位置参数：
+#   dispatcher                      需要执行的 dispatcher
+#   dispatcher_params               dispatcher 参数
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 获取的 monitors 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
+function hyprland::hyprctl::instance::dispatch {
     local instance
+    local dispatcher
+    local dispatcher_params=()
+    local instance_params=()
 
-    hyprland::hyprctl::instance::all_by_username instances "$(os::user::name)" || return "$SHELL_FALSE"
+    local param
 
-    if array::is_empty instances; then
-        linfo "hyprland self caller(${caller}) failed, no instance to call."
-        return "$SHELL_FALSE"
-    fi
-
-    for instance in "${instances[@]}"; do
-        "hyprland::hyprctl::instance::${caller}" "$@" "$instance" || return "$SHELL_FALSE"
-        linfo "hyprland self ${caller} success. instance=${instance}"
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -v dispatcher ]; then
+                dispatcher="$param"
+                continue
+            fi
+            array::rpush dispatcher_params "$param" || return "$SHELL_FALSE"
+            # lerror "invalid param: $param"
+            # return "${SHELL_FALSE}"
+            ;;
+        esac
     done
 
-    linfo "hyprland self ${caller} all instance success."
+    if [ ! -v dispatcher ]; then
+        lerror "param dispatcher is required"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_not_empty "$instance"; then
+        instance_params+=("-i" "$instance")
+    fi
+
+    cmd::run_cmd_with_history -- hyprctl -q "${instance_params[@]}" dispatch "${dispatcher}" "${dispatcher_params[@]}" || return "$SHELL_FALSE"
+
+    linfo "hyprctl instance(${instance}) dispatch ${dispatcher} ${dispatcher_params[*]} success"
 
     return "$SHELL_TRUE"
 }
 
-function hyprland::hyprctl::self::caller_first() {
+# 当前用户下的所有 hyprland 实例执行相应的操作
+# 说明：
+#   1. 没有实例时不做任何操作，认为成功
+# 位置参数：
+# 可选参数：
+# 标准输出： 相应操作的输出
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
+function hyprland::hyprctl::self::caller() {
     local caller="$1"
+    shift
+    local params=("$@")
     shift
 
     local instances
@@ -259,13 +498,48 @@ function hyprland::hyprctl::self::caller_first() {
     hyprland::hyprctl::instance::all_by_username instances "$(os::user::name)" || return "$SHELL_FALSE"
 
     if array::is_empty instances; then
-        linfo "hyprland self caller_first(${caller}) failed, no instance to call."
-        return "$SHELL_FALSE"
+        linfo "hyprland self caller(${caller} ${params[*]}) failed, no instance to call."
+        return "$SHELL_TRUE"
     fi
 
     for instance in "${instances[@]}"; do
-        "hyprland::hyprctl::instance::${caller}" "$@" "$instance" || return "$SHELL_FALSE"
-        linfo "hyprland self caller_first(${caller}) success. instance=${instance}"
+        "hyprland::hyprctl::instance::${caller}" --instance="$instance" "${params[@]}" || return "$SHELL_FALSE"
+        linfo "hyprland self ${caller} ${params[*]} success. instance=${instance}"
+    done
+
+    linfo "hyprland self ${caller} ${params[*]} all instance success."
+
+    return "$SHELL_TRUE"
+}
+
+# 当前用户下的第一个 hyprland 实例执行相应的操作
+# 说明：
+#   1. 没有实例时不做任何操作，认为成功
+# 位置参数：
+# 可选参数：
+# 标准输出： 相应操作的输出
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
+function hyprland::hyprctl::self::caller_first() {
+    local caller="$1"
+    shift
+    local params=("$@")
+    shift
+
+    local instances
+    local instance
+
+    hyprland::hyprctl::instance::all_by_username instances "$(os::user::name)" || return "$SHELL_FALSE"
+
+    if array::is_empty instances; then
+        linfo "hyprland self caller_first(${caller} ${params[*]}) failed, no instance to call."
+        return "$SHELL_TRUE"
+    fi
+
+    for instance in "${instances[@]}"; do
+        "hyprland::hyprctl::instance::${caller}" --instance="$instance" "${params[@]}" || return "$SHELL_FALSE"
+        linfo "hyprland self caller_first(${caller} ${params[*]}) success. instance=${instance}"
         return "$SHELL_TRUE"
     done
 
