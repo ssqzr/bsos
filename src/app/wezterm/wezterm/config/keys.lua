@@ -7,7 +7,7 @@ local keys = {}
 
 function keys.config(config)
     -- https://wezfurlong.org/wezterm/config/keys.html?h=leader#leader-key
-    config.leader = { key = 'k', mods = 'CTRL', timeout_milliseconds = 1000 }
+    config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
 
     config.keys = {
         {
@@ -109,6 +109,16 @@ function keys.config(config)
         --     mods = 'CTRL',
         --     action = wezterm.action.CopyTo 'Clipboard'
         -- },
+
+        -- 滚动快捷键
+        { key = 'i',        mods = 'CTRL',  action = act.ScrollByLine(-1) },
+        { key = 'k',        mods = 'CTRL',  action = act.ScrollByLine(1) },
+        { key = 'j',        mods = 'CTRL',  action = act.ScrollToPrompt(-1) },
+        { key = 'l',        mods = 'CTRL',  action = act.ScrollToPrompt(1) },
+        { key = 'h',        mods = 'CTRL',  action = act.ScrollToTop },
+        { key = ';',        mods = 'CTRL',  action = act.ScrollToBottom },
+        { key = 'PageUp',   mods = 'SHIFT', action = act.ScrollByPage(-0.5) },
+        { key = 'PageDown', mods = 'SHIFT', action = act.ScrollByPage(0.5) },
     }
 end
 
