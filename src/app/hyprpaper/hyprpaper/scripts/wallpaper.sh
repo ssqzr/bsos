@@ -39,14 +39,14 @@ function hyprpaper::wallpaper::today() {
 }
 
 function hyprpaper::wallpaper::bing_wallpaper_filepath() {
-    local monitor_name="$1"
+    local monitor="$1"
     local wallpaper_dir
     local day
 
     wallpaper_dir="$(hyprpaper::wallpaper::directory)" || return "$SHELL_FALSE"
 
     day=$(hyprpaper::wallpaper::today)
-    echo "${wallpaper_dir}/bing_${day}_${monitor_name}.jpg"
+    echo "${wallpaper_dir}/bing_${day}_${monitor}.jpg"
 }
 
 function hyprpaper::wallpaper::bing_wallpaper_url() {
@@ -135,12 +135,74 @@ function hyprpaper::wallpaper::set_log() {
     return "$SHELL_TRUE"
 }
 
+# 获取所有显示器的id列表
+# 列表通过距离原点的距离进行排序
+function hyprpaper::wallpaper::monitors() {
+    local -n monitors_name_a4d29a8e="$1"
+    shift
+
+    local monitors_a4d29a8e
+    local monitor_count_a4d29a8e
+    local index_a4d29a8e
+    local id_a4d29a8e
+    local name_a4d29a8e
+    local description_a4d29a8e
+    local temp_a4d29a8e
+    local distance_a4d29a8e=0
+    local x_a4d29a8e
+    local y_a4d29a8e
+    local min_index_a4d29a8e=0
+    local min_distance_a4d29a8e=-1
+
+    monitors_a4d29a8e="$(hyprctl monitors -j)" || return "$SHELL_FALSE"
+    monitor_count_a4d29a8e=$(echo "$monitors_a4d29a8e" | yq 'length')
+
+    temp_a4d29a8e=()
+    for ((index_a4d29a8e = 0; index_a4d29a8e < monitor_count_a4d29a8e; index_a4d29a8e++)); do
+        id_a4d29a8e="$(echo "$monitors_a4d29a8e" | yq ".[${index_a4d29a8e}].id")" || return "$SHELL_FALSE"
+        name_a4d29a8e="$(echo "$monitors_a4d29a8e" | yq ".[${index_a4d29a8e}].name")" || return "$SHELL_FALSE"
+        description_a4d29a8e="$(echo "$monitors_a4d29a8e" | yq ".[${index_a4d29a8e}].description")" || return "$SHELL_FALSE"
+        x_a4d29a8e="$(echo "$monitors_a4d29a8e" | yq ".[${index_a4d29a8e}].x")" || return "$SHELL_FALSE"
+        y_a4d29a8e="$(echo "$monitors_a4d29a8e" | yq ".[${index_a4d29a8e}].y")" || return "$SHELL_FALSE"
+        distance_a4d29a8e=$((x_a4d29a8e * x_a4d29a8e + y_a4d29a8e * y_a4d29a8e))
+
+        array::rpush temp_a4d29a8e "${id_a4d29a8e}::${name_a4d29a8e}::${description_a4d29a8e}::${distance_a4d29a8e}" || return "$SHELL_FALSE"
+    done
+
+    # 按照距离进行排序
+    monitors_a4d29a8e=()
+    while array::is_not_empty temp_a4d29a8e; do
+        min_index_a4d29a8e=0
+        min_distance_a4d29a8e=-1
+        monitor_count_a4d29a8e=$(array::length temp_a4d29a8e) || return "$SHELL_FALSE"
+        for ((index_a4d29a8e = 0; index_a4d29a8e < monitor_count_a4d29a8e; index_a4d29a8e++)); do
+            distance_a4d29a8e="$(echo "${temp_a4d29a8e[$index_a4d29a8e]}" | awk -F "::" '{print $4}')"
+            if [ "$min_distance_a4d29a8e" -lt 0 ] || [ "$distance_a4d29a8e" -lt "$min_distance_a4d29a8e" ]; then
+                min_index_a4d29a8e="$index_a4d29a8e"
+                min_distance_a4d29a8e="$distance_a4d29a8e"
+            fi
+        done
+
+        array::rpush monitors_a4d29a8e "${temp_a4d29a8e[$min_index_a4d29a8e]}" || return "$SHELL_FALSE"
+        array::remove_at REF_PLACEHOLDER temp_a4d29a8e "$min_index_a4d29a8e" || return "$SHELL_FALSE"
+    done
+
+    linfo "sorted monitors: $(array::join_with monitors_a4d29a8e ', ')"
+
+    monitors_name_a4d29a8e=()
+    for temp_a4d29a8e in "${monitors_a4d29a8e[@]}"; do
+        name_a4d29a8e="$(echo "$temp_a4d29a8e" | awk -F "::" '{print $2}')"
+        array::rpush "${!monitors_name_a4d29a8e}" "$name_a4d29a8e" || return "$SHELL_FALSE"
+    done
+
+    return "$SHELL_TRUE"
+}
+
 function hyprpaper::wallpaper::main() {
     local filepath
     local monitors
-    local monitor_count
-    local index
     local name
+    local index
 
     hyprpaper::wallpaper::set_log || return "$SHELL_FALSE"
 
@@ -148,32 +210,28 @@ function hyprpaper::wallpaper::main() {
 
     hyprpaper::wallpaper::clean_old_file || return "$SHELL_FALSE"
 
-    monitors="$(hyprctl monitors -j)" || return "$SHELL_FALSE"
+    hyprpaper::wallpaper::monitors monitors || return "$SHELL_FALSE"
 
-    monitor_count=$(echo "$monitors" | yq 'length')
-
-    for ((index = 0; index < monitor_count; index++)); do
-        name="$(echo "$monitors" | yq ".[${index}].name")" || return "$SHELL_FALSE"
-
+    index=0
+    for name in "${monitors[@]}"; do
         filepath="$(hyprpaper::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
 
-        if [ ! -f "$filepath" ]; then
-            hyprpaper::wallpaper::bing_wallpaper_download "${index}" "${filepath}" || return "$SHELL_FALSE"
-        else
+        if fs::path::is_exists "${filepath}"; then
             linfo "wallpaper $filepath exist, skip download"
+        else
+            hyprpaper::wallpaper::bing_wallpaper_download "${index}" "${filepath}" || return "$SHELL_FALSE"
         fi
-
-        cmd::run_cmd_with_history -- hyprctl hyprpaper preload "${filepath}"
-        cmd::run_cmd_with_history -- hyprctl hyprpaper wallpaper "${name},${filepath}"
+        cmd::run_cmd_with_history -- hyprctl -q hyprpaper preload "${filepath}"
+        cmd::run_cmd_with_history -- hyprctl -q hyprpaper wallpaper "${name},contain:${filepath}"
         # 应用所有显示器
-        # cmd::run_cmd_with_history -- hyprctl hyprpaper wallpaper "${filepath}"
+        # cmd::run_cmd_with_history -- hyprctl -q hyprpaper wallpaper "${filepath}"
 
+        index=$((index + 1))
     done
 
-    cmd::run_cmd_with_history -- hyprctl hyprpaper unload unused || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history -- hyprctl -q hyprpaper unload unused || return "$SHELL_FALSE"
 
-    # 获取第一个显示器的名称
-    name="$(echo "$monitors" | yq ".[0].name")" || return "$SHELL_FALSE"
+    name="$(array::first monitors)" || return "$SHELL_FALSE"
     filepath="$(hyprpaper::wallpaper::bing_wallpaper_filepath "${name}")" || return "$SHELL_FALSE"
     cmd::run_cmd_with_history -- wallust run "${filepath}"
 
