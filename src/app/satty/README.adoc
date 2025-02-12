@@ -1,0 +1,6 @@
+# satty 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/gabm/satty[官方文档]
+
