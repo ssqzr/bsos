@@ -1,7 +1,9 @@
 # rofi 安装说明文档
 include::../../../doc/base.adoc[]
 
-https://github.com/davatorium/rofi[官方文档]
+- https://github.com/davatorium/rofi[官方仓库]
+- https://github.com/in0ni/rofi-wayland[rofi wayland]
+- https://davatorium.github.io/rofi/[官方文档]
 
 
 ## 问题记录

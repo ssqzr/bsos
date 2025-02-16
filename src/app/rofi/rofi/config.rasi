@@ -1,5 +1,4 @@
-// 需要确保 "~/.cache/wal/colors-rofi-light.rasi" 存在
-@import "~/.cache/colors/rofi"
+@import "./theme.rasi"
 
 configuration {
 /*	modes: "window,drun,run,ssh";*/
@@ -144,12 +143,65 @@ configuration {
 /*	me-select-entry: "MousePrimary";*/
 /*	me-accept-entry: "MouseDPrimary";*/
 /*	me-accept-custom: "Control+MouseDPrimary";*/
+
+
+  modes: "combi,window,drun,run,ssh,keys";
+  cycle: true;
+  combi-modes: "window,drun,run,ssh,keys";
+  /* 设置这个才可以显示 modes 列表 */
+  sidebar-mode: true;
+  show-icons: true;
+
+
+  ssh-command: "wezterm ssh {host}[:{port}]";
+
+
+  /* FIXME: https://github.com/davatorium/rofi/issues/2095 */
+  /* FIXME: 持续跟踪新版本是否解决 */
+  kb-move-front: "Alt+Meta+h";
+  /* ';' 的键码是 47 */
+  kb-move-end: "Alt+Meta+[47]";
+  kb-move-char-back: "Left,Alt+Meta+j";
+  kb-move-char-forward: "Right,Alt+Meta+l";
+
+  kb-mode-next: "Tab";
+  /* ISO_Left_Tab = Shift+Tab */
+  kb-mode-previous: "ISO_Left_Tab";
+  /* 去掉和上面冲突的按键绑定 */
+  kb-element-next: "";
+  kb-element-prev: "";
+
+
+  kb-row-left: "Control+j";
+  kb-row-right: "Control+l";
+  kb-row-up: "Up,Control+i";
+  kb-row-down: "Down,Control+k";
+  /* 去掉和上面冲突的按键绑定 */
+  kb-accept-entry: "Return,KP_Enter";
+  kb-mode-complete: "";
+  kb-remove-to-eol: "";
+
   timeout {
-      action: "kb-cancel";
-      delay:  0;
+    action: "kb-cancel";
+    delay:  0;
   }
   filebrowser {
-      directories-first: true;
-      sorting-method:    "name";
+    directories-first: true;
+    sorting-method:    "name";
+  }
+
+
+  run,drun {
+    fallback-icon: "application-x-addon";
+  }
+
+
+  /* FIXME: 设置了没什么作用 */
+  window-thumbnail: true;
+  window {
+    /* FIXME: 设置了没什么作用 */
+    hide-active-window: true;
+    /* FIXME: 设置了没什么作用 */
+    prefer-icon-theme: true;
   }
 }
