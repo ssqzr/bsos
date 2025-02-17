@@ -156,13 +156,11 @@ configuration {
   ssh-command: "wezterm ssh {host}[:{port}]";
 
 
-  /* FIXME: https://github.com/davatorium/rofi/issues/2095 */
-  /* FIXME: 持续跟踪新版本是否解决 */
-  kb-move-front: "Alt+Meta+h";
+  kb-move-front: "Alt+h";
   /* ';' 的键码是 47 */
-  kb-move-end: "Alt+Meta+[47]";
-  kb-move-char-back: "Left,Alt+Meta+j";
-  kb-move-char-forward: "Right,Alt+Meta+l";
+  kb-move-end: "Alt+[47]";
+  kb-move-char-back: "Left,Alt+j";
+  kb-move-char-forward: "Right,Alt+l";
 
   kb-mode-next: "Tab";
   /* ISO_Left_Tab = Shift+Tab */
