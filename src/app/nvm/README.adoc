@@ -1,6 +1,0 @@
-# nvm 安装说明文档
-include::../../../doc/base.adoc[]
-
-
-https://github.com/nvm-sh/nvm[官方文档]
-

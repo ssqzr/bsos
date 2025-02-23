@@ -8,10 +8,6 @@ https://www.gnu.org/software/bash/manual/bash.html[官方文档]
 
 ### 命令行中“--”的含义
 
-在使用zsh的bindkey的时候发现有使用"bindkey --"的代码，查看 https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Zle-Builtins[bindkey]的文档，也没有查到其含义。
-
-其实以前也在其他命令看到过类似的用法，只是没特别在意而已。
-
 https://unix.stackexchange.com/questions/11376/what-does-double-dash-mean[What does "--" (double-dash) mean?]
 
 看上面这个解答就可以了。
@@ -62,7 +58,7 @@ drwxr-xr-x   7 root root 4.0K  1月 4日 13:02 src
 - 不会是 `sbin` 目录下，它就是 `bin` 目录的链接
 - 不会是 `src` 目录下，因为不是源代码
 - 不会是 `local` 目录下，它是供系统管理员在本地安装软件时使用。当系统软件更新时，它需要确保不被覆盖。
-- 选择 `share` 目录，因为我观察部分软件都是安装在这个目录下的，例如 `zsh` 。
+- 选择 `share` 目录，因为我观察部分软件都是安装在这个目录下的。
 
 所以决定将 `src/lib/utils` 目录拷贝到 `/usr/share/bsos/bash` 目录下。
 

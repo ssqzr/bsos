@@ -46,7 +46,7 @@ function fzf::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function fzf::trait::post_install() {
     fs::directory::copy --force "$SCRIPT_DIR_f0d5ae0d/fzf" "$XDG_CONFIG_HOME/fzf" || return "${SHELL_FALSE}"
-    zsh::config::add "350" "$SCRIPT_DIR_f0d5ae0d/fzf.zsh" || return "${SHELL_FALSE}"
+    fish::config::add "350" "$SCRIPT_DIR_f0d5ae0d/fish/fzf.fish" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -64,7 +64,7 @@ function fzf::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function fzf::trait::post_uninstall() {
     fs::directory::safe_delete "$XDG_CONFIG_HOME/fzf" || return "${SHELL_FALSE}"
-    zsh::config::remove "350" "fzf.zsh" || return "${SHELL_FALSE}"
+    fish::config::remove "350" "fzf.fish" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

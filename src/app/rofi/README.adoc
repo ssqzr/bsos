@@ -78,7 +78,7 @@ https://github.com/svenstaro/rofi-calc/issues?q=abi+version+of+plugin[rofi-calc]
 ====
 
 ❯ rofi -show-icons -show combi -combi-modes "drun,window,run,ssh" -modes combi
-zsh: bus error (core dumped)  rofi -show-icons -show combi -combi-modes "drun,window,run,ssh" -modes combi
+bus error (core dumped)  rofi -show-icons -show combi -combi-modes "drun,window,run,ssh" -modes combi
 
 ====
 

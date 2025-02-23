@@ -17,7 +17,7 @@ function flutter::settings::install_dir() {
 }
 
 function flutter::settings::env::clean() {
-    zsh::config::remove "350" "flutter.zsh" || return "${SHELL_FALSE}"
+    fish::config::remove "350" "flutter.fish" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -26,10 +26,10 @@ function flutter::settings::env::setup() {
     local src_dir
     src_dir="$(flutter::settings::install_dir)" || return "${SHELL_FALSE}"
 
-    zsh::config::add "350" "${SCRIPT_DIR_2c7abf78}/flutter.zsh" || return "${SHELL_FALSE}"
-    filepath="$(zsh::config::filepath "350" "flutter.zsh")" || return "${SHELL_FALSE}"
+    fish::config::add "350" "${SCRIPT_DIR_2c7abf78}/fish/flutter.fish" || return "${SHELL_FALSE}"
+    filepath="$(fish::config::filepath "350" "flutter.fish")" || return "${SHELL_FALSE}"
 
-    cmd::run_cmd_with_history -- echo "export PATH=\\\"$src_dir/bin:\\\$PATH\\\"" ">>" "$filepath" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history -- echo "fish_add_path ${src_dir}/bin" ">>" "$filepath" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

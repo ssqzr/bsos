@@ -19,7 +19,7 @@ function theme.colors(config)
         config.color_scheme = color_scheme
     else
         local color_scheme = {
-            -- NOTE: zsh 也会设置终端的颜色，为了让其他终端也有良好的颜色体验，我们会以 zsh 的颜色为主
+            -- NOTE: wallust 也会设置终端的颜色，为了让其他终端也有良好的颜色体验，我们会以 wallust 的颜色为主
             foreground = colors.foreground,
             background = colors.background,
             cursor_bg = colors.foreground,

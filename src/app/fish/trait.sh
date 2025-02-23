@@ -2,7 +2,7 @@
 
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 # shellcheck disable=SC2034
-SCRIPT_DIR_29b7d4b3="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
+SCRIPT_DIR_8ae37a2c="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
@@ -11,97 +11,112 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
-function xdg::trait::hyprland::install() {
-    hyprland::config::add "350" "${SCRIPT_DIR_29b7d4b3}/hyprland/xdg.conf" || return "${SHELL_FALSE}"
-    return "${SHELL_TRUE}"
-}
+# 处理 .config/fish 目录下的配置文件
+function fish::settings::fish_dir() {
+    local src
+    local dst
+    local filename
+    local files
 
-function xdg::trait::hyprland::uninstall() {
-    hyprland::config::remove "350" "xdg.conf" || return "${SHELL_FALSE}"
-    return "${SHELL_TRUE}"
-}
+    if fs::path::is_not_exists "$XDG_CONFIG_HOME/fish"; then
+        # 拷贝全新的文件
+        fs::directory::copy "$SCRIPT_DIR_8ae37a2c/fish" "$XDG_CONFIG_HOME/fish" || return "$SHELL_FALSE"
+        return "${SHELL_TRUE}"
+    fi
 
-function xdg::trait::user_dirs::install() {
-    local locale
-    locale="$(localectl status | grep "System Locale" | awk -F ':' '{print $2}')" || return "${SHELL_FALSE}"
-    locale="$(string::trim "$locale")"
+    # 备份配置文件
+    fs::directory::move --force "$XDG_CONFIG_HOME/fish" "$BUILD_TEMP_DIR/fish" || return "$SHELL_FALSE"
 
-    # https://wiki.archlinux.org/title/XDG_user_directories
-    cmd::run_cmd_with_history -- "${locale}" xdg-user-dirs-update || return "${SHELL_FALSE}"
+    # 拷贝全新的文件
+    fs::directory::copy "$SCRIPT_DIR_8ae37a2c/fish" "$XDG_CONFIG_HOME/fish" || return "$SHELL_FALSE"
 
-    return "${SHELL_TRUE}"
-}
-
-function xdg::trait::update_mime_database() {
-    # 用于给用户添加自定义的类型
-    fs::directory::create_recursive "${HOME}/.local/share/mime/application" || return "${SHELL_FALSE}"
-    fs::directory::create_recursive "${HOME}/.local/share/mime/packages" || return "${SHELL_FALSE}"
-
-    # FIXME: 由于 xdg-mime 在 Hyprland 下不能正常识别文件类型，等 xdg-mime 问题解决了再看效果要不要执行这个
-    # cmd::run_cmd_with_history --sudo -- update-mime-database "/usr/share/mime" || return "${SHELL_FALSE}"
+    # 处理 conf.d 目录下的配置文件，复制不属于 fish 内置的脚本
+    if fs::path::is_exists "$BUILD_TEMP_DIR/fish/conf.d"; then
+        fs::directory::read files "$BUILD_TEMP_DIR/fish/conf.d" || return "$SHELL_FALSE"
+        for src in "${files[@]}"; do
+            filename="$(basename "$src")"
+            dst="$XDG_CONFIG_HOME/fish/conf.d/$filename"
+            if fs::path::is_exists "$dst"; then
+                continue
+            fi
+            if fs::path::is_file "$src"; then
+                fs::file::copy "$src" "$dst" || return "$SHELL_FALSE"
+            elif fs::path::is_directory "$src"; then
+                fs::directory::copy "$src" "$dst" || return "$SHELL_FALSE"
+            else
+                lerror "file($src) is not file and directory"
+                return "$SHELL_FALSE"
+            fi
+        done
+    fi
 
     return "${SHELL_TRUE}"
 }
 
 # 指定使用的包管理器
-function xdg::trait::package_manager() {
+function fish::trait::package_manager() {
     echo "pacman"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
-function xdg::trait::package_name() {
-    # 它是一系列xdg相关的包，所以没有具体的包名
-    echo "_xdg_spec_group"
+function fish::trait::package_name() {
+    echo "fish"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
-function xdg::trait::description() {
-    echo "xdg specification for applications"
+function fish::trait::description() {
+    package_manager::package_description "$(fish::trait::package_manager)" "$(fish::trait::package_name)" || return "$SHELL_FALSE"
+    return "$SHELL_TRUE"
 }
 
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
-function xdg::trait::install_guide() {
+function fish::trait::install_guide() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的前置操作，比如下载源代码
-function xdg::trait::pre_install() {
+function fish::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的操作
-function xdg::trait::do_install() {
-    # package_manager::pacman::install "$(xdg::trait::package_name)" || return "${SHELL_FALSE}"
+function fish::trait::do_install() {
+    package_manager::install "$(fish::trait::package_manager)" "$(fish::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
-function xdg::trait::post_install() {
-    xdg::trait::user_dirs::install || return "${SHELL_FALSE}"
-    xdg::trait::update_mime_database || return "${SHELL_FALSE}"
-    fish::config::add "030" "${SCRIPT_DIR_29b7d4b3}/fish/xdg.fish" || return "${SHELL_FALSE}"
+function fish::trait::post_install() {
 
-    xdg::trait::hyprland::install || return "${SHELL_FALSE}"
+    fish::settings::fish_dir || return "$SHELL_FALSE"
+
+    # 设置默认的shell为fish
+    local username
+    username=$(os::user::name)
+    cmd::run_cmd_with_history --sudo -- chsh -s /usr/bin/fish "${username}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
-function xdg::trait::pre_uninstall() {
+function fish::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
 # 卸载的操作
-function xdg::trait::do_uninstall() {
-    # package_manager::pacman::uninstall "$(xdg::trait::package_name)" || return "${SHELL_FALSE}"
+function fish::trait::do_uninstall() {
+    package_manager::uninstall "$(fish::trait::package_manager)" "$(fish::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
 # 卸载的后置操作，比如删除临时文件
-function xdg::trait::post_uninstall() {
+function fish::trait::post_uninstall() {
+    local username
+    username=$(os::user::name)
 
-    fish::config::remove "030" "xdg.fish" || return "${SHELL_FALSE}"
-    xdg::trait::hyprland::uninstall || return "${SHELL_FALSE}"
+    fs::directory::safe_delete "$XDG_CONFIG_HOME/fish" || return "$SHELL_FALSE"
+
+    cmd::run_cmd_with_history --sudo -- chsh -s /usr/bin/bash "${username}"
     return "${SHELL_TRUE}"
 }
 
@@ -112,8 +127,8 @@ function xdg::trait::post_uninstall() {
 # - 更新的操作和版本无关，也就是说所有版本更新方法都一样
 # - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
 # - 更新的指责和包管理器类似，只负责更新
-function xdg::trait::upgrade() {
-    # package_manager::upgrade "$(xdg::trait::package_manager)" "$(xdg::trait::package_name)" || return "${SHELL_FALSE}"
+function fish::trait::upgrade() {
+    package_manager::upgrade "$(fish::trait::package_manager)" "$(fish::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -122,14 +137,14 @@ function xdg::trait::upgrade() {
 # 1. Hyprland 的插件需要在Hyprland运行时才可以启动
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
-function xdg::trait::fixme() {
+function fish::trait::fixme() {
     return "${SHELL_TRUE}"
 }
 
 # fixme 的逆操作
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
-function xdg::trait::unfixme() {
+function fish::trait::unfixme() {
     return "${SHELL_TRUE}"
 }
 
@@ -139,7 +154,7 @@ function xdg::trait::unfixme() {
 # 或者有一些依赖的包不仅安装就可以了，它自身也需要进行额外的配置。
 # 因此还是需要为一些特殊场景添加依赖
 # NOTE: 这里的依赖包是必须安装的，并且在安装本程序前进行安装
-function xdg::trait::dependencies() {
+function fish::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
     # "pacman:vim"
@@ -147,11 +162,6 @@ function xdg::trait::dependencies() {
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
-
-    apps+=("custom:locale")
-
-    apps+=("pacman:xdg-utils" "pacman:xdg-user-dirs" "pacman:shared-mime-info" "pacman:desktop-file-utils")
-
     array::print apps
     return "${SHELL_TRUE}"
 }
@@ -160,14 +170,15 @@ function xdg::trait::dependencies() {
 # 例如程序的插件、主题等。
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
-function xdg::trait::features() {
+function fish::trait::features() {
     local apps=()
+    apps+=("custom:pkgfile")
     array::print apps
     return "${SHELL_TRUE}"
 }
 
-function xdg::trait::main() {
-    return "$SHELL_TRUE"
+function fish::trait::main() {
+    return "${SHELL_TRUE}"
 }
 
-xdg::trait::main
+fish::trait::main

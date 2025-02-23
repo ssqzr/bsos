@@ -1,0 +1,6 @@
+# fish 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://fishshell.com/[官方文档]
+

@@ -1,0 +1,6 @@
+# volta 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://volta.sh/[官方文档]
+

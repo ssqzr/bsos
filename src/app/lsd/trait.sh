@@ -46,7 +46,7 @@ function lsd::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function lsd::trait::post_install() {
-    zsh::config::add "350" "${SCRIPT_DIR_3998d210}/zsh/lsd.zsh" || return "${SHELL_FALSE}"
+    fish::config::add "350" "${SCRIPT_DIR_3998d210}/fish/lsd.fish" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -64,7 +64,7 @@ function lsd::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function lsd::trait::post_uninstall() {
-    zsh::config::remove "350" "lsd.zsh" || return "${SHELL_FALSE}"
+    fish::config::remove "350" "lsd.fish" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }

@@ -47,7 +47,7 @@ function pkgfile::trait::do_install() {
 function pkgfile::trait::post_install() {
     local unit="pkgfile-update.timer"
 
-    zsh::config::add "350" "$SCRIPT_DIR_fba3043f/pkgfile.zsh" || return "$SHELL_FALSE"
+    fish::config::add "350" "$SCRIPT_DIR_fba3043f/fish/pkgfile.fish" || return "$SHELL_FALSE"
 
     systemctl::enable "$unit" || return "$SHELL_FALSE"
     systemctl::restart "$unit" || return "$SHELL_FALSE"
@@ -74,7 +74,7 @@ function pkgfile::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function pkgfile::trait::post_uninstall() {
-    zsh::config::remove "350" "pkgfile.zsh" || return "${SHELL_FALSE}"
+    fish::config::remove "350" "pkgfile.fish" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

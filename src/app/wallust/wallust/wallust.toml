@@ -14,8 +14,6 @@ wlogout = { template = 'wlogout.css', target = '~/.cache/colors/wlogout.css' }
 
 rofi = { template = 'rofi.rasi', target = '~/.cache/colors/rofi.rasi' }
 
-zsh = { template = 'zsh.zsh', target = '~/.cache/colors/zsh.zsh' }
-
 wezterm = { template = 'wezterm_colors.lua', target = '~/.cache/colors/wezterm_colors.lua' }
 
 swaync = { template = 'swaync.css', target = '~/.cache/colors/swaync.css' }

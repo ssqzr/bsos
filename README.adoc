@@ -161,9 +161,9 @@ polkit.addRule(function(action, subject) {
 
 [example]
 ====
-`zsh` 的 `features` 里有 `pkgfile` ，用于提供 `command not found` 的功能。
+`fish` 的 `features` 里有 `pkgfile` ，用于提供 `command not found` 的功能。
 
-但是 `pkgfile` 并不依赖 `zsh` 。 `pkgfile` 是一个相对独立的应用。
+但是 `pkgfile` 并不依赖 `fish` 。 `pkgfile` 是一个相对独立的应用。
 ====
 
 
@@ -219,7 +219,7 @@ include::doc/assets/bsos_architecture.excalidraw[]
 │                           ├── sed.sh
 │                           ├── os.sh
 │                           ├── hyprland.sh
-│                           ├── zsh.sh
+│                           ├── fish.sh
 │                           ├── swap.sh
 │                           ├── flatpak.sh
 │                           └── process.sh
@@ -499,7 +499,6 @@ SUBCOMMAND:
 * [ ] print.sh 支持 256 colors
 * [*] 日志支持多个 handler ，并且支持从命令行参数指定
 * [ ] xref:src/app/hyprland/README.adoc#per-workspace-layer[关注 hyprland 支持不同工作空间设置不同的 layer 的特性]
-* [ ] zsh 库的 string 库怎么复用 bash 库。
 * [*] 单元测试支持测试某个文件、某个测试等细粒度操作。
 * [*] xref:src/app/hyprland/README.adoc#hyprland-dynamic-config[Hyprland 支持动态加载配置文件]
 * [*] 提供命令行的帮助信息

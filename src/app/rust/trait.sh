@@ -51,7 +51,7 @@ function rust::trait::post_install() {
     cmd::run_cmd_with_history -- rustup default stable || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- rustup update || return "${SHELL_FALSE}"
 
-    zsh::config::add "350" "${SCRIPT_DIR_fd47d50e}/rust.zsh" || return "${SHELL_FALSE}"
+    fish::config::add "350" "${SCRIPT_DIR_fd47d50e}/fish/rust.fish" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -70,7 +70,7 @@ function rust::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function rust::trait::post_uninstall() {
     fs::directory::safe_delete "${HOME}/.cargo" || return "${SHELL_FALSE}"
-    zsh::config::remove "350" "rust.zsh" || return "${SHELL_FALSE}"
+    fish::config::remove "350" "rust.fish" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
