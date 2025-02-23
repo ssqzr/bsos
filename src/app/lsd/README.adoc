@@ -1,0 +1,6 @@
+# lsd 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/lsd-rs/lsd[官方文档]
+
