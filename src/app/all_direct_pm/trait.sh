@@ -112,6 +112,7 @@ function all_direct_pm::trait::dependencies() {
     apps+=("flatpak:com.github.xournalpp.xournalpp" "flatpak:ch.openboard.OpenBoard")
     apps+=("flatpak:net.agalwood.Motrix")
     apps+=("pacman:fd")
+    apps+=("pacman:bottom")
     array::print apps
     return "${SHELL_TRUE}"
 }
