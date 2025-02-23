@@ -1,0 +1,6 @@
+# bat 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/sharkdp/bat[官方文档]
+
