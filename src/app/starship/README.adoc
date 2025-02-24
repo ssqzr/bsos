@@ -1,0 +1,6 @@
+# starship 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://starship.rs/[官方文档]
+
