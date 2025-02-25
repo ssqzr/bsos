@@ -52,7 +52,7 @@ function yazi::trait::post_install() {
 
     cmd::run_cmd_with_history -- mkdir -p "${XDG_CONFIG_HOME}/yazi/plugins" || return "${SHELL_FALSE}"
     # 需要安装 ouch
-    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- git clone https://github.com/ndtoan96/ouch.yazi.git "${XDG_CONFIG_HOME}/yazi/plugins/ouch.yazi" || return "${SHELL_FALSE}"
+    cmd::run_cmd_retry_three cmd::run_cmd_with_history -- git clone --depth 1 https://github.com/ndtoan96/ouch.yazi.git "${XDG_CONFIG_HOME}/yazi/plugins/ouch.yazi" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }

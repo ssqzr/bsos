@@ -53,6 +53,26 @@ prepend_keymap = [
     ], run = "move 1", desc = "Move cursor right" },
 ]
 
+[pick]
+prepend_keymap = [
+    { on = [
+        "i",
+    ], run = "arrow -1", desc = "Move cursor up" },
+    { on = [
+        "k",
+    ], run = "arrow 1", desc = "Move cursor down" },
+]
+
+[spot]
+prepend_keymap = [
+    { on = [
+        "i",
+    ], run = "arrow -1", desc = "Move cursor up" },
+    { on = [
+        "k",
+    ], run = "arrow 1", desc = "Move cursor down" },
+]
+
 [help]
 prepend_keymap = [
     { on = [

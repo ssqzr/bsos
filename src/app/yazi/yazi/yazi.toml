@@ -2,12 +2,29 @@
 [manager]
 scrolloffsort_by = "natural"
 sort_dir_first = true
-show_hidden = true
+show_hidden = false
 show_symlink = true
 
 
 [opener]
 # text = [{ run = 'vim "$@"', block = true }]
+vscode = [
+    { run = 'code "$@"', block = true, for = "linux", desc = "Open With VSCode" },
+]
+
+[open]
+rules = [
+    { mime = "text/*", use = [
+        "open",
+        "edit",
+        "vscode",
+    ] },
+    { mime = "inode/directory", use = [
+        "open",
+        "vscode",
+    ] },
+]
+
 
 [plugin]
 prepend_previewers = [
