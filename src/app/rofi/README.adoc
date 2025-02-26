@@ -83,3 +83,55 @@ bus error (core dumped)  rofi -show-icons -show combi -combi-modes "drun,window,
 ====
 
 目前不知道具体原因，重启电脑可以解决。
+
+
+### `run-shell-command` 配置的说明
+
+这个配置是值通过终端运行命令时运行的方式。
+
+例如通过 `drun` 模式运行 `yazi.desktop` 时，它就是通过 `run-shell-command` 指定的方式运行 `yazi` 命令。
+
+因为 `yazi.desktop` 文件里指定了 `Terminal=true` ，这个是 `desktop` 的规范，它告诉启动器我需要通过终端来运行。
+
+通过分析 `yazi` 源码： `source/modes/drun.c` 和 `source/helper.c::helper_execute_command` 
+
+`rofi` 也是解析 `desktop` 文件里的 `Terminal` 字段来判断的。
+
+- 当 `Terminal=true` 时， `rofi` 会通过 `run-shell-command` 指定的方式来运行命令。
+- 当 `Terminal=false` 或者没有指定时， `rofi` 会通过 `run-command` 指定的方式来运行命令。
+
+
+### `run` 模式下运行 `yazi` 闪退的问题
+
+通过 `run` 模式下运行 `yazi` 程序，会闪退。
+
+运行 `yazi` 命令需要依附终端，直接运行 `yazi` 命令是不可以的，这个不是 `rofi` 的问题。
+
+`rofi` 运行命令的方式是通过 `run-command` 配置来指定的，默认是 "`{cmd}`"，也就是直接运行命令。
+
+我们可以修改 `run-command` 配置为 `wezterm -e {cmd}` 或者 `wezterm start -- {cmd}`，这样就可以运行了。
+
+但是这就导致其他的命令也会通过终端运行，例如 `vscode` ，导致 `rofi` 会先运行终端，终端里再运行 `vscode` ，导致界面会闪一下，就是启动终端的界面会打开再关闭。
+
+[.red]#所以还是不建议修改 `run-command` 配置。#
+
+参考： https://davatorium.github.io/rofi/1.7.3/rofi.1/#run[rofi run模式]里的说明。
+
+我们可以通过 `accept-alt` 快捷键绑定 (默认是 `shift-enter` ) 来通过终端运行命令。
+
+
+### `combi` 运行 `yazi 目录路径` 闪退的问题
+
+如果设置 `run-command` 配置为 `wezterm start -- {cmd}` 。
+
+在 `combi` 模式下输入 `yazi ~` ,并不会打开 `yazi` ，而是闪退。
+
+这个是因为在 `combi` 模式下，输入的命令是 `yazi ~` ，在候选框里并没有候选项，它并不是运行这个命令，而是直接退出了。
+
+在 `run` 模式下输入 `yazi ~` ,会打开 `yazi` ，因为指定 `run` 模式下它会运行这个命令，即使没有候选项。
+
+[.green]#所以运行命令指定参数时一定要切换到 `run` 模式下运行，不能在 `combi` 模式下运行。#
+
+[.red]#上面测试都是建立在修改 `run-command` 配置为 `wezterm start -- {cmd}` 的情况下。#
+
+
