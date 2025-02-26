@@ -20,19 +20,90 @@ source "${SCRIPT_DIR_83277c97}/../cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_83277c97}/../fs/fs.sh"
 
-function flatpak::override::permission::_gen_option_name() {
+declare -r __DEFAULT_POLICY_83277c97="allow"
+declare -r __DEFAULT_SCOPE_83277c97="user"
+
+function flatpak::override::_get_config_path() {
+    local scope
+    local app
+
+    local param
+    local filepath
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    case "$scope" in
+    system)
+        filepath="/var/lib/flatpak/overrides"
+        ;;
+    user)
+        filepath="$HOME/.local/share/flatpak/overrides"
+        ;;
+    *)
+        lerror "unknown scope $scope"
+        return "$SHELL_FALSE"
+        ;;
+    esac
+
+    if string::is_empty "$app"; then
+        filepath="${filepath}/global"
+    else
+        filepath="${filepath}/$app"
+    fi
+    ldebug "config file=$filepath"
+
+    echo "$filepath"
+    return "$SHELL_TRUE"
+}
+
+function flatpak::override::permission::_check_policy() {
+    local policy="$1"
+    shift
+    # shellcheck disable=SC2034
+    local valid_policy=("allow" "deny")
+    if array::is_not_contain valid_policy "$policy"; then
+        lerror "invalid policy $policy"
+        return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+function flatpak::override::permission::_check_scope() {
+    local scope="$1"
+    shift
+    # shellcheck disable=SC2034
+    local valid_scope=("user" "system")
+    if array::is_not_contain valid_scope "$scope"; then
+        lerror "invalid scope $scope"
+        return "$SHELL_FALSE"
+    fi
+    return "$SHELL_TRUE"
+}
+
+function flatpak::override::permission::set::_gen_option_name() {
     local permission="$1"
     shift
     local policy="$1"
     shift
 
     local name
-    # shellcheck disable=SC2034
-    local valid_policy=("allow" "deny" "unset")
-    if array::is_not_contain valid_policy "$policy"; then
-        lerror "invalid policy $policy"
-        return "$SHELL_FALSE"
-    fi
 
     case "$permission" in
     socket | device | filesystem)
@@ -125,13 +196,13 @@ function flatpak::override::permission::set() {
     for param in "$@"; do
         case "$param" in
         --scope=*)
-            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            parameter::parse_string --default="${__DEFAULT_SCOPE_83277c97}" --no-empty --option="$param" scope || return "$SHELL_FALSE"
             ;;
         --app=*)
             parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
             ;;
         --policy=*)
-            parameter::parse_string --option="$param" policy || return "$SHELL_FALSE"
+            parameter::parse_string --default="${__DEFAULT_POLICY_83277c97}" --no-empty --option="$param" policy || return "$SHELL_FALSE"
             ;;
         -*)
             lerror "unknown option $param"
@@ -164,6 +235,19 @@ function flatpak::override::permission::set() {
         return "$SHELL_FALSE"
     fi
 
+    if [ ! -v value ]; then
+        lerror "param value is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$value"; then
+        lerror "param value is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    flatpak::override::permission::_check_scope "$scope" || return "$SHELL_FALSE"
+    flatpak::override::permission::_check_policy "$policy" || return "$SHELL_FALSE"
+
     if string::is_empty "$scope" || [ "$scope" == "system" ]; then
         is_sudo="$SHELL_TRUE"
     elif [ "$scope" == "user" ]; then
@@ -174,10 +258,129 @@ function flatpak::override::permission::set() {
         return "$SHELL_FALSE"
     fi
 
-    permission_name="$(flatpak::override::permission::_gen_option_name "$permission" "$policy")" || return "$SHELL_FALSE"
+    permission_name="$(flatpak::override::permission::set::_gen_option_name "$permission" "$policy")" || return "$SHELL_FALSE"
     options+=("${permission_name}=${value}")
 
     cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- flatpak override "${options[@]}" "$app" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+# 通过修改配置文件的方式清除
+function flatpak::override::permission::unset() {
+    local scope
+    local app
+    local policy
+    local permission
+    local value
+
+    local param
+    local config_filepath
+    local temp_str
+    local values=()
+    local is_sudo="$SHELL_FALSE"
+    local valid_permission_name=("socket" "device" "filesystem")
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --default="${__DEFAULT_SCOPE_83277c97}" --no-empty --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        --policy=*)
+            parameter::parse_string --default="${__DEFAULT_POLICY_83277c97}" --no-empty --option="$param" policy || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v permission ]; then
+                permission="$param"
+                continue
+            fi
+
+            if [ ! -v value ]; then
+                value="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v permission ]; then
+        lerror "param permission is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$permission"; then
+        lerror "param permission is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -v value ]; then
+        lerror "param value is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$value"; then
+        lerror "param value is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    flatpak::override::permission::_check_scope "$scope" || return "$SHELL_FALSE"
+    flatpak::override::permission::_check_policy "$policy" || return "$SHELL_FALSE"
+
+    ldebug "param scope=$scope, permission=$permission, value=$value, policy=$policy, app=$app"
+
+    if array::is_not_contain valid_permission_name "$permission"; then
+        lerror "permission($permission) is not valid, current valid permission name is (${valid_permission_name[*]})"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$scope" || [ "$scope" == "system" ]; then
+        is_sudo="$SHELL_TRUE"
+    elif [ "$scope" == "user" ]; then
+        is_sudo="$SHELL_FALSE"
+    else
+        lerror "unknown scope $scope"
+        return "$SHELL_FALSE"
+    fi
+
+    config_filepath="$(flatpak::override::_get_config_path --scope="$scope" --app="$app")" || return "$SHELL_FALSE"
+
+    if fs::path::is_not_exists "$config_filepath"; then
+        ldebug "config file($config_filepath) is not exists, not need unset"
+        return "$SHELL_TRUE"
+    fi
+
+    if [ "$policy" == "deny" ]; then
+        value="!${value}"
+    fi
+
+    temp_str=$(grep -E "^${permission}s=" "$config_filepath" | awk -F '=' '{print $2}')
+    ldebug "current sockets=$temp_str"
+
+    if string::is_empty "$temp_str"; then
+        ldebug "permission($permission) is not set in config file($config_filepath), not need unset"
+        return "$SHELL_TRUE"
+    fi
+
+    string::split_with values "$temp_str" ";" || return "$SHELL_FALSE"
+    ldebug "values=(${values[*]})"
+
+    array::remove values "$value" || return "$SHELL_FALSE"
+
+    temp_str="$(array::join_with values ";")" || return "$SHELL_FALSE"
+
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- sed -i "{{s|^${permission}s=.*|${permission}s=${temp_str}|g}}" "$config_filepath" || return "$SHELL_FALSE"
+
+    linfo "remove permission($permission) value($value) success, scope=$scope, app=$app, policy=$policy"
 
     return "$SHELL_TRUE"
 }
@@ -251,86 +454,6 @@ function flatpak::override::filesystem::deny() {
     return "$SHELL_TRUE"
 }
 
-# 通过修改配置文件的方式清除
-function flatpak::override::filesystem::_unset() {
-    local scope="$1"
-    shift
-    local filesystem="$1"
-    shift
-    local is_deny="$1"
-    shift
-    local app="$1"
-    shift
-
-    local param
-    local config_filepath
-    local temp_str
-    local filesystems=()
-    local is_sudo="$SHELL_FALSE"
-
-    ldebug "param scope=$scope, filesystem=$filesystem, is_deny=$is_deny, app=$app"
-
-    if string::is_empty "$scope" || [ "$scope" == "system" ]; then
-        is_sudo="$SHELL_TRUE"
-    elif [ "$scope" == "user" ]; then
-        is_sudo="$SHELL_FALSE"
-    else
-        lerror "unknown scope $scope"
-        return "$SHELL_FALSE"
-    fi
-
-    case "$scope" in
-    system)
-        config_filepath="/var/lib/flatpak/overrides"
-        ;;
-    user)
-        config_filepath="$HOME/.local/share/flatpak/overrides"
-        ;;
-    *)
-        lerror "unknown scope $scope"
-        return "$SHELL_FALSE"
-        ;;
-    esac
-
-    if string::is_empty "$app"; then
-        config_filepath="${config_filepath}/global"
-    else
-        config_filepath="${config_filepath}/$app"
-    fi
-    ldebug "config file=$config_filepath"
-
-    if fs::path::is_not_exists "$config_filepath"; then
-        ldebug "config file($config_filepath) is not exists, not need unset"
-        return "$SHELL_TRUE"
-    fi
-
-    if [ "$is_deny" == "$SHELL_TRUE" ]; then
-        filesystem="!${filesystem}"
-    fi
-
-    temp_str=$(grep -E "^filesystems=" "$config_filepath" | awk -F '=' '{print $2}')
-    ldebug "current filesystems=$temp_str"
-
-    if string::is_empty "$temp_str"; then
-        ldebug "filesystems is not set in config file($config_filepath), not need unset"
-        return "$SHELL_TRUE"
-    fi
-
-    string::split_with filesystems "$temp_str" ";" || return "$SHELL_FALSE"
-    ldebug "filesystems=(${filesystems[*]})"
-
-    array::remove filesystems "$filesystem" || return "$SHELL_FALSE"
-
-    temp_str="$(array::join_with filesystems ";")" || return "$SHELL_FALSE"
-
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- sed -i "{{s|^filesystems=.*|filesystems=${temp_str}|g}}" "$config_filepath" || return "$SHELL_FALSE"
-
-    linfo "remove filesystem $filesystem success, scope=$scope, app=$app, is_deny=$is_deny"
-
-    return "$SHELL_TRUE"
-}
-
-# 通过修改配置文件的方式清除
 function flatpak::override::filesystem::allow_unset() {
     local filesystem
     local scope
@@ -363,12 +486,11 @@ function flatpak::override::filesystem::allow_unset() {
 
     ldebug "param filesystem=$filesystem scope=$scope app=$app"
 
-    flatpak::override::filesystem::_unset "$scope" "$filesystem" "$SHELL_FALSE" "$app" || return "$SHELL_FALSE"
+    flatpak::override::permission::unset --scope="$scope" --app="$app" --policy="allow" "filesystem" "$filesystem" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
 
-# 通过修改配置文件的方式清除
 function flatpak::override::filesystem::deny_unset() {
     local filesystem
     local scope
@@ -401,7 +523,153 @@ function flatpak::override::filesystem::deny_unset() {
 
     ldebug "param filesystem=$filesystem scope=$scope app=$app"
 
-    flatpak::override::filesystem::_unset "$scope" "$filesystem" "$SHELL_TRUE" "$app" || return "$SHELL_FALSE"
+    flatpak::override::permission::unset --scope="$scope" --app="$app" --policy="deny" "filesystem" "$filesystem" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function flatpak::override::socket::allow() {
+    local socket
+    local scope
+    local app
+
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v socket ]; then
+                socket="$param"
+                continue
+            fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    flatpak::override::permission::set --scope="$scope" --app="$app" --policy=allow "socket" "$socket" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+function flatpak::override::socket::deny() {
+    local socket
+    local scope
+    local app
+
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v socket ]; then
+                socket="$param"
+                continue
+            fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    flatpak::override::permission::set --scope="$scope" --app="$app" --policy=deny "socket" "$socket" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+# 通过修改配置文件的方式清除
+function flatpak::override::socket::allow_unset() {
+    local socket
+    local scope
+    local app
+
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v socket ]; then
+                socket="$param"
+                continue
+            fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    ldebug "param socket=$socket scope=$scope app=$app"
+
+    flatpak::override::permission::unset --scope="$scope" --app="$app" --policy="allow" "socket" "$socket" || return "$SHELL_FALSE"
+
+    return "$SHELL_TRUE"
+}
+
+# 通过修改配置文件的方式清除
+function flatpak::override::socket::deny_unset() {
+    local socket
+    local scope
+    local app
+
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v socket ]; then
+                socket="$param"
+                continue
+            fi
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    ldebug "param socket=$socket scope=$scope app=$app"
+
+    flatpak::override::permission::unset --scope="$scope" --app="$app" --policy="deny" "socket" "$socket" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }
@@ -493,24 +761,7 @@ function flatpak::override::environment::allow_unset() {
         return "$SHELL_FALSE"
     fi
 
-    case "$scope" in
-    system)
-        config_filepath="/var/lib/flatpak/overrides"
-        ;;
-    user)
-        config_filepath="$HOME/.local/share/flatpak/overrides"
-        ;;
-    *)
-        lerror "unknown scope $scope"
-        return "$SHELL_FALSE"
-        ;;
-    esac
-
-    if string::is_empty "$app"; then
-        config_filepath="${config_filepath}/global"
-    else
-        config_filepath="${config_filepath}/$app"
-    fi
+    config_filepath="$(flatpak::override::_get_config_path --scope="$scope" --app="$app")" || return "$SHELL_FALSE"
     ldebug "config file=$config_filepath"
 
     if fs::path::is_not_exists "$config_filepath"; then
