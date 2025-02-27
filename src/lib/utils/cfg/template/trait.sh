@@ -31,9 +31,9 @@ declare CFG_TRAIT_TEMPLATE_DEFAULT_SEPARATOR=","
 # 说明：
 #   1. path 不存在的时候，表示失败
 # 可选参数：
-#   --comment=COMMENT               string              指定注释的字符串
+#   --comment                       string              指定注释的字符串
 # 位置参数：
-#   path                            string              map 上级的路径
+#   path                            string              JSONPath
 #   data                            string              配置数据
 # 标准输出： 获取的值
 # 返回值：
@@ -96,9 +96,9 @@ function cfg::trait::template::map::get() {
 # 说明：
 #   无
 # 可选参数：
-#   --comment=COMMENT               string              指定注释的字符串
+#   --comment                       string              指定注释的字符串
 # 位置参数：
-#   path                            string              map 上级的路径
+#   path                            string              JSONPath
 #   data                            string              配置数据
 # 标准输出： 无
 # 返回值：
@@ -159,34 +159,53 @@ function cfg::trait::template::map::is_exists() {
 #   1. 不存在 path 的时候，会创建 path
 #   2. 存在 path 的时候，会更新 path 的 value
 # 可选参数：
-#   --comment=COMMENT               string              指定注释的字符串
+#   --comment                       string              指定注释的字符串
+#   --old-value-ref                 string引用           用于保存修改前的值的变量的引用
 # 位置参数：
-#   path                            string              map 上级的路径
+#   result_data_ref                 string引用           用于保存修改后的配置数据的变量的引用
+#   path                            string              JSONPath
 #   value                           string              更新的值
-#   data                            string 引用          配置数据，修改后的配置数据也会存放在这里
+#   data                            string              原始配置数据
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 表示更新成功
 #   ${SHELL_FALSE} 表示更新失败
 function cfg::trait::template::map::update() {
     # FIXME: 重新生成 uuid 。 生成命令： uuidgen |awk -F '-' '{print $1}'
+    local old_value_ref_fd38c827
+    local -n res_data_ref_fd38c827
     local path_fd38c827
     local value_fd38c827
-    local -n data_fd38c827
+    local data_fd38c827
 
+    local -n old_value_fd38c827
+
+    # shellcheck disable=SC2034
     local comment_fd38c827="${CFG_TRAIT_TEMPLATE_DEFAULT_COMMENT}"
     local param_fd38c827
+
+    ldebug "params=($*)"
 
     for param_fd38c827 in "$@"; do
         case "$param_fd38c827" in
         --comment=*)
             parameter::parse_string --default="${CFG_TRAIT_TEMPLATE_DEFAULT_COMMENT}" --option="$param_fd38c827" comment_fd38c827 || return "${SHELL_FALSE}"
             ;;
+        --old-value-ref=*)
+            parameter::parse_string --no-empty --option="$param_fd38c827" old_value_ref_fd38c827 || return "${SHELL_FALSE}"
+            # shellcheck disable=SC2034
+            old_value_fd38c827="$old_value_ref_fd38c827"
+            ;;
         -*)
             lerror "invalid option: $param_fd38c827"
             return "${SHELL_FALSE}"
             ;;
         *)
+
+            if [ ! -R res_data_ref_fd38c827 ]; then
+                res_data_ref_fd38c827="$param_fd38c827"
+                continue
+            fi
 
             if [ ! -v path_fd38c827 ]; then
                 path_fd38c827="$param_fd38c827"
@@ -198,7 +217,7 @@ function cfg::trait::template::map::update() {
                 continue
             fi
 
-            if [ ! -R data_fd38c827 ]; then
+            if [ ! -v data_fd38c827 ]; then
                 data_fd38c827="$param_fd38c827"
                 continue
             fi
@@ -208,6 +227,11 @@ function cfg::trait::template::map::update() {
             ;;
         esac
     done
+
+    if [ ! -R res_data_ref_fd38c827 ]; then
+        lerror "param result_data_ref is required"
+        return "${SHELL_FALSE}"
+    fi
 
     if [ ! -v path_fd38c827 ]; then
         lerror "param path is required"
@@ -219,13 +243,10 @@ function cfg::trait::template::map::update() {
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -R data_fd38c827 ]; then
+    if [ ! -v data_fd38c827 ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi
-
-    linfo "param path=${path_fd38c827}, value=${value_fd38c827}, comment=${comment_fd38c827}"
-    ldebug "param data ref=${!data_fd38c827}, data=${data_fd38c827}"
 
     return "${SHELL_TRUE}"
 }
@@ -234,21 +255,24 @@ function cfg::trait::template::map::update() {
 # 说明：
 #   1. 不存在 path 的时候，认为失败
 # 可选参数：
-#   --comment=COMMENT               string              指定注释的字符串
+#   --comment                       string              指定注释的字符串
+#   --old-value-ref                 string引用           用于保存修改前的值的变量的引用
 # 位置参数：
-#   path                            string              map 上级的路径
-#   value                           string 引用         pop 的值
-#   data                            string 引用         配置数据，修改后的配置数据也会存放在这里
+#   result_data_ref                 string引用           用于保存修改后的配置数据的变量的引用
+#   path                            string              JSONPath
+#   data                            string              配置数据
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 表示更新成功
 #   ${SHELL_FALSE} 表示更新失败
 function cfg::trait::template::map::pop() {
     # FIXME: 重新生成 uuid 。 生成命令： uuidgen |awk -F '-' '{print $1}'
+    local old_value_ref_fc1aecc2
+    local -n res_data_ref_fc1aecc2
     local path_fc1aecc2
-    # shellcheck disable=SC2034
-    local -n value_fc1aecc2
-    local -n data_fc1aecc2
+    local data_fc1aecc2
+
+    local -n old_value_fc1aecc2
 
     local comment_fc1aecc2="${CFG_TRAIT_TEMPLATE_DEFAULT_COMMENT}"
     local param_fc1aecc2
@@ -258,23 +282,28 @@ function cfg::trait::template::map::pop() {
         --comment=*)
             parameter::parse_string --default="${CFG_TRAIT_TEMPLATE_DEFAULT_COMMENT}" --option="$param_fc1aecc2" comment_fc1aecc2 || return "${SHELL_FALSE}"
             ;;
+        --old-value-ref=*)
+            parameter::parse_string --no-empty --option="$param_fc1aecc2" old_value_ref_fc1aecc2 || return "${SHELL_FALSE}"
+            # shellcheck disable=SC2034
+            old_value_fc1aecc2="$old_value_ref_fc1aecc2"
+            ;;
         -*)
             lerror "invalid option: $param_fc1aecc2"
             return "${SHELL_FALSE}"
             ;;
         *)
 
+            if [ ! -R res_data_ref_fc1aecc2 ]; then
+                res_data_ref_fc1aecc2="$param_fc1aecc2"
+                continue
+            fi
+
             if [ ! -v path_fc1aecc2 ]; then
                 path_fc1aecc2="$param_fc1aecc2"
                 continue
             fi
 
-            if [ ! -R value_fc1aecc2 ]; then
-                value_fc1aecc2="$param_fc1aecc2"
-                continue
-            fi
-
-            if [ ! -R data_fc1aecc2 ]; then
+            if [ ! -v data_fc1aecc2 ]; then
                 data_fc1aecc2="$param_fc1aecc2"
                 continue
             fi
@@ -285,17 +314,18 @@ function cfg::trait::template::map::pop() {
         esac
     done
 
+    if [ ! -R res_data_ref_fc1aecc2 ]; then
+        lerror "param result_data_ref is required"
+        return "${SHELL_FALSE}"
+
+    fi
+
     if [ ! -v path_fc1aecc2 ]; then
         lerror "param path is required"
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -R value_fc1aecc2 ]; then
-        lerror "param value is required"
-        return "${SHELL_FALSE}"
-    fi
-
-    if [ ! -R data_fc1aecc2 ]; then
+    if [ ! -v data_fc1aecc2 ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi
@@ -312,8 +342,8 @@ function cfg::trait::template::map::pop() {
 # 说明：
 #   1. 不存在 path 的时候，认为成功，返回空数组
 # 可选参数：
-#   --separator=[,]                 string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','。
-#   --comment=COMMENT               string              指定注释的字符串
+#   --separator                     string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','。
+#   --comment                       string              指定注释的字符串
 # 位置参数：
 #   all                             数组引用              存放所有元素的数组的引用
 #   path                            string              map 上级的路径
@@ -390,21 +420,27 @@ function cfg::trait::template::array::all() {
 # 更新指定 path 下所有列表元素
 # 说明：
 # 可选参数：
-#   --separator=[,]                 string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','。
-#   --comment=COMMENT               string              指定注释的字符串
+#   --separator                     string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','。
+#   --comment                       string              指定注释的字符串
+#   --old-value-ref                 数组引用             用于保存修改前的数组的引用
 # 位置参数：
+#   result_data_ref                 string引用           用于保存修改后的配置数据的变量的引用
 #   path                            string              map 上级的路径
 #   new                             数组引用              更新的列表引用
-#   data                            string 引用          配置数据，修改后的配置数据也会存放在这里
+#   data                            string              配置数据
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 表示更新成功
 #   ${SHELL_FALSE} 表示更新失败
 function cfg::trait::template::array::update_all() {
     # FIXME: 重新生成 uuid 。 生成命令： uuidgen |awk -F '-' '{print $1}'
+    local old_value_ref_ba4851ea
+    local -n res_data_ref_ba4851ea
     local path_ba4851ea
     local -n new_ba4851ea
-    local -n data_ba4851ea
+    local data_ba4851ea
+
+    local -n old_value_ba4851ea
 
     local param_ba4851ea
     local separator_ba4851ea="${CFG_TRAIT_TEMPLATE_DEFAULT_SEPARATOR}"
@@ -418,11 +454,21 @@ function cfg::trait::template::array::update_all() {
         --comment=*)
             parameter::parse_string --default="${CFG_TRAIT_TEMPLATE_DEFAULT_COMMENT}" --option="$param_ba4851ea" comment_ba4851ea || return "${SHELL_FALSE}"
             ;;
+        --old-value-ref=*)
+            parameter::parse_string --no-empty --option="$param_ba4851ea" old_value_ref_ba4851ea || return "${SHELL_FALSE}"
+            # shellcheck disable=SC2034
+            old_value_ba4851ea="${old_value_ref_ba4851ea}"
+            ;;
         -*)
             lerror "invalid option: $param_ba4851ea"
             return "${SHELL_FALSE}"
             ;;
         *)
+            if [ ! -R res_data_ref_ba4851ea ]; then
+                res_data_ref_ba4851ea="$param_ba4851ea"
+                continue
+            fi
+
             if [ ! -v path_ba4851ea ]; then
                 path_ba4851ea="$param_ba4851ea"
                 continue
@@ -433,7 +479,7 @@ function cfg::trait::template::array::update_all() {
                 continue
             fi
 
-            if [ ! -R data_ba4851ea ]; then
+            if [ ! -v data_ba4851ea ]; then
                 data_ba4851ea="$param_ba4851ea"
                 continue
             fi
@@ -443,6 +489,11 @@ function cfg::trait::template::array::update_all() {
             ;;
         esac
     done
+
+    if [ ! -R res_data_ref_ba4851ea ]; then
+        lerror "param result_data_ref is required"
+        return "${SHELL_FALSE}"
+    fi
 
     if [ ! -v path_ba4851ea ]; then
         lerror "param path is required"
@@ -454,7 +505,7 @@ function cfg::trait::template::array::update_all() {
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -R data_ba4851ea ]; then
+    if [ ! -v data_ba4851ea ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi

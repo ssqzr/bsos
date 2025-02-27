@@ -49,6 +49,7 @@ function cfg::trait::ini::parser::factory::line() {
 }
 
 # 说明
+# 用于构造回调函数的参数的工厂函数
 # 1. 所有的回调函数第一个参数都是一个关联数组，字段有如下：
 #   字段说明：
 #       - result                    string 引用                         用于保存修改后的配置数据
@@ -173,6 +174,7 @@ function cfg::trait::ini::parser::is_match_key_value() {
     return "${SHELL_FALSE}"
 }
 
+# 根据 JSONPath 解析 section 的名称
 function cfg::trait::ini::parser::path::parse_section() {
     local path="$1"
     shift
@@ -192,6 +194,7 @@ function cfg::trait::ini::parser::path::parse_section() {
     return "${SHELL_TRUE}"
 }
 
+# 根据 JSONPath 解析 section 下的配置的 key 的名称
 function cfg::trait::ini::parser::path::parse_key() {
     local path="$1"
     shift
@@ -265,7 +268,8 @@ function cfg::trait::ini::parser::line::parse_value() {
 }
 
 # 参数说明
-#   - data                          配置数据的引用                        包含整个配置的变量引用，修改后的配置会写入到这个变量中
+#   - result                        string引用                          修改后的配置会写入到这个变量中
+#   - data                          string                              配置数据
 #   - comment                       string                             注释符号
 #   - separator                     string                              用于解析数组的分隔符
 #   - callback                      关联数组的引用                        回调函数的关联数组
@@ -279,7 +283,9 @@ function cfg::trait::ini::parser::line::parse_value() {
 #       - line::unknown                                                     用于处理未知的行
 #   - extra                         关联数组的引用                        额外的参数，直接传递给回调，是关联数组
 function cfg::trait::ini::parser::parser() {
-    local -n data_468242ca="$1"
+    local -n result_468242ca="$1"
+    shift
+    local data_468242ca="$1"
     shift
     local comment_468242ca="$1"
     shift
@@ -291,7 +297,6 @@ function cfg::trait::ini::parser::parser() {
     local -n extra_468242ca="$1"
     shift
 
-    local result_468242ca
     local line_468242ca
     local line_section_468242ca
     local line_number_468242ca="-1"
@@ -414,7 +419,7 @@ function cfg::trait::ini::parser::parser() {
         "${func_468242ca}" callback_pramas_468242ca || return "${SHELL_FALSE}"
     fi
 
-    data_468242ca="${result_468242ca}"
+    return "${SHELL_TRUE}"
 }
 
 ############################################### 默认回调函数 #################################################

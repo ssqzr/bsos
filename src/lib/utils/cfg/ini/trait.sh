@@ -179,7 +179,7 @@ function cfg::trait::ini::map::get() {
     # 覆盖自己写的回调
     callback_237f9215["line::kv"]="cfg::trait::ini::map::get::callback::line::kv"
 
-    cfg::trait::ini::parser::parser data_237f9215 "${comment_237f9215}" "" callback_237f9215 extra_237f9215 || return "${SHELL_FALSE}"
+    cfg::trait::ini::parser::parser REF_PLACEHOLDER "${data_237f9215}" "${comment_237f9215}" "" callback_237f9215 extra_237f9215 || return "${SHELL_FALSE}"
 
     if [ "${is_done_237f9215}" != "${SHELL_TRUE}" ]; then
         lerror "map section=${section_in_path_237f9215}, key=${key_in_path_237f9215}, is not exists."
@@ -324,7 +324,7 @@ function cfg::trait::ini::map::is_exists() {
     # 覆盖自己写的回调
     callback_a87c1e96["line::kv"]="cfg::trait::ini::map::is_exists::callback::line::kv"
 
-    cfg::trait::ini::parser::parser data_a87c1e96 "${comment_a87c1e96}" "" callback_a87c1e96 extra_a87c1e96 || return "${SHELL_FALSE}"
+    cfg::trait::ini::parser::parser REF_PLACEHOLDER "${data_a87c1e96}" "${comment_a87c1e96}" "" callback_a87c1e96 extra_a87c1e96 || return "${SHELL_FALSE}"
 
     if [ "${is_done_a87c1e96}" != "${SHELL_TRUE}" ]; then
         lerror "map section=${section_in_path_a87c1e96}, key=${key_in_path_a87c1e96}, is not exists."
@@ -387,19 +387,26 @@ function cfg::trait::ini::map::is_exists::callback::line::kv() {
 #   1. 不存在 path 的时候，会创建 path
 #   2. 存在 path 的时候，会更新 path 的 value
 # 可选参数：
-#   --comment=COMMENT               string              指定注释的字符串
+#   --comment                       string                  指定注释的字符串
+#   --old-value-ref                 string引用              用于保存修改前的值的变量的引用
 # 位置参数：
-#   path                            string              map 上级的路径
-#   value                           string              更新的值
-#   data                            string 引用          配置数据，修改后的配置数据也会存放在这里
+#   result_data_ref                 string引用              用于保存修改后的配置数据的变量的引用
+#   path                            string                  JSONPath
+#   value                           string                  更新的值
+#   data                            string                  原始配置数据
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 表示更新成功
 #   ${SHELL_FALSE} 表示更新失败
 function cfg::trait::ini::map::update() {
+    local old_value_ref_fbf44aec
+    local -n res_data_ref_fbf44aec
     local path_fbf44aec
     local value_fbf44aec
-    local -n data_fbf44aec
+    local data_fbf44aec
+
+    local -n old_value_fbf44aec
+    local old_value_shadow_fbf44aec
 
     local comment_fbf44aec="${CFG_TRAIT_INI_DEFAULT_COMMENT}"
 
@@ -411,16 +418,27 @@ function cfg::trait::ini::map::update() {
 
     local param_fbf44aec
 
+    ldebug "params=($*)"
+
     for param_fbf44aec in "$@"; do
         case "$param_fbf44aec" in
         --comment=*)
             parameter::parse_string --default="${CFG_TRAIT_INI_DEFAULT_COMMENT}" --option="$param_fbf44aec" comment_fbf44aec || return "${SHELL_FALSE}"
+            ;;
+        --old-value-ref=*)
+            parameter::parse_string --no-empty --option="$param_fbf44aec" old_value_ref_fbf44aec || return "${SHELL_FALSE}"
+            old_value_fbf44aec="$old_value_ref_fbf44aec"
             ;;
         -*)
             lerror "invalid option: $param_fbf44aec"
             return "${SHELL_FALSE}"
             ;;
         *)
+
+            if [ ! -R res_data_ref_fbf44aec ]; then
+                res_data_ref_fbf44aec="$param_fbf44aec"
+                continue
+            fi
 
             if [ ! -v path_fbf44aec ]; then
                 path_fbf44aec="$param_fbf44aec"
@@ -432,7 +450,7 @@ function cfg::trait::ini::map::update() {
                 continue
             fi
 
-            if [ ! -R data_fbf44aec ]; then
+            if [ ! -v data_fbf44aec ]; then
                 data_fbf44aec="$param_fbf44aec"
                 continue
             fi
@@ -442,6 +460,11 @@ function cfg::trait::ini::map::update() {
             ;;
         esac
     done
+
+    if [ ! -R res_data_ref_fbf44aec ]; then
+        lerror "param result_data_ref is required"
+        return "${SHELL_FALSE}"
+    fi
 
     if [ ! -v path_fbf44aec ]; then
         lerror "param path is required"
@@ -453,13 +476,10 @@ function cfg::trait::ini::map::update() {
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -R data_fbf44aec ]; then
+    if [ ! -v data_fbf44aec ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi
-
-    linfo "param path=${path_fbf44aec}, value=${value_fbf44aec}, comment=${comment_fbf44aec}"
-    ldebug "param data ref=${!data_fbf44aec}, data=${data_fbf44aec}"
 
     cfg::trait::ini::utils::check_path "${path_fbf44aec}" || return "${SHELL_FALSE}"
 
@@ -469,8 +489,9 @@ function cfg::trait::ini::map::update() {
     extra_fbf44aec["section_in_path"]="${section_in_path_fbf44aec}"
     extra_fbf44aec["key_in_path"]="${key_in_path_fbf44aec}"
     extra_fbf44aec["value"]="${value_fbf44aec}"
-    # shellcheck disable=SC2034
     extra_fbf44aec["is_done"]=is_done_fbf44aec
+    # shellcheck disable=SC2034
+    extra_fbf44aec["old_value"]=old_value_shadow_fbf44aec
 
     cfg::trait::ini::parser::factory::callback::default callback_fbf44aec || return "${SHELL_FALSE}"
     # 覆盖自己写的回调
@@ -479,11 +500,15 @@ function cfg::trait::ini::map::update() {
     # shellcheck disable=SC2034
     callback_fbf44aec["section::end"]="cfg::trait::ini::map::update::callback::section::end"
 
-    cfg::trait::ini::parser::parser "${!data_fbf44aec}" "${comment_fbf44aec}" "" callback_fbf44aec extra_fbf44aec || return "${SHELL_FALSE}"
+    cfg::trait::ini::parser::parser res_data_ref_fbf44aec "${data_fbf44aec}" "${comment_fbf44aec}" "" callback_fbf44aec extra_fbf44aec || return "${SHELL_FALSE}"
 
     if [ "${is_done_fbf44aec}" = "${SHELL_FALSE}" ]; then
         lerror "map update failed, section=${section_in_path_fbf44aec}, key=${key_in_path_fbf44aec}, value=${value_fbf44aec}"
         return "${SHELL_FALSE}"
+    fi
+
+    if [ -R old_value_fbf44aec ]; then
+        old_value_fbf44aec="${old_value_shadow_fbf44aec}"
     fi
 
     return "${SHELL_TRUE}"
@@ -509,6 +534,7 @@ function cfg::trait::ini::map::update::callback::line::kv() {
     local key_in_path_fc439f47="${extra_fc439f47["key_in_path"]}"
     local extra_value_fc439f47="${extra_fc439f47["value"]}"
     local -n extra_is_done_fc439f47="${extra_fc439f47["is_done"]}"
+    local -n extra_old_value_fc439f47="${extra_fc439f47["old_value"]}"
     local line_key_fc439f47
     local line_value_fc439f47
 
@@ -531,6 +557,8 @@ function cfg::trait::ini::map::update::callback::line::kv() {
     fi
 
     result_fc439f47+="${line_key_fc439f47}=${extra_value_fc439f47}"$'\n'
+    # shellcheck disable=SC2034
+    extra_old_value_fc439f47="${line_value_fc439f47}"
 
     # shellcheck disable=SC2034
     extra_is_done_fc439f47="${SHELL_TRUE}"
@@ -619,21 +647,26 @@ function cfg::trait::ini::map::update::callback::data::end() {
 # 说明：
 #   1. 不存在 path 的时候，认为失败
 # 可选参数：
-#   --comment=COMMENT               string              指定注释的字符串
+#   --comment                       string              指定注释的字符串
+#   --old-value-ref                 string引用           用于保存修改前的值的变量的引用
 # 位置参数：
+#   result_data_ref                 string引用           用于保存修改后的配置数据的变量的引用
 #   path                            string              map 上级的路径
-#   value                           string 引用         pop 的值
-#   data                            string 引用         配置数据，修改后的配置数据也会存放在这里
+#   data                            string              配置数据
 # 标准输出： 无
 # 返回值：
-#   ${SHELL_TRUE} 表示更新成功
-#   ${SHELL_FALSE} 表示更新失败
+#   ${SHELL_TRUE} 表示 pop 成功
+#   ${SHELL_FALSE} 表示 pop 失败
 function cfg::trait::ini::map::pop() {
+    local old_value_ref_d9a26cf6
+    local -n res_data_ref_d9a26cf6
     local path_d9a26cf6
     # shellcheck disable=SC2034
-    local -n value_d9a26cf6
-    local -n data_d9a26cf6
+    local data_d9a26cf6
 
+    local res_data_shadow_d9a26cf6
+    local -n old_value_d9a26cf6
+    local old_value_shadow_d9a26cf6
     local comment_d9a26cf6="${CFG_TRAIT_INI_DEFAULT_COMMENT}"
 
     local section_in_path_d9a26cf6
@@ -645,10 +678,16 @@ function cfg::trait::ini::map::pop() {
 
     local param_d9a26cf6
 
+    ldebug "params=($*)"
+
     for param_d9a26cf6 in "$@"; do
         case "$param_d9a26cf6" in
         --comment=*)
             parameter::parse_string --default="${CFG_TRAIT_INI_DEFAULT_COMMENT}" --option="$param_d9a26cf6" comment_d9a26cf6 || return "${SHELL_FALSE}"
+            ;;
+        --old-value-ref=*)
+            parameter::parse_string --no-empty --option="$param_d9a26cf6" old_value_ref_d9a26cf6 || return "${SHELL_FALSE}"
+            old_value_d9a26cf6="$old_value_ref_d9a26cf6"
             ;;
         -*)
             lerror "invalid option: $param_d9a26cf6"
@@ -656,17 +695,17 @@ function cfg::trait::ini::map::pop() {
             ;;
         *)
 
+            if [ ! -R res_data_ref_d9a26cf6 ]; then
+                res_data_ref_d9a26cf6="$param_d9a26cf6"
+                continue
+            fi
+
             if [ ! -v path_d9a26cf6 ]; then
                 path_d9a26cf6="$param_d9a26cf6"
                 continue
             fi
 
-            if [ ! -R value_d9a26cf6 ]; then
-                value_d9a26cf6="$param_d9a26cf6"
-                continue
-            fi
-
-            if [ ! -R data_d9a26cf6 ]; then
+            if [ ! -v data_d9a26cf6 ]; then
                 data_d9a26cf6="$param_d9a26cf6"
                 continue
             fi
@@ -677,23 +716,21 @@ function cfg::trait::ini::map::pop() {
         esac
     done
 
+    if [ ! -R res_data_ref_d9a26cf6 ]; then
+        lerror "param result_data_ref is required"
+        return "${SHELL_FALSE}"
+
+    fi
+
     if [ ! -v path_d9a26cf6 ]; then
         lerror "param path is required"
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -R value_d9a26cf6 ]; then
-        lerror "param value is required"
-        return "${SHELL_FALSE}"
-    fi
-
-    if [ ! -R data_d9a26cf6 ]; then
+    if [ ! -v data_d9a26cf6 ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi
-
-    linfo "param path=${path_d9a26cf6}, comment=${comment_d9a26cf6}"
-    ldebug "param data=${data_d9a26cf6}"
 
     cfg::trait::ini::utils::check_path "${path_d9a26cf6}" || return "${SHELL_FALSE}"
 
@@ -702,7 +739,7 @@ function cfg::trait::ini::map::pop() {
 
     extra_d9a26cf6["section_in_path"]="${section_in_path_d9a26cf6}"
     extra_d9a26cf6["key_in_path"]="${key_in_path_d9a26cf6}"
-    extra_d9a26cf6["result_value"]="${!value_d9a26cf6}"
+    extra_d9a26cf6["old_value"]="old_value_shadow_d9a26cf6"
     # shellcheck disable=SC2034
     extra_d9a26cf6["is_done"]=is_done_d9a26cf6
 
@@ -711,11 +748,17 @@ function cfg::trait::ini::map::pop() {
     # shellcheck disable=SC2034
     callback_d9a26cf6["line::kv"]="cfg::trait::ini::map::pop::callback::line::kv"
 
-    cfg::trait::ini::parser::parser "${!data_d9a26cf6}" "${comment_d9a26cf6}" "" callback_d9a26cf6 extra_d9a26cf6 || return "${SHELL_FALSE}"
+    cfg::trait::ini::parser::parser res_data_shadow_d9a26cf6 "${data_d9a26cf6}" "${comment_d9a26cf6}" "" callback_d9a26cf6 extra_d9a26cf6 || return "${SHELL_FALSE}"
 
     if [ "${is_done_d9a26cf6}" = "${SHELL_FALSE}" ]; then
         lerror "pop failed, not found, section=${section_in_path_d9a26cf6}, key=${key_in_path_d9a26cf6}"
         return "${SHELL_FALSE}"
+    fi
+
+    res_data_ref_d9a26cf6="${res_data_shadow_d9a26cf6}"
+
+    if [ -R old_value_d9a26cf6 ]; then
+        old_value_d9a26cf6="${old_value_shadow_d9a26cf6}"
     fi
 
     return "${SHELL_TRUE}"
@@ -739,7 +782,7 @@ function cfg::trait::ini::map::pop::callback::line::kv() {
     local line_number_74857bc9="${line_74857bc9["number"]}"
     local section_in_path_74857bc9="${extra_74857bc9["section_in_path"]}"
     local key_in_path_74857bc9="${extra_74857bc9["key_in_path"]}"
-    local -n extra_result_value_74857bc9="${extra_74857bc9["result_value"]}"
+    local -n extra_old_value_74857bc9="${extra_74857bc9["old_value"]}"
     local -n extra_is_done_74857bc9="${extra_74857bc9["is_done"]}"
     local line_key_74857bc9
     local line_value_74857bc9
@@ -762,10 +805,10 @@ function cfg::trait::ini::map::pop::callback::line::kv() {
         return "${SHELL_TRUE}"
     fi
 
-    extra_result_value_74857bc9="${line_value_74857bc9}"
+    extra_old_value_74857bc9="${line_value_74857bc9}"
     # shellcheck disable=SC2034
     extra_is_done_74857bc9="${SHELL_TRUE}"
-    linfo "section=${line_section_74857bc9}, key=${line_key_74857bc9}, value=${line_value_74857bc9}, result_value=${extra_result_value_74857bc9}"
+    linfo "section=${line_section_74857bc9}, key=${line_key_74857bc9}, value=${line_value_74857bc9}, old_value=${extra_old_value_74857bc9}"
 
     return "${SHELL_TRUE}"
 }
@@ -870,7 +913,7 @@ function cfg::trait::ini::array::all() {
     # shellcheck disable=SC2034
     callback_6b33bf94["line::kv"]="cfg::trait::ini::array::all::callback::line::kv"
 
-    cfg::trait::ini::parser::parser data_6b33bf94 "${comment_6b33bf94}" "${separator_6b33bf94}" callback_6b33bf94 extra_6b33bf94 || return "${SHELL_FALSE}"
+    cfg::trait::ini::parser::parser REF_PLACEHOLDER "${data_6b33bf94}" "${comment_6b33bf94}" "${separator_6b33bf94}" callback_6b33bf94 extra_6b33bf94 || return "${SHELL_FALSE}"
 
     linfo "result array=(${result_array_6b33bf94[*]})"
 
@@ -926,26 +969,34 @@ function cfg::trait::ini::array::all::callback::line::kv() {
 # 更新指定 path 下所有列表元素
 # 说明：
 # 可选参数：
-#   --separator=[,]                 string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','。
-#   --comment=COMMENT               string              指定注释的字符串
+#   --separator                     string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','。
+#   --comment                       string              指定注释的字符串
+#   --old-value-ref                 数组引用             用于保存修改前的数组的引用
 # 位置参数：
+#   result_data_ref                 string引用          用于保存修改后的配置数据的变量的引用
 #   path                            string              map 上级的路径
 #   new                             数组引用              更新的列表引用
-#   data                            string 引用          配置数据，修改后的配置数据也会存放在这里
+#   data                            string              配置数据
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 表示更新成功
 #   ${SHELL_FALSE} 表示更新失败
 function cfg::trait::ini::array::update_all() {
+    local old_value_ref_ece25cf2
+    local -n res_data_ref_ece25cf2
     local path_ece25cf2
     local -n new_ece25cf2
-    local -n data_ece25cf2
+    local data_ece25cf2
+
+    local -n old_value_ece25cf2
 
     # 防止后面调用的函数覆盖上级的变量名，通过这里代理，保证后面使用的变量引用是本函数定义的变量名，不会重名
     # 也防止内部修改 new 变量
     # shellcheck disable=SC2034
-    local new_copy_ece25cf2
-    local data_copy_ece25cf2
+    local new_shadow_ece25cf2
+    local res_data_shadow_ece25cf2
+    # shellcheck disable=SC2034
+    local old_value_shadow_ece25cf2=()
 
     local param_ece25cf2
     local separator_ece25cf2="${CFG_TRAIT_INI_DEFAULT_SEPARATOR}"
@@ -958,6 +1009,8 @@ function cfg::trait::ini::array::update_all() {
     # shellcheck disable=SC2034
     local is_done_ece25cf2="${SHELL_FALSE}"
 
+    ldebug "params=($*)"
+
     for param_ece25cf2 in "$@"; do
         case "$param_ece25cf2" in
         --separator=*)
@@ -966,11 +1019,20 @@ function cfg::trait::ini::array::update_all() {
         --comment=*)
             parameter::parse_string --default="${CFG_TRAIT_INI_DEFAULT_COMMENT}" --option="$param_ece25cf2" comment_ece25cf2 || return "${SHELL_FALSE}"
             ;;
+        --old-value-ref=*)
+            parameter::parse_string --no-empty --option="$param_ece25cf2" old_value_ref_ece25cf2 || return "${SHELL_FALSE}"
+            old_value_ece25cf2="${old_value_ref_ece25cf2}"
+            ;;
         -*)
             lerror "invalid option: $param_ece25cf2"
             return "${SHELL_FALSE}"
             ;;
         *)
+            if [ ! -R res_data_ref_ece25cf2 ]; then
+                res_data_ref_ece25cf2="$param_ece25cf2"
+                continue
+            fi
+
             if [ ! -v path_ece25cf2 ]; then
                 path_ece25cf2="$param_ece25cf2"
                 continue
@@ -981,7 +1043,7 @@ function cfg::trait::ini::array::update_all() {
                 continue
             fi
 
-            if [ ! -R data_ece25cf2 ]; then
+            if [ ! -v data_ece25cf2 ]; then
                 data_ece25cf2="$param_ece25cf2"
                 continue
             fi
@@ -991,6 +1053,11 @@ function cfg::trait::ini::array::update_all() {
             ;;
         esac
     done
+
+    if [ ! -R res_data_ref_ece25cf2 ]; then
+        lerror "param result_data_ref is required"
+        return "${SHELL_FALSE}"
+    fi
 
     if [ ! -v path_ece25cf2 ]; then
         lerror "param path is required"
@@ -1002,16 +1069,12 @@ function cfg::trait::ini::array::update_all() {
         return "${SHELL_FALSE}"
     fi
 
-    if [ ! -R data_ece25cf2 ]; then
+    if [ ! -v data_ece25cf2 ]; then
         lerror "param data is required"
         return "${SHELL_FALSE}"
     fi
 
-    linfo "param path=${path_ece25cf2}, new=${!new_ece25cf2}, separator=${separator_ece25cf2}, comment=${comment_ece25cf2}"
-    ldebug "param data=${data_ece25cf2}"
-
-    array::copy new_copy_ece25cf2 "${!new_ece25cf2}" || return "${SHELL_FALSE}"
-    data_copy_ece25cf2="${data_ece25cf2}"
+    array::copy new_shadow_ece25cf2 "${!new_ece25cf2}" || return "${SHELL_FALSE}"
 
     cfg::trait::ini::utils::check_path "${path_ece25cf2}" || return "${SHELL_FALSE}"
 
@@ -1021,8 +1084,9 @@ function cfg::trait::ini::array::update_all() {
     extra_ece25cf2["section_in_path"]="${section_in_path_ece25cf2}"
     extra_ece25cf2["key_in_path"]="${key_in_path_ece25cf2}"
     extra_ece25cf2["is_done"]=is_done_ece25cf2
+    extra_ece25cf2["new_array"]=new_shadow_ece25cf2
     # shellcheck disable=SC2034
-    extra_ece25cf2["new_array"]=new_copy_ece25cf2
+    extra_ece25cf2["old_value"]=old_value_shadow_ece25cf2
 
     cfg::trait::ini::parser::factory::callback::default callback_ece25cf2 || return "${SHELL_FALSE}"
     # 覆盖自己写的回调
@@ -1031,9 +1095,14 @@ function cfg::trait::ini::array::update_all() {
     # shellcheck disable=SC2034
     callback_ece25cf2["data::end"]="cfg::trait::ini::array::update_all::callback::data::end"
 
-    cfg::trait::ini::parser::parser data_copy_ece25cf2 "${comment_ece25cf2}" "${separator_ece25cf2}" callback_ece25cf2 extra_ece25cf2 || return "${SHELL_FALSE}"
+    cfg::trait::ini::parser::parser res_data_shadow_ece25cf2 "${data_ece25cf2}" "${comment_ece25cf2}" "${separator_ece25cf2}" callback_ece25cf2 extra_ece25cf2 || return "${SHELL_FALSE}"
 
-    data_ece25cf2="${data_copy_ece25cf2}"
+    res_data_ref_ece25cf2="${res_data_shadow_ece25cf2}"
+
+    if [ -R old_value_ece25cf2 ]; then
+        array::copy "${!old_value_ece25cf2}" old_value_shadow_ece25cf2 || return "${SHELL_FALSE}"
+    fi
+
     linfo "update array success. section=${section_in_path_ece25cf2}, key=${key_in_path_ece25cf2}"
 
     return "${SHELL_TRUE}"
@@ -1059,6 +1128,7 @@ function cfg::trait::ini::array::update_all::callback::line::kv() {
     local section_in_path_f9b6a329="${extra_f9b6a329["section_in_path"]}"
     local key_in_path_f9b6a329="${extra_f9b6a329["key_in_path"]}"
     local -n extra_new_array_f9b6a329="${extra_f9b6a329["new_array"]}"
+    local -n extra_old_value_f9b6a329="${extra_f9b6a329["old_value"]}"
     local -n is_done_f9b6a329="${extra_f9b6a329["is_done"]}"
     local line_key_f9b6a329
     local line_value_f9b6a329
@@ -1087,6 +1157,8 @@ function cfg::trait::ini::array::update_all::callback::line::kv() {
     new_line_value_f9b6a329="$(array::join_with "${!extra_new_array_f9b6a329}" "${separator_f9b6a329}")" || return "${SHELL_FALSE}"
     result_f9b6a329+="${line_key_f9b6a329}=${new_line_value_f9b6a329}"$'\n'
     is_done_f9b6a329="${SHELL_TRUE}"
+
+    array::copy "${!extra_old_value_f9b6a329}" old_array_f9b6a329 || return "${SHELL_FALSE}"
 
     linfo "update array success. section=${line_section_f9b6a329}, line_key=${line_key_f9b6a329}, line_value=${line_value_f9b6a329}, old array=${old_array_f9b6a329[*]}, new_array=${extra_new_array_f9b6a329[*]}, is_done=$(string::print_yes_no "${is_done_f9b6a329}")"
 
@@ -1242,76 +1314,102 @@ function TEST::cfg::trait::ini::map::is_exists() {
 
 function TEST::cfg::trait::ini::map::update() {
     local data
+    local res_data
+    local old_value
     # 不存在 section
     data=$''
-    cfg::trait::ini::map::update ".test3.name" "xxx" data
+    cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname=xxx\n'
+    utest::assert_equal "$old_value" $''
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n'
 
     # 存在 section，不存在 key， section 后面还有其他的 section
+    old_value=""
+    res_data=""
     data=$'[test3]\n[test4]\n'
-    cfg::trait::ini::map::update ".test3.name" "xxx" data
+    cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname=xxx\n[test4]\n'
+    utest::assert_equal "$old_value" $''
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n[test4]\n'
 
     # 存在 section，不存在 key， section 后面没有其他的 section
+    old_value=""
+    res_data=""
     data=$'[test3]\n'
-    cfg::trait::ini::map::update ".test3.name" "xxx" data
+    cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname=xxx\n'
+    utest::assert_equal "$old_value" $''
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n'
 
     # 存在 section，存在 key， section 后面还有其他的 section
+    old_value=""
+    res_data=""
     data=$'[test3]\nname=abc\n[test4]'
-    cfg::trait::ini::map::update ".test3.name" "xxx" data
+    cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname=xxx\n[test4]\n'
+    utest::assert_equal "$old_value" $'abc'
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n[test4]\n'
 
     # 存在 section，存在 key， section 后面没有其他的 section
+    old_value=""
+    res_data=""
     data=$'[test3]\nname=abc'
-    cfg::trait::ini::map::update ".test3.name" "xxx" data
+    cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname=xxx\n'
+    utest::assert_equal "$old_value" $'abc'
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n'
 
 }
 
 function TEST::cfg::trait::ini::map::pop() {
-    local value
     local data
+    local res_data
+    local old_value
 
     # 不存在 section
+    res_data=""
+    old_value=""
     data=$'[test1]\n'
-    cfg::trait::ini::map::pop ".test3.name" value data
+    cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert_fail $?
-    utest::assert_equal "$value" ""
-    utest::assert_equal "$data" $'[test1]\n'
+    utest::assert_equal "$old_value" ""
+    utest::assert_equal "$res_data" $''
 
     # 存在 section，不存在 key， section 后面没有其他的 section
+    res_data=""
+    old_value=""
     data=$'[test3]\n'
-    cfg::trait::ini::map::pop ".test3.name" value data
+    cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert_fail $?
-    utest::assert_equal "$value" ""
-    utest::assert_equal "$data" $'[test3]\n'
+    utest::assert_equal "$old_value" ""
+    utest::assert_equal "$res_data" $''
 
     # 存在 section，不存在 key， section 后面存在其他的 section
+    res_data=""
+    old_value=""
     data=$'[test3]\n[test4]\n'
-    cfg::trait::ini::map::pop ".test3.name" value data
+    cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert_fail $?
-    utest::assert_equal "$value" ""
-    utest::assert_equal "$data" $'[test3]\n[test4]\n'
+    utest::assert_equal "$old_value" ""
+    utest::assert_equal "$res_data" $''
 
     # 存在 section，存在 key， section 后面没有其他的 section
+    res_data=""
+    old_value=""
     data=$'[test3]\nname=abc'
-    cfg::trait::ini::map::pop ".test3.name" value data
+    cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert $?
-    utest::assert_equal "$value" "abc"
-    utest::assert_equal "$data" $'[test3]\n'
+    utest::assert_equal "$old_value" "abc"
+    utest::assert_equal "$res_data" $'[test3]\n'
 
     # 存在 section，存在 key， section 后面还有其他的 section
+    res_data=""
+    old_value=""
     data=$'[test3]\nname=abc\n[test4]'
-    cfg::trait::ini::map::pop ".test3.name" value data
+    cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert $?
-    utest::assert_equal "$value" "abc"
-    utest::assert_equal "$data" $'[test3]\n[test4]\n'
+    utest::assert_equal "$old_value" "abc"
+    utest::assert_equal "$res_data" $'[test3]\n[test4]\n'
 }
 ######################################## array 测试代码 ########################################
 
@@ -1358,48 +1456,68 @@ function TEST::cfg::trait::ini::array::all() {
 }
 
 function TEST::cfg::trait::ini::array::update_all() {
+    local res_data
+    local old_value=()
     local data
     local new_array
 
     # 不存在 section
+    res_data=""
+    old_value=()
     data=$'[test4]'
     new_array=("abc" "123" "!@#")
-    cfg::trait::ini::array::update_all ".test3.name" new_array data
+    cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test4]\n[test3]\nname=abc,123,!@#\n'
+    utest::assert_equal "${old_value[*]}" $''
+    utest::assert_equal "$res_data" $'[test4]\n[test3]\nname=abc,123,!@#\n'
 
     # 存在 section，不存在 key， section 后面没有其他的 section
+    res_data=""
+    old_value=()
     data=$'[test3]\nname1=abc\n'
     new_array=("abc" "123" "!@#")
-    cfg::trait::ini::array::update_all ".test3.name" new_array data
+    cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname1=abc\nname=abc,123,!@#\n'
+    utest::assert_equal "${old_value[*]}" $''
+    utest::assert_equal "$res_data" $'[test3]\nname1=abc\nname=abc,123,!@#\n'
 
     # 存在 section，不存在 key， section 后面存在其他的 section
+    res_data=""
+    old_value=()
     data=$'[test3]\nname1=abc\n[test4]\nname=123'
     new_array=("abc" "123" "!@#")
-    cfg::trait::ini::array::update_all ".test3.name" new_array data
+    cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname1=abc\nname=abc,123,!@#\n[test4]\nname=123\n'
+    utest::assert_equal "${old_value[*]}" $''
+    utest::assert_equal "$res_data" $'[test3]\nname1=abc\nname=abc,123,!@#\n[test4]\nname=123\n'
 
     # 存在 section，存在 key， section 后面没有其他的 section
+    res_data=""
+    old_value=()
     data=$'[test3]\nname=abc,  12  ,  34   \nname1=1234'
     new_array=("abc" "123" "!@#")
-    cfg::trait::ini::array::update_all ".test3.name" new_array data
+    cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nname=abc,123,!@#\nname1=1234\n'
+    utest::assert_equal "$(array::join_with old_value ",")" $'abc,  12  ,  34   '
+    utest::assert_equal "$res_data" $'[test3]\nname=abc,123,!@#\nname1=1234\n'
 
     # 存在 section，存在 key， section 后面还有其他的 section
+    res_data=""
+    old_value=()
     data=$'[test3]\nid=#####\nname=abc,12,34\nage=23\n[test4]\nname=123\n'
     new_array=("abc" "123" "!@#")
-    cfg::trait::ini::array::update_all ".test3.name" new_array data
+    cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nid=#####\nname=abc,123,!@#\nage=23\n[test4]\nname=123\n'
+    utest::assert_equal "$(array::join_with old_value ",")" $'abc,12,34'
+    utest::assert_equal "$res_data" $'[test3]\nid=#####\nname=abc,123,!@#\nage=23\n[test4]\nname=123\n'
 
     # 存在 section，存在 key， 数组使用不同的分隔符
+    res_data=""
+    old_value=()
     data=$'[test3]\nid=#####\nname=abc;12;34\nage=23\n[test4]\nname=123\n'
     new_array=("abc" "123" "!@#")
-    cfg::trait::ini::array::update_all --separator=';' ".test3.name" new_array data
+    cfg::trait::ini::array::update_all --old-value-ref=old_value res_data --separator=';' ".test3.name" new_array "$data"
     utest::assert $?
-    utest::assert_equal "$data" $'[test3]\nid=#####\nname=abc;123;!@#\nage=23\n[test4]\nname=123\n'
+    utest::assert_equal "$(array::join_with old_value ",")" $'abc,12,34'
+    utest::assert_equal "$res_data" $'[test3]\nid=#####\nname=abc;123;!@#\nage=23\n[test4]\nname=123\n'
 }
