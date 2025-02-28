@@ -326,6 +326,10 @@ function cfg::trait::ini::parser::parser() {
 
     line_number_468242ca=0
     while IFS='' read -r line_468242ca; do
+        if [ "${line_number_468242ca}" -gt 0 ]; then
+            # 处理第一行前不加换行符，处理后面的行才加换行符
+            result_468242ca+=$'\n'
+        fi
         line_info_468242ca=()
         line_number_468242ca=$((line_number_468242ca + 1))
         cfg::trait::ini::parser::factory::line line_info_468242ca "${line_468242ca}" "${line_number_468242ca}" "${line_section_468242ca}" || return "${SHELL_FALSE}"
@@ -465,7 +469,7 @@ function cfg::trait::ini::parser::callback::default::section::start() {
     local -n line_b19b10e9="${params_b19b10e9["line"]}"
     local -n result_b19b10e9="${params_b19b10e9["result"]}"
 
-    result_b19b10e9+="${line_b19b10e9["content"]}"$'\n'
+    result_b19b10e9+="${line_b19b10e9["content"]}"
 
     return "${SHELL_TRUE}"
 }
@@ -498,7 +502,7 @@ function cfg::trait::ini::parser::callback::default::line::comment() {
     local -n line_ee653e6e="${params_ee653e6e["line"]}"
     local -n result_ee653e6e="${params_ee653e6e["result"]}"
 
-    result_ee653e6e+="${line_ee653e6e["content"]}"$'\n'
+    result_ee653e6e+="${line_ee653e6e["content"]}"
 
     return "${SHELL_TRUE}"
 }
@@ -517,7 +521,7 @@ function cfg::trait::ini::parser::callback::default::line::kv() {
     local -n line_09e0c22c="${params_09e0c22c["line"]}"
     local -n result_09e0c22c="${params_09e0c22c["result"]}"
 
-    result_09e0c22c+="${line_09e0c22c["content"]}"$'\n'
+    result_09e0c22c+="${line_09e0c22c["content"]}"
 
     return "${SHELL_TRUE}"
 }
@@ -536,7 +540,7 @@ function cfg::trait::ini::parser::callback::default::line::empty() {
     local -n line_aa2009f9="${params_aa2009f9["line"]}"
     local -n result_aa2009f9="${params_aa2009f9["result"]}"
 
-    result_aa2009f9+="${line_aa2009f9["content"]}"$'\n'
+    result_aa2009f9+="${line_aa2009f9["content"]}"
 
     return "${SHELL_TRUE}"
 }
@@ -555,7 +559,7 @@ function cfg::trait::ini::parser::callback::default::line::unknown() {
     local -n line_355b4c4c="${params_355b4c4c["line"]}"
     local -n result_355b4c4c="${params_355b4c4c["result"]}"
 
-    result_355b4c4c+="${line_355b4c4c["content"]}"$'\n'
+    result_355b4c4c+="${line_355b4c4c["content"]}"
 
     return "${SHELL_TRUE}"
 }

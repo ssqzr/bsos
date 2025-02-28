@@ -219,7 +219,7 @@ function cfg::trait::ini::map::get::callback::line::kv() {
 
     ldebug "line_content=${line_content_28a2a700}, line_section=${line_section_28a2a700}, line_number=${line_number_28a2a700}, section_in_path=${section_in_path_28a2a700}, key_in_path=${key_in_path_28a2a700}, key=${line_key_28a2a700}, value=${line_value_28a2a700}"
 
-    result_28a2a700+="${line_content_28a2a700}"$'\n'
+    result_28a2a700+="${line_content_28a2a700}"
 
     if [ "${line_section_28a2a700}" != "${section_in_path_28a2a700}" ] || [ "${line_key_28a2a700}" != "${key_in_path_28a2a700}" ]; then
         # 不是需要处理的 section 下的 key-value
@@ -361,7 +361,7 @@ function cfg::trait::ini::map::is_exists::callback::line::kv() {
 
     ldebug "line_content=${line_content_5ae042fa}, line_section=${line_section_5ae042fa}, line_number=${line_number_5ae042fa}, section_in_path=${section_in_path_5ae042fa}, key_in_path=${key_in_path_5ae042fa}, key=${line_key_5ae042fa}, value=${line_value_5ae042fa}"
 
-    result_5ae042fa+="${line_content_5ae042fa}"$'\n'
+    result_5ae042fa+="${line_content_5ae042fa}"
 
     if [ "${line_section_5ae042fa}" != "${section_in_path_5ae042fa}" ] || [ "${line_key_5ae042fa}" != "${key_in_path_5ae042fa}" ]; then
         # 不是需要处理的 section 下的 key-value
@@ -547,7 +547,7 @@ function cfg::trait::ini::map::update::callback::line::kv() {
 
     if [ "${line_section_fc439f47}" != "${section_in_path_fc439f47}" ] || [ "${line_key_fc439f47}" != "${key_in_path_fc439f47}" ]; then
         # 不是需要处理的 section 下的 key-value
-        result_fc439f47+="${line_content_fc439f47}"$'\n'
+        result_fc439f47+="${line_content_fc439f47}"
         return "${SHELL_TRUE}"
     fi
 
@@ -556,7 +556,7 @@ function cfg::trait::ini::map::update::callback::line::kv() {
         return "${SHELL_TRUE}"
     fi
 
-    result_fc439f47+="${line_key_fc439f47}=${extra_value_fc439f47}"$'\n'
+    result_fc439f47+="${line_key_fc439f47}=${extra_value_fc439f47}"
     # shellcheck disable=SC2034
     extra_old_value_fc439f47="${line_value_fc439f47}"
 
@@ -796,13 +796,18 @@ function cfg::trait::ini::map::pop::callback::line::kv() {
 
     if [ "${line_section_74857bc9}" != "${section_in_path_74857bc9}" ] || [ "${line_key_74857bc9}" != "${key_in_path_74857bc9}" ]; then
         # 不是需要处理的 section 下的 key-value
-        result_74857bc9+="${line_content_74857bc9}"$'\n'
+        result_74857bc9+="${line_content_74857bc9}"
         return "${SHELL_TRUE}"
     fi
 
     if [ "${extra_is_done_74857bc9}" == "${SHELL_TRUE}" ]; then
         ldebug "pop already done, skip. section=${line_section_74857bc9}, line_content=${line_content_74857bc9}, line_number=${line_number_74857bc9}"
         return "${SHELL_TRUE}"
+    fi
+
+    # 因为是删除一行，所以要去掉一个换行符
+    if string::is_ends_with "$result_74857bc9" $'\n'; then
+        result_74857bc9="${result_74857bc9::-1}"
     fi
 
     extra_old_value_74857bc9="${line_value_74857bc9}"
@@ -951,7 +956,7 @@ function cfg::trait::ini::array::all::callback::line::kv() {
     ldebug "separator=${separator_bba79196}, line_content=${line_content_bba79196}, line_section=${line_section_bba79196}, line_number=${line_number_bba79196}, section_in_path=${section_in_path_bba79196}, key_in_path=${key_in_path_bba79196}, key=${line_key_bba79196}, value=${line_value_bba79196}"
 
     # 不管怎么样都回写
-    result_bba79196+="${line_content_bba79196}"$'\n'
+    result_bba79196+="${line_content_bba79196}"
 
     if [ "${line_section_bba79196}" != "${section_in_path_bba79196}" ] || [ "${line_key_bba79196}" != "${key_in_path_bba79196}" ]; then
         # 不是需要处理的 section 下的 key-value
@@ -1142,7 +1147,7 @@ function cfg::trait::ini::array::update_all::callback::line::kv() {
 
     if [ "${line_section_f9b6a329}" != "${section_in_path_f9b6a329}" ] || [ "${line_key_f9b6a329}" != "${key_in_path_f9b6a329}" ]; then
         # 不是需要处理的 section 下的 key-value
-        result_f9b6a329+="${line_content_f9b6a329}"$'\n'
+        result_f9b6a329+="${line_content_f9b6a329}"
         return "${SHELL_TRUE}"
     fi
 
@@ -1155,7 +1160,7 @@ function cfg::trait::ini::array::update_all::callback::line::kv() {
     string::split_with old_array_f9b6a329 "${line_value_f9b6a329}" "${separator_f9b6a329}" || return "${SHELL_FALSE}"
 
     new_line_value_f9b6a329="$(array::join_with "${!extra_new_array_f9b6a329}" "${separator_f9b6a329}")" || return "${SHELL_FALSE}"
-    result_f9b6a329+="${line_key_f9b6a329}=${new_line_value_f9b6a329}"$'\n'
+    result_f9b6a329+="${line_key_f9b6a329}=${new_line_value_f9b6a329}"
     is_done_f9b6a329="${SHELL_TRUE}"
 
     array::copy "${!extra_old_value_f9b6a329}" old_array_f9b6a329 || return "${SHELL_FALSE}"
@@ -1232,6 +1237,11 @@ function cfg::trait::ini::array::update_all::callback::data::end() {
     if [ "${is_done_35a51ca6}" == "${SHELL_TRUE}" ]; then
         ldebug "update is done, skip. section_in_path=${section_in_path_35a51ca6}, key_in_path=${key_in_path_35a51ca6}"
         return "${SHELL_TRUE}"
+    fi
+
+    # 因为是新增内容，如果配置最后一行没有换行符，需要补上
+    if string::is_not_ends_with "$result_35a51ca6" $'\n'; then
+        result_35a51ca6+=$'\n'
     fi
 
     new_line_value_35a51ca6="$(array::join_with "${!extra_new_array_35a51ca6}" "${separator_35a51ca6}")" || return "${SHELL_FALSE}"
@@ -1348,7 +1358,7 @@ function TEST::cfg::trait::ini::map::update() {
     cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
     utest::assert_equal "$old_value" $'abc'
-    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n[test4]\n'
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n[test4]'
 
     # 存在 section，存在 key， section 后面没有其他的 section
     old_value=""
@@ -1357,7 +1367,7 @@ function TEST::cfg::trait::ini::map::update() {
     cfg::trait::ini::map::update --old-value-ref=old_value res_data ".test3.name" "xxx" "$data"
     utest::assert $?
     utest::assert_equal "$old_value" $'abc'
-    utest::assert_equal "$res_data" $'[test3]\nname=xxx\n'
+    utest::assert_equal "$res_data" $'[test3]\nname=xxx'
 
 }
 
@@ -1400,7 +1410,7 @@ function TEST::cfg::trait::ini::map::pop() {
     cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert $?
     utest::assert_equal "$old_value" "abc"
-    utest::assert_equal "$res_data" $'[test3]\n'
+    utest::assert_equal "$res_data" $'[test3]'
 
     # 存在 section，存在 key， section 后面还有其他的 section
     res_data=""
@@ -1409,7 +1419,7 @@ function TEST::cfg::trait::ini::map::pop() {
     cfg::trait::ini::map::pop --old-value-ref=old_value res_data ".test3.name" "$data"
     utest::assert $?
     utest::assert_equal "$old_value" "abc"
-    utest::assert_equal "$res_data" $'[test3]\n[test4]\n'
+    utest::assert_equal "$res_data" $'[test3]\n[test4]'
 }
 ######################################## array 测试代码 ########################################
 
@@ -1489,7 +1499,7 @@ function TEST::cfg::trait::ini::array::update_all() {
     cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
     utest::assert_equal "${old_value[*]}" $''
-    utest::assert_equal "$res_data" $'[test3]\nname1=abc\nname=abc,123,!@#\n[test4]\nname=123\n'
+    utest::assert_equal "$res_data" $'[test3]\nname1=abc\nname=abc,123,!@#\n[test4]\nname=123'
 
     # 存在 section，存在 key， section 后面没有其他的 section
     res_data=""
@@ -1499,7 +1509,7 @@ function TEST::cfg::trait::ini::array::update_all() {
     cfg::trait::ini::array::update_all --old-value-ref=old_value res_data ".test3.name" new_array "$data"
     utest::assert $?
     utest::assert_equal "$(array::join_with old_value ",")" $'abc,  12  ,  34   '
-    utest::assert_equal "$res_data" $'[test3]\nname=abc,123,!@#\nname1=1234\n'
+    utest::assert_equal "$res_data" $'[test3]\nname=abc,123,!@#\nname1=1234'
 
     # 存在 section，存在 key， section 后面还有其他的 section
     res_data=""
