@@ -22,7 +22,7 @@ source "${SCRIPT_DIR_28e227a8}/../array.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_28e227a8}/../process.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_28e227a8}/../os.sh"
+source "${SCRIPT_DIR_28e227a8}/../os/os.sh"
 
 # 获取所有 hyprland 实例
 function hyprland::hyprctl::instance::all() {

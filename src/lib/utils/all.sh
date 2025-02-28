@@ -32,7 +32,7 @@ source "${SCRIPT_DIR_cd871afe}/process.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/systemctl.sh"
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_cd871afe}/os.sh"
+source "${SCRIPT_DIR_cd871afe}/os/os.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/gsettings.sh"
 # shellcheck source=/dev/null
@@ -47,3 +47,5 @@ source "${SCRIPT_DIR_cd871afe}/storage/storage.sh"
 source "${SCRIPT_DIR_cd871afe}/math/math.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/swap.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/lock.sh"

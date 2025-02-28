@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 和系统规范相关的工具函数
+
+# 1. 依赖应该尽可能的少
+
 if [ -n "${SCRIPT_DIR_58234bf8}" ]; then
     return
 fi
@@ -8,7 +12,9 @@ fi
 SCRIPT_DIR_58234bf8="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck source=/dev/null
-source "${SCRIPT_DIR_58234bf8}/constant.sh"
+source "${SCRIPT_DIR_58234bf8}/../constant.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_58234bf8}/path.sh"
 
 function os::is_vmware() {
     lspci | grep -q "VMware PCI"

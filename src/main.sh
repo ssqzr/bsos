@@ -24,6 +24,8 @@ source "${SCRIPT_DIR_8dac019e}/manager/flags.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/manager/utils.sh"
 # shellcheck source=/dev/null
+source "${SCRIPT_DIR_8dac019e}/manager/setup.sh"
+# shellcheck source=/dev/null
 source "${SCRIPT_DIR_8dac019e}/dev.sh"
 
 # 输出帮助信息
@@ -147,12 +149,6 @@ function main::must_do() {
 
     # 将当前用户添加到wheel组
     cmd::run_cmd_with_history --sudo -- usermod -aG wheel "$(os::user::name)" || return "$SHELL_FALSE"
-}
-
-function main::check() {
-    # 其他检查
-
-    return "$SHELL_TRUE"
 }
 
 function main::command::install() {
@@ -410,8 +406,6 @@ function main::_do_main() {
     main::must_do || return "$SHELL_FALSE"
     # NOTE: 在执行 main::must_do 之后才可以使用 yq 操作配置文件
 
-    main::check || return "$SHELL_FALSE"
-
     case "${command}" in
     "install" | "uninstall" | "upgrade" | "fixme" | "unfixme")
         "main::command::${command}" "${command_params[@]}" || return "$SHELL_FALSE"
@@ -424,40 +418,14 @@ function main::_do_main() {
     return "$SHELL_TRUE"
 }
 
-function main::signal::handler_exit() {
-    local code="$1"
-    linfo "script exit, pid=$$, exit code=${code}"
-
-    linfo "pkill child process..."
-    pkill -P "$$"
-    case "$?" in
-    0)
-        linfo "pkill child process success."
-        ;;
-    1)
-        linfo "no child process to pkill."
-        ;;
-    *)
-        lerror "pkill child process failed. exit code=$?"
-        ;;
-    esac
-    manager::base::disable_no_password || return "$SHELL_FALSE"
-    return "$SHELL_TRUE"
-}
-
 function main::run() {
     local command
-    local log_filepath
-    local cmd_history_filepath
     local config_filepath
     local code
     local remain_params=()
     local remain_options=()
     local param
     local temp
-
-    # 单例
-    manager::base::lock || return "$SHELL_FALSE"
 
     # 先解析全局的参数
     for param in "$@"; do
@@ -494,21 +462,25 @@ function main::run() {
         remain_params=("install")
     fi
 
-    # 设置记录执行命令的文件路径
-    cmd_history_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/cmd.history"
-    rm -f "${cmd_history_filepath}" || return "$SHELL_FALSE"
-    cmd::set_cmd_history_filepath "${cmd_history_filepath}" || return "$SHELL_FALSE"
+    # 创建临时根目录，程序运行时需要的临时目录和文件都放在这里
+    fs::directory::create_recursive "$(global::temp_base_dir)" || return "$SHELL_FALSE"
+
+    # 单例
+    manager::setup::lock::lock || return "$SHELL_FALSE"
+    # 信号的处理
+    manager::setup::signal::register || return "$SHELL_FALSE"
 
     # 设置配置文件路径
     config_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/config.yml"
     config::set_config_filepath "${config_filepath}" || return "$SHELL_FALSE"
 
     # 导出全局变量
-    manager::base::export_env || return "$SHELL_FALSE"
+    manager::setup::export_env || return "$SHELL_FALSE"
+    fs::directory::create_recursive "$BUILD_ROOT_DIR" || return "$SHELL_FALSE"
 
-    manager::base::enable_no_password || return "$SHELL_FALSE"
-    trap 'main::signal::handler_exit "$?"' EXIT
+    manager::setup::enable_no_password "${ROOT_PASSWORD}" || return "$SHELL_FALSE"
 
+    # 调用子命令
     array::lpop remain_params command || return "$SHELL_FALSE"
     case "${command}" in
     "dev")
@@ -526,14 +498,25 @@ function main::run() {
 }
 
 function main::wrap_run() {
+    local log_filepath
+    local cmd_history_filepath
+
     # 第一步就是检查用户，不然可能会污染环境
-    manager::base::check_root_user || return "$SHELL_FALSE"
+    manager::setup::check_root_user || return "$SHELL_FALSE"
 
     # 其次设置日志的路径，尽量记录日志
     log_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/main.log"
     log::handler::file_handler::register || return "$SHELL_FALSE"
     log::handler::file_handler::set_log_file "${log_filepath}" || return "$SHELL_FALSE"
     log::level::set "$LOG_LEVEL_DEBUG" || return "$SHELL_FALSE"
+    # 最长的是 success 字符串，长度为 7
+    export LOG_HANDLER_STREAM_FORMATTER="{{datetime}} [{{level|to_upper|justify 7 center}}] {{message}}"
+
+    # 设置记录执行命令的文件路径
+    # 可以删除，只是为了方便排错
+    cmd_history_filepath="$(dirname "${SCRIPT_DIR_8dac019e}")/cmd.history"
+    rm -f "${cmd_history_filepath}" || return "$SHELL_FALSE"
+    cmd::set_cmd_history_filepath "${cmd_history_filepath}" || return "$SHELL_FALSE"
 
     main::run "$@"
     if [ $? -eq "$SHELL_FALSE" ]; then
