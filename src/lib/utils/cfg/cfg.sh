@@ -1093,15 +1093,22 @@ function cfg::array::remove() {
 
     cfg::utils::_read_data data_3441cf8e "$data_3441cf8e" "$filepath_3441cf8e" || return "${SHELL_FALSE}"
 
+    if [ -R result_data_ref_3441cf8e ]; then
+        # 先赋值原始的数据，保证有一些不需要修改的场景直接返回正确时，也需要返回配置数据
+        result_data_ref_3441cf8e="${data_3441cf8e}"
+    fi
+
     if ! "cfg::trait::$type_3441cf8e::map::is_exists" "${path_3441cf8e}" "${data_3441cf8e}" "--comment=${comment_3441cf8e}"; then
         linfo "path in data not exists, path=${path_3441cf8e}"
-        if [ -R result_data_ref_3441cf8e ]; then
-            result_data_ref_3441cf8e="${data_3441cf8e}"
-        fi
         return "${SHELL_TRUE}"
     fi
 
     "cfg::trait::${type_3441cf8e}::array::all" items_3441cf8e "${path_3441cf8e}" "${data_3441cf8e}" "--comment=${comment_3441cf8e}" "${extra_params_3441cf8e[@]}" || return "${SHELL_FALSE}"
+
+    if array::is_not_contain items_3441cf8e "${value_3441cf8e}"; then
+        linfo "item(${value_3441cf8e}) is not exists in array, skip remove"
+        return "${SHELL_TRUE}"
+    fi
 
     array::remove items_3441cf8e "${value_3441cf8e}" || return "${SHELL_FALSE}"
 

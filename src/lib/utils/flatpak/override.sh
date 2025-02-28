@@ -19,9 +19,12 @@ source "${SCRIPT_DIR_83277c97}/../array.sh"
 source "${SCRIPT_DIR_83277c97}/../cmd.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_83277c97}/../fs/fs.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_83277c97}/../cfg/cfg.sh"
 
 declare -r __DEFAULT_POLICY_83277c97="allow"
 declare -r __DEFAULT_SCOPE_83277c97="user"
+declare -r __VALID_PERMISSION_NAME=("socket" "device" "filesystem")
 
 function flatpak::override::_get_config_path() {
     local scope
@@ -276,10 +279,8 @@ function flatpak::override::permission::unset() {
 
     local param
     local config_filepath
-    local temp_str
-    local values=()
     local is_sudo="$SHELL_FALSE"
-    local valid_permission_name=("socket" "device" "filesystem")
+    local permission_value
 
     for param in "$@"; do
         case "$param" in
@@ -338,8 +339,8 @@ function flatpak::override::permission::unset() {
 
     ldebug "param scope=$scope, permission=$permission, value=$value, policy=$policy, app=$app"
 
-    if array::is_not_contain valid_permission_name "$permission"; then
-        lerror "permission($permission) is not valid, current valid permission name is (${valid_permission_name[*]})"
+    if array::is_not_contain __VALID_PERMISSION_NAME "$permission"; then
+        lerror "permission($permission) is not valid, current valid permission name is (${__VALID_PERMISSION_NAME[*]})"
         return "$SHELL_FALSE"
     fi
 
@@ -359,28 +360,90 @@ function flatpak::override::permission::unset() {
         return "$SHELL_TRUE"
     fi
 
+    permission_value="$value"
     if [ "$policy" == "deny" ]; then
-        value="!${value}"
+        permission_value="!${value}"
     fi
 
-    temp_str=$(grep -E "^${permission}s=" "$config_filepath" | awk -F '=' '{print $2}')
-    ldebug "current sockets=$temp_str"
+    cfg::array::remove --separator=";" --type="ini" --filepath="${config_filepath}" ".Context.${permission}s" "$permission_value" || return "$SHELL_FALSE"
 
-    if string::is_empty "$temp_str"; then
-        ldebug "permission($permission) is not set in config file($config_filepath), not need unset"
+    linfo "remove permission($permission) value($value) success, scope=$scope, app=$app, policy=$policy"
+
+    return "$SHELL_TRUE"
+}
+
+# 通过修改配置文件的方式清除
+function flatpak::override::permission::clear() {
+    local scope
+    local app
+    local permission
+
+    local param
+    local config_filepath
+    local is_sudo="$SHELL_FALSE"
+
+    for param in "$@"; do
+        case "$param" in
+        --scope=*)
+            parameter::parse_string --default="${__DEFAULT_SCOPE_83277c97}" --no-empty --option="$param" scope || return "$SHELL_FALSE"
+            ;;
+        --app=*)
+            parameter::parse_string --option="$param" app || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown option $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v permission ]; then
+                permission="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v permission ]; then
+        lerror "param permission is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$permission"; then
+        lerror "param permission is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    flatpak::override::permission::_check_scope "$scope" || return "$SHELL_FALSE"
+
+    ldebug "param scope=$scope, permission=$permission, app=$app"
+
+    if array::is_not_contain __VALID_PERMISSION_NAME "$permission"; then
+        lerror "permission($permission) is not valid, current valid permission name is (${__VALID_PERMISSION_NAME[*]})"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$scope" || [ "$scope" == "system" ]; then
+        is_sudo="$SHELL_TRUE"
+    elif [ "$scope" == "user" ]; then
+        is_sudo="$SHELL_FALSE"
+    else
+        lerror "unknown scope $scope"
+        return "$SHELL_FALSE"
+    fi
+
+    config_filepath="$(flatpak::override::_get_config_path --scope="$scope" --app="$app")" || return "$SHELL_FALSE"
+
+    if fs::path::is_not_exists "$config_filepath"; then
+        ldebug "config file($config_filepath) is not exists, not need clear"
         return "$SHELL_TRUE"
     fi
 
-    string::split_with values "$temp_str" ";" || return "$SHELL_FALSE"
-    ldebug "values=(${values[*]})"
+    cfg::map::delete --type="ini" --filepath="${config_filepath}" ".Context.${permission}s" || return "$SHELL_FALSE"
 
-    array::remove values "$value" || return "$SHELL_FALSE"
-
-    temp_str="$(array::join_with values ";")" || return "$SHELL_FALSE"
-
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- sed -i "{{s|^${permission}s=.*|${permission}s=${temp_str}|g}}" "$config_filepath" || return "$SHELL_FALSE"
-
-    linfo "remove permission($permission) value($value) success, scope=$scope, app=$app, policy=$policy"
+    linfo "clear permission($permission) success, scope=$scope, app=$app"
 
     return "$SHELL_TRUE"
 }
@@ -762,14 +825,13 @@ function flatpak::override::environment::allow_unset() {
     fi
 
     config_filepath="$(flatpak::override::_get_config_path --scope="$scope" --app="$app")" || return "$SHELL_FALSE"
-    ldebug "config file=$config_filepath"
 
     if fs::path::is_not_exists "$config_filepath"; then
-        ldebug "config file($config_filepath) is not exists, not need unset"
+        ldebug "config file($config_filepath) is not exists, not need unset environment"
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" -- sed -i "{{s/^${name}=.*//g}}" "$config_filepath" || return "$SHELL_FALSE"
+    cfg::map::delete --type="ini" --filepath="${config_filepath}" ".Environment.${name}" || return "$SHELL_FALSE"
 
     linfo "remove env success. scope=$scope, app=$app, name=$name"
 

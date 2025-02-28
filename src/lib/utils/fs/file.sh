@@ -19,6 +19,8 @@ source "${SCRIPT_DIR_dc1ea0de}/../log/log.sh"
 source "${SCRIPT_DIR_dc1ea0de}/../parameter.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_dc1ea0de}/path.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_dc1ea0de}/../os/os.sh"
 
 function fs::file::size_byte() {
     local path
@@ -474,6 +476,7 @@ function fs::file::write() {
     local param
     local is_force="${SHELL_FALSE}"
     local temp
+    local temp_filepath
 
     ldebug "params=$*"
 
@@ -538,7 +541,18 @@ function fs::file::write() {
         ldebug "create file($filepath) parent directory success"
     fi
 
-    cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- echo "${data}" ">>" "$filepath" || return "$SHELL_FALSE"
+    # 先写临时文件
+    temp_filepath="$(fs::path::random_path --parent="$(os::path::temp_temp_base_dir)" --name="$(fs::path::basename "$filepath")")" || return "$SHELL_FALSE"
+
+    if fs::path::is_exists "$temp_filepath"; then
+        lerror "temp file($temp_filepath) is exists"
+        return "$SHELL_FALSE"
+    fi
+
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- echo "{{${data}}}" ">" "$temp_filepath" || return "$SHELL_FALSE"
+
+    # 再移动
+    fs::file::move --force --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "$temp_filepath" "$filepath" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

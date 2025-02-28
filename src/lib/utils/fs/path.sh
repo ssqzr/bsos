@@ -98,6 +98,19 @@ function fs::path::dirname() {
 }
 
 # 同时指定 --path 和 --parent 和 --name ，优先以 --path 为准
+# 构造一个具有随机字符串的路径
+# 说明：
+#   1. 指定 --path 将忽略 --parent 和 --name 参数
+# 可选参数：
+#   --path                          string              根据现有的路径来构造
+#   --parent                        string              指定父级路径
+#   --name                          string              指定基础文件名
+#   --suffix                        string              指定后缀
+# 位置参数：
+# 标准输出： 构造的路径
+# 返回值：
+#   ${SHELL_TRUE} 成功
+#   ${SHELL_FALSE} 失败
 function fs::path::random_path() {
     local path
     local parent
