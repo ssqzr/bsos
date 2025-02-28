@@ -601,7 +601,7 @@ function fs::file::write() {
         return "$SHELL_FALSE"
     fi
 
-    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- echo "{{${data}}}" ">" "$temp_filepath" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- printf "%s" "{{${data}}}" ">" "$temp_filepath" || return "$SHELL_FALSE"
 
     # 再移动
     fs::file::move --force --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "$temp_filepath" "$filepath" || return "$SHELL_FALSE"
