@@ -283,6 +283,7 @@ function cfg::trait::ini::parser::line::parse_value() {
 #       - line::unknown                                                     用于处理未知的行
 #   - extra                         关联数组的引用                        额外的参数，直接传递给回调，是关联数组
 function cfg::trait::ini::parser::parser() {
+    # shellcheck disable=SC2034
     local -n result_468242ca="$1"
     shift
     local data_468242ca="$1"
@@ -331,9 +332,9 @@ function cfg::trait::ini::parser::parser() {
 
         if cfg::trait::ini::parser::is_match_empty "${line_468242ca}"; then
             # 空行
-            ldebug "empty line: (${line_468242ca})"
+            ldebug "empty line, line number=$line_number_468242ca"
 
-            func_468242ca="${callback_468242ca["data::start"]}"
+            func_468242ca="${callback_468242ca["line::empty"]}"
             if string::is_not_empty "${func_468242ca}"; then
                 cfg::trait::ini::parser::factory::callback_params callback_pramas_468242ca result_468242ca "${data_468242ca}" "${comment_468242ca}" "${separator_468242ca}" line_info_468242ca "${!extra_468242ca}" || return "${SHELL_FALSE}"
                 "${func_468242ca}" callback_pramas_468242ca || return "${SHELL_FALSE}"
@@ -410,7 +411,7 @@ function cfg::trait::ini::parser::parser() {
         "${func_468242ca}" callback_pramas_468242ca || return "${SHELL_FALSE}"
     fi
 
-    # 解析前的回调
+    # 解析后的回调
     # shellcheck disable=SC2034
     line_info_468242ca=()
     func_468242ca="${callback_468242ca["data::end"]}"
