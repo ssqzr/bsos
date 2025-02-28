@@ -114,7 +114,7 @@ function cfg::utils::_read_data() {
     fi
 
     if string::is_empty "$data_556e8434"; then
-        return_data_ref_556e8434=$(fs::file::read "$filepath_556e8434") || return "${SHELL_FALSE}"
+        fs::file::read "$filepath_556e8434" return_data_ref_556e8434 || return "${SHELL_FALSE}"
         return "${SHELL_TRUE}"
     fi
 
@@ -560,7 +560,7 @@ function cfg::map::delete() {
     cfg::utils::_read_data data_192676fa "$data_192676fa" "$filepath_192676fa" || return "${SHELL_FALSE}"
 
     if ! "cfg::trait::$type_192676fa::map::is_exists" "${path_192676fa}" "${data_192676fa}" "${extra_params_192676fa[@]}"; then
-        linfo "delete path success, path is not exist, path=${path_192676fa}"
+        linfo "delete path success, path=(${path_192676fa}) not exists, ignore delete"
         if [ -R result_data_ref_192676fa ]; then
             result_data_ref_192676fa="${data_192676fa}"
         fi

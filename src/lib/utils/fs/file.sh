@@ -413,57 +413,109 @@ function fs::file::copy() {
     return "$SHELL_TRUE"
 }
 
+# 读取文件内容
+# 说明：
+#   1. 不能直接输出到标准输出，当调用者通过命令替换进行接收标准输出时，最后的所有换行符会被删除。
+#      所以需要通过变量引用来接收完整的数据
+# 可选参数：
+#   --sudo                          bool                指定是否需要通过sudo执行
+#   --password                      string              指定sudo执行时需要的密码
+# 位置参数：
+#   filepath                        string              文件路径
+#   data                            string引用           变量引用，用于接收文件内容
+# 标准输出： 构造的路径
+# 返回值：
+#   ${SHELL_TRUE} 成功
+#   ${SHELL_FALSE} 失败
 function fs::file::read() {
-    local filepath
-    local is_sudo
-    local password
-    local param
+    local filepath_09689818
+    local is_sudo_09689818
+    local password_09689818
+    local -n data_09689818
+
+    local param_09689818
+    local code_09689818
 
     ldebug "params=$*"
 
-    for param in "$@"; do
-        case "$param" in
+    for param_09689818 in "$@"; do
+        case "$param_09689818" in
         -s | -s=* | --sudo | --sudo=*)
-            parameter::parse_bool --default=y --option="$param" is_sudo || return "$SHELL_FALSE"
+            parameter::parse_bool --default=y --option="$param_09689818" is_sudo_09689818 || return "$SHELL_FALSE"
             ;;
         -p=* | --password=*)
-            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
+            parameter::parse_string --option="$param_09689818" password_09689818 || return "$SHELL_FALSE"
             ;;
         -*)
-            lerror "unknown parameter $param"
+            lerror "unknown parameter $param_09689818"
             return "$SHELL_FALSE"
             ;;
         *)
-            if [ ! -v filepath ]; then
-                filepath="$param"
+            if [ ! -v filepath_09689818 ]; then
+                filepath_09689818="$param_09689818"
                 continue
             fi
 
-            lerror "unknown parameter $param"
+            if [ ! -R data_09689818 ]; then
+                data_09689818="$param_09689818"
+                continue
+            fi
+
+            lerror "unknown parameter $param_09689818"
             return "$SHELL_FALSE"
             ;;
         esac
     done
 
-    if [ ! -v filepath ]; then
+    if [ ! -v filepath_09689818 ]; then
         lerror "param filepath is required"
         return "$SHELL_FALSE"
     fi
 
-    if fs::path::is_not_exists "$filepath"; then
-        lerror "file($filepath) is not exists"
+    if fs::path::is_not_exists "$filepath_09689818"; then
+        lerror "file($filepath_09689818) is not exists"
         return "$SHELL_FALSE"
     fi
 
-    if fs::path::is_not_file "$filepath"; then
-        lerror "file($filepath) is not a file"
+    if fs::path::is_not_file "$filepath_09689818"; then
+        lerror "file($filepath_09689818) is not a file"
         return "$SHELL_FALSE"
     fi
 
-    # 这个实现不了 sudo
+    # 方式1
+    # 这个实现不了 sudo，也会丢失最后所有的换行符
     # data="$(</dev/stdin)"
 
-    cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cat "$filepath" || return "$SHELL_FALSE"
+    # 方式2
+    # 这个直接 echo 到标准输出，当调用者通过命令替换接收标准输出时，最后的换行符因为命令替换而丢失
+    # cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo_09689818")" --password="$password_09689818" -- cat "$filepath_09689818" || return "$SHELL_FALSE"
+
+    # 方式3
+    # 不能使用管道符，因为管道符是运行了子程序，变量引用回写无效
+    # cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo_09689818")" --password="$password_09689818" -- cat "$filepath_09689818" | IFS= read -rd '' data_09689818
+
+    # 方式4
+    # 这样写也可以获取到最后所有的换行符
+    # local line_09689818
+    # while IFS= read -r line_09689818; do
+    #     data_09689818+="$line_09689818"$'\n'
+    # done < <(cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo_09689818")" --password="$password_09689818" -- cat "$filepath_09689818") || return "$SHELL_FALSE"
+
+    # 方式5
+    # https://unix.stackexchange.com/questions/383217/shell-keep-trailing-newlines-n-in-command-substitution
+    # https://linuxcommand.org/lc3_man_pages/readh.html
+    # https://stackoverflow.com/questions/73102589/exit-status-of-read-is-1-even-though-it-appears-to-be-succeeding
+    # read 返回 1 ，所以后面不能添加 || return "$SHELL_FALSE"
+    IFS= read -rd '' data_09689818 < <(cmd::run_cmd_with_history --stdout=cat --sudo="$(string::print_yes_no "$is_sudo_09689818")" --password="$password_09689818" -- cat "$filepath_09689818")
+    # 判断子进程的返回值
+    wait "$!"
+    code_09689818=$?
+    linfo "read file($filepath_09689818) sub process exit code=$code_09689818"
+
+    if [ "$code_09689818" -ne "$SHELL_TRUE" ]; then
+        lerror "read file($filepath_09689818) failed"
+        return "$SHELL_FALSE"
+    fi
 
     return "$SHELL_TRUE"
 }
