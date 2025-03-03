@@ -126,7 +126,7 @@ function audio::trait::dependencies() {
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
 function audio::trait::features() {
     # NOTE: 不要通过flatpak安装carla，测试发现使用插件时打不开插件的自定义UI
-    local apps=("pacman:pipewire-alsa" "pacman:pipewire-jack" "pacman:pipewire-pulse" "pacman:carla")
+    local apps=("pacman:pipewire-alsa" "pacman:pipewire-jack" "pacman:pipewire-pulse")
     apps+=("pacman:pavucontrol")
 
     # 媒体控制需要 playerctl
