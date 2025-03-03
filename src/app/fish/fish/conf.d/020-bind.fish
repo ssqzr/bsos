@@ -1,6 +1,11 @@
-bind \eh beginning-of-line
-bind \e\; end-of-line
-bind \ej backward-char
-bind \el forward-char
-bind \eb backward-delete-char
-bind \ed delete-char
+bind alt-h beginning-of-line
+bind alt-\; end-of-line
+bind alt-j backward-char
+bind alt-l forward-char
+bind alt-u backward-word
+bind alt-o forward-word
+
+bind alt-b backward-delete-char
+bind alt-d delete-char
+bind alt-enter backward-kill-word
+bind alt-w kill-word
