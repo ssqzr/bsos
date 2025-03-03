@@ -16,11 +16,14 @@ source "${SCRIPT_DIR_b121320e}/utils.sh" || exit 1
 
 # 生成安装列表
 function manager::cache::generate_top_apps() {
+    local command_6fef53f7="$1"
+    shift
     local -n pm_apps_6fef53f7="$1"
     shift
 
     local pm_app_6fef53f7
     local temp_str_6fef53f7
+    local temp_array_6fef53f7=()
     local priority_apps_6fef53f7=()
     # 被其他app依赖的app
     local required_by_6fef53f7=()
@@ -38,11 +41,17 @@ function manager::cache::generate_top_apps() {
     if manager::flags::develop::is_exists; then
         linfo "is in develop mode, not add prior install apps to top app list"
     else
-        # 先处理优先安装的app
-        manager::base::prior_install_apps::all priority_apps_6fef53f7 || return "$SHELL_FALSE"
-        for pm_app_6fef53f7 in "${priority_apps_6fef53f7[@]}"; do
-            config::cache::top_apps::rpush_unique "$pm_app_6fef53f7" || return "$SHELL_FALSE"
-        done
+        # shellcheck disable=SC2034
+        temp_array_6fef53f7=("uninstall" "unfixme")
+        if array::is_contain temp_array_6fef53f7 "$command_6fef53f7" && array::is_not_empty "${!pm_apps_6fef53f7}"; then
+            linfo "command=($command_6fef53f7) and apps(${pm_apps_6fef53f7[*]}) is not empty, not add prior install apps to top app list"
+        else
+            # 先处理优先安装的app
+            manager::base::prior_install_apps::all priority_apps_6fef53f7 || return "$SHELL_FALSE"
+            for pm_app_6fef53f7 in "${priority_apps_6fef53f7[@]}"; do
+                config::cache::top_apps::rpush_unique "$pm_app_6fef53f7" || return "$SHELL_FALSE"
+            done
+        fi
     fi
 
     if array::is_not_empty "${!pm_apps_6fef53f7}"; then
@@ -222,6 +231,8 @@ function manager::cache::generate_apps_relation() {
 }
 
 function manager::cache::do() {
+    local command_096d6b8f=$1
+    shift
     local -n include_pm_apps_096d6b8f=$1
     shift
     local -n exclude_pm_apps_096d6b8f=$1
@@ -244,7 +255,7 @@ function manager::cache::do() {
 
     # 指定 include_pm_apps_096d6b8f 参数时，必须重新生成
     if array::is_not_empty "${!include_pm_apps_096d6b8f}" || config::cache::top_apps::is_not_exists; then
-        tui::components::spinner::main --title="generate top apps. It may take a long time..." exit_code_096d6b8f manager::cache::generate_top_apps "${!include_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
+        tui::components::spinner::main --title="generate top apps. It may take a long time..." exit_code_096d6b8f manager::cache::generate_top_apps "${command_096d6b8f}" "${!include_pm_apps_096d6b8f}" || return "$SHELL_FALSE"
         if [ "$exit_code_096d6b8f" -ne "$SHELL_TRUE" ]; then
             lerror --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "generate top apps failed."
             return "$SHELL_FALSE"

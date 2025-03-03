@@ -47,7 +47,7 @@ function package_manager::pacman::uninstall() {
         return "$SHELL_TRUE"
     fi
 
-    cmd::run_cmd_with_history --sudo -- pacman -Rc --noconfirm "$@" || return "$SHELL_FALSE"
+    cmd::run_cmd_with_history --sudo -- pacman -Rcus --noconfirm "$@" || return "$SHELL_FALSE"
 }
 
 function package_manager::pacman::package_description() {

@@ -292,7 +292,7 @@ function develop::command::install() {
         exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
+    manager::cache::do "install" pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     manager::flow::install::main || return "$SHELL_FALSE"
 

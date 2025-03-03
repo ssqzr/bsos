@@ -200,7 +200,7 @@ function main::command::install() {
         exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
+    manager::cache::do "install" pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     manager::flow::install::main || return "$SHELL_FALSE"
 
@@ -248,7 +248,7 @@ function main::command::uninstall() {
         exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
+    manager::cache::do "uninstall" pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     manager::flow::uninstall::main || return "$SHELL_FALSE"
 
@@ -296,7 +296,7 @@ function main::command::upgrade() {
         exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
+    manager::cache::do "upgrade" pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     manager::flow::upgrade::main || return "$SHELL_FALSE"
 
@@ -344,7 +344,7 @@ function main::command::fixme() {
         exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
+    manager::cache::do "fixme" pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     manager::flow::fixme::main || return "$SHELL_FALSE"
 
@@ -392,7 +392,7 @@ function main::command::unfixme() {
         exclude_pm_apps+=("$(manager::utils::convert_app_name "$temp_str")") || return "$SHELL_FALSE"
     done
 
-    manager::cache::do pm_apps exclude_pm_apps || return "$SHELL_FALSE"
+    manager::cache::do "unfixme" pm_apps exclude_pm_apps || return "$SHELL_FALSE"
 
     manager::flow::unfixme::main || return "$SHELL_FALSE"
 
