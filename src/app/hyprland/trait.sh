@@ -253,6 +253,9 @@ function hyprland::trait::features() {
     # hyprfocus 插件
     apps+=("custom:hyprfocus")
 
+    # Hyprspace 插件
+    apps+=("custom:hyprspace")
+
     apps+=("custom:audio")
 
     # 截图

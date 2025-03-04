@@ -104,3 +104,14 @@ function hyprland::hyprpm::reload() {
     linfo "hyprpm reload success"
     return "${SHELL_TRUE}"
 }
+
+# 安装插件
+function hyprland::hyprpm::add_plugin() {
+    local git_url="$1"
+    shift
+
+    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add "$git_url" || return "${SHELL_FALSE}"
+    linfo "hyprpm add $git_url plugin success"
+
+    return "${SHELL_TRUE}"
+}

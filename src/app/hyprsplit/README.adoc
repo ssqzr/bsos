@@ -1,0 +1,6 @@
+# hyprsplit 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/shezdy/hyprsplit[官方文档]
+
