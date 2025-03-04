@@ -2,7 +2,7 @@
 
 # dirname 处理不了相对路径， dirname ../../xxx => ../..
 # shellcheck disable=SC2034
-SCRIPT_DIR_fdb555da="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
+SCRIPT_DIR_63902615="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # shellcheck disable=SC1091
 source "$SRC_ROOT_DIR/lib/utils/all.sh"
@@ -12,98 +12,105 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 # 指定使用的包管理器
-function hyprfocus::trait::package_manager() {
-    echo "pacman"
+function hyprland-virtual-desktops::trait::package_manager() {
+    echo "none"
 }
 
 # 需要安装包的名称，如果安装一个应用需要安装多个包，那么这里填写最核心的包，其他的包算是依赖
-function hyprfocus::trait::package_name() {
-    echo "hyprfocus"
+function hyprland-virtual-desktops::trait::package_name() {
+    echo "hyprland-virtual-desktops"
 }
 
 # 简短的描述信息，查看包的信息的时候会显示
-function hyprfocus::trait::description() {
-    echo "a focus animation plugin for Hyprland inspired by Flashfocus"
+function hyprland-virtual-desktops::trait::description() {
+    # package_manager::package_description "$(hyprland-virtual-desktops::trait::package_manager)" "$(hyprland-virtual-desktops::trait::package_name)" || return "$SHELL_FALSE"
+
+    echo "A plugin for the Hyprland compositor, implementing virtual-desktop functionality."
     return "$SHELL_TRUE"
 }
 
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
-function hyprfocus::trait::install_guide() {
+function hyprland-virtual-desktops::trait::install_guide() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的前置操作，比如下载源代码
-function hyprfocus::trait::pre_install() {
+function hyprland-virtual-desktops::trait::pre_install() {
     return "${SHELL_TRUE}"
 }
 
 # 安装的操作
-function hyprfocus::trait::do_install() {
+function hyprland-virtual-desktops::trait::do_install() {
+    # package_manager::install "$(hyprland-virtual-desktops::trait::package_manager)" "$(hyprland-virtual-desktops::trait::package_name)" || return "${SHELL_FALSE}"
+
     if hyprland::hyprctl::instance::is_not_can_connect; then
-        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install hyprfocus plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not install $(hyprland-virtual-desktops::trait::package_name) plugin"
         return "${SHELL_TRUE}"
     fi
 
     # 先更新，安装 hyprland headers
     hyprland::hyprpm::update || return "${SHELL_FALSE}"
 
-    if hyprland::hyprpm::repository::is_exists "hyprfocus"; then
+    if hyprland::hyprpm::repository::is_exists "virtual-desktops"; then
         # 如果存在， hyprpm update 会更新到最新版本，所以不需要再次安装
-        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "hyprfocus already exists"
+        linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: plugin virtual-desktops already exists"
         return "${SHELL_TRUE}"
     fi
 
-    # https://github.com/VortexCoyote/hyprfocus 是原始的仓库，但是长时间没更新，目前不可用
-    # cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/VortexCoyote/hyprfocus || return "${SHELL_FALSE}"
-    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/pyt0xic/hyprfocus || return "${SHELL_FALSE}"
-    linfo "hyprpm add hyprfocus plugin success"
+    cmd::run_cmd_with_history -- printf "y" '|' hyprpm -v add https://github.com/levnikmyskin/hyprland-virtual-desktops || return "${SHELL_FALSE}"
+    linfo "hyprpm add virtual-desktops plugin success"
 
     return "${SHELL_TRUE}"
 }
 
 # 安装的后置操作，比如写配置文件
-function hyprfocus::trait::post_install() {
+function hyprland-virtual-desktops::trait::post_install() {
     if hyprland::hyprctl::instance::is_not_can_connect; then
-        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_install hyprfocus plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_install $(hyprland-virtual-desktops::trait::package_name) plugin"
         return "${SHELL_TRUE}"
     fi
 
-    hyprland::hyprpm::plugin::enable hyprfocus || return "${SHELL_FALSE}"
+    hyprland::hyprpm::plugin::enable "virtual-desktops" || return "${SHELL_FALSE}"
 
-    hyprland::config::add "350" "${SCRIPT_DIR_fdb555da}/hyprfocus.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_63902615}/hyprland/hyprland-virtual-desktops.conf" || return "${SHELL_FALSE}"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"
+
+    linfo "$(hyprland-virtual-desktops::trait::package_name) plugin post_install success"
 
     return "${SHELL_TRUE}"
 }
 
 # 卸载的前置操作，比如卸载依赖
-function hyprfocus::trait::pre_uninstall() {
+function hyprland-virtual-desktops::trait::pre_uninstall() {
     return "${SHELL_TRUE}"
 }
 
 # 卸载的操作
-function hyprfocus::trait::do_uninstall() {
+function hyprland-virtual-desktops::trait::do_uninstall() {
+    # package_manager::uninstall "$(hyprland-virtual-desktops::trait::package_manager)" "$(hyprland-virtual-desktops::trait::package_name)" || return "${SHELL_FALSE}"
+
     if hyprland::hyprctl::instance::is_not_can_connect; then
-        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not uninstall hyprfocus plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not uninstall $(hyprland-virtual-desktops::trait::package_name) plugin"
         return "${SHELL_TRUE}"
     fi
 
-    hyprland::hyprpm::repository::remove hyprfocus || return "${SHELL_FALSE}"
-    linfo "hyprpm remove hyprfocus plugin success"
+    hyprland::hyprpm::repository::remove "virtual-desktops" || return "${SHELL_FALSE}"
+    linfo "hyprpm remove $(hyprland-virtual-desktops::trait::package_name) plugin success"
+
     return "${SHELL_TRUE}"
 }
 
 # 卸载的后置操作，比如删除临时文件
-function hyprfocus::trait::post_uninstall() {
+function hyprland-virtual-desktops::trait::post_uninstall() {
     if hyprland::hyprctl::instance::is_not_can_connect; then
-        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_uninstall hyprfocus plugin"
+        lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not post_uninstall $(hyprland-virtual-desktops::trait::package_name) plugin"
         return "${SHELL_TRUE}"
     fi
 
-    hyprland::config::remove "350" hyprfocus.conf || return "${SHELL_FALSE}"
-    linfo "delete hyprfocus config success"
+    hyprland::config::remove "350" "hyprland-virtual-desktops.conf" || return "${SHELL_FALSE}"
+    linfo "delete $(hyprland-virtual-desktops::trait::package_name) config success"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"
 
@@ -117,19 +124,8 @@ function hyprfocus::trait::post_uninstall() {
 # - 更新的操作和版本无关，也就是说所有版本更新方法都一样
 # - 更新的操作不应该做配置转换之类的操作，这个应该是应用需要处理的
 # - 更新的指责和包管理器类似，只负责更新
-function hyprfocus::trait::upgrade() {
-    # FIXME: 现在更新总是失败，因为和 hyprland 的版本不配套
-    # if hyprland::hyprctl::instance::is_not_can_connect; then
-    #     lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${PM_APP_NAME}: can not connect to hyprland, do not upgrade hyprfocus plugin"
-    #     return "${SHELL_TRUE}"
-    # fi
-
-    # if hyprland::hyprpm::repository::is_not_exists "hyprfocus"; then
-    #     return "${SHELL_TRUE}"
-    # fi
-
-    # hyprland::hyprpm::update || return "${SHELL_FALSE}"
-
+function hyprland-virtual-desktops::trait::upgrade() {
+    package_manager::upgrade "$(hyprland-virtual-desktops::trait::package_manager)" "$(hyprland-virtual-desktops::trait::package_name)" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -138,14 +134,14 @@ function hyprfocus::trait::upgrade() {
 # 1. Hyprland 的插件需要在Hyprland运行时才可以启动
 # 函数内部需要自己检测环境是否满足才进行相关操作。
 # NOTE: 注意重复安装是否会覆盖fixme做的修改
-function hyprfocus::trait::fixme() {
+function hyprland-virtual-desktops::trait::fixme() {
     return "${SHELL_TRUE}"
 }
 
 # fixme 的逆操作
 # 有一些操作如果不进行 fixme 的逆操作，可能会有残留。
 # 如果直接卸载也不会有残留就不用处理
-function hyprfocus::trait::unfixme() {
+function hyprland-virtual-desktops::trait::unfixme() {
     return "${SHELL_TRUE}"
 }
 
@@ -155,7 +151,7 @@ function hyprfocus::trait::unfixme() {
 # 或者有一些依赖的包不仅安装就可以了，它自身也需要进行额外的配置。
 # 因此还是需要为一些特殊场景添加依赖
 # NOTE: 这里的依赖包是必须安装的，并且在安装本程序前进行安装
-function hyprfocus::trait::dependencies() {
+function hyprland-virtual-desktops::trait::dependencies() {
     # 一个APP的书写格式是："包管理器:包名"
     # 例如：
     # "pacman:vim"
@@ -171,14 +167,14 @@ function hyprfocus::trait::dependencies() {
 # 例如程序的插件、主题等。
 # 虽然可以建立插件的依赖是本程序，然后配置安装插件，而不是安装本程序。但是感觉宣兵夺主了。
 # 这些软件是本程序的一个补充，一般可安装可不安装，但是为了简化安装流程，还是默认全部安装
-function hyprfocus::trait::features() {
+function hyprland-virtual-desktops::trait::features() {
     local apps=()
     array::print apps
     return "${SHELL_TRUE}"
 }
 
-function hyprfocus::trait::main() {
+function hyprland-virtual-desktops::trait::main() {
     return "${SHELL_TRUE}"
 }
 
-hyprfocus::trait::main
+hyprland-virtual-desktops::trait::main
