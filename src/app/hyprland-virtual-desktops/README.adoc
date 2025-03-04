@@ -1,6 +1,0 @@
-# hyprland-virtual-desktops 安装说明文档
-include::../../../doc/base.adoc[]
-
-
-https://github.com/levnikmyskin/hyprland-virtual-desktops[官方文档]
-
