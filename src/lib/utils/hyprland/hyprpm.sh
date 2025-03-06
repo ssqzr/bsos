@@ -70,6 +70,47 @@ function hyprland::hyprpm::plugin::enable() {
     return "${SHELL_TRUE}"
 }
 
+function hyprland::hyprpm::plugin::disable() {
+    local name="$1"
+
+    cmd::run_cmd_with_history -- hyprpm -v disable "$name"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "plugin(${name}) disable failed"
+        return "${SHELL_FALSE}"
+    fi
+    linfo "plugin(${name}) disable success"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::hyprpm::plugin::is_exists() {
+    local name="$1"
+
+    hyprpm list | grep -q -E "Plugin $name"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "plugin(${name}) is not exists"
+        return "${SHELL_FALSE}"
+    fi
+    linfo "plugin(${name}) is exists"
+    return "${SHELL_TRUE}"
+}
+
+function hyprland::hyprpm::plugin::is_not_exists() {
+    ! hyprland::hyprpm::plugin::is_exists "$@"
+}
+
+function hyprland::hyprpm::plugin::is_enabled() {
+    local name="$1"
+
+    # hyprpm 输出 true 有颜色，所以 true 前面还有不可见字符
+    hyprpm list | grep -E "Plugin $name" -A2 | grep -q -E "enabled: .*true"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "plugin(${name}) is not enabled"
+        return "${SHELL_FALSE}"
+    fi
+    linfo "plugin(${name}) is enabled"
+    return "${SHELL_TRUE}"
+}
+
 function hyprland::hyprpm::clean() {
     # 删除插件
     local repository

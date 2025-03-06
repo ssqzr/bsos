@@ -117,7 +117,7 @@ function hyprland::hyprctl::instance::version() {
     fi
 
     local temp_str
-    temp_str=$(hyprctl -j version "${instance_params[@]}") || return "$SHELL_FALSE"
+    temp_str=$(hyprctl -j version "${instance_params[@]}")
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "get hyprland version failed, instance=${instance}, err=${temp_str}"
         return "$SHELL_FALSE"
@@ -164,7 +164,7 @@ function hyprland::hyprctl::instance::version::tag() {
     fi
 
     tag=$(hyprctl -j version "${instance_params[@]}") || return "$SHELL_FALSE"
-    tag=$(echo "$tag" | yq '.tag') || return "$SHELL_FALSE"
+    tag=$(echo "$tag" | yq '.tag')
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "get hyprland version tag failed, instance=${instance}, err=${tag}"
         return "$SHELL_FALSE"
@@ -410,13 +410,70 @@ function hyprland::hyprctl::instance::monitors() {
         instance_params+=("-i" "$instance")
     fi
 
-    value=$(hyprctl -j monitors "${instance_params[@]}") || return "$SHELL_FALSE"
+    value=$(hyprctl -j monitors "${instance_params[@]}")
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "get hyprland monitors failed, instance=${instance}, err=${value}"
         return "$SHELL_FALSE"
     fi
 
     echo "$value"
+
+    return "$SHELL_TRUE"
+}
+
+# 获取 hyprland 实例的 plugin 列表
+# 说明：
+# 位置参数：
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 获取的 monitors 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
+function hyprland::hyprctl::instance::plugin::list() {
+    local instance_f2e75a0d
+    local -n plugins_f2e75a0d
+
+    local value_f2e75a0d
+    local instance_params_f2e75a0d=()
+    local param_f2e75a0d
+
+    for param_f2e75a0d in "$@"; do
+        case "$param_f2e75a0d" in
+        --instance=*)
+            parameter::parse_string --option="$param_f2e75a0d" instance_f2e75a0d || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param_f2e75a0d"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -R plugins_f2e75a0d ]; then
+                plugins_f2e75a0d="$param_f2e75a0d"
+                continue
+            fi
+            lerror "invalid param: $param_f2e75a0d"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    if [ ! -R plugins_f2e75a0d ]; then
+        lerror "param plugins is required"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_not_empty "$instance_f2e75a0d"; then
+        instance_params_f2e75a0d+=("-i" "$instance_f2e75a0d")
+    fi
+
+    value_f2e75a0d=$(hyprctl -j plugin list "${instance_params_f2e75a0d[@]}" | yq '.[].name')
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "get hyprland plugins failed, instance=${instance_f2e75a0d}, err=${value_f2e75a0d}"
+        return "$SHELL_FALSE"
+    fi
+
+    array::readarray plugins_f2e75a0d <<<"${value_f2e75a0d}" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

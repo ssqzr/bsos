@@ -72,7 +72,7 @@ function hyprland-plugins::trait::post_install() {
 
     # hyprland::config::add "350" "${SCRIPT_DIR_aada4c10}/hyprland/hyprland-plugins.conf" || return "${SHELL_FALSE}"
 
-    # hyprland::hyprpm::plugin::enable "$(hyprland-plugins::trait::package_name)" || return "${SHELL_FALSE}"
+    hyprland::hyprpm::plugin::enable "hyprwinwrap" || return "${SHELL_FALSE}"
 
     hyprland::hyprpm::reload || return "${SHELL_FALSE}"
 

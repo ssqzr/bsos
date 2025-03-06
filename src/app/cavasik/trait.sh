@@ -51,7 +51,7 @@ function cavasik::trait::post_install() {
     cmd::run_cmd_with_history -- mkdir -p "$(dirname "$config_path")" || return "${SHELL_FALSE}"
     cmd::run_cmd_with_history -- cp -rf "${SCRIPT_DIR_a35d2bad}/config" "$config_path" || return "${SHELL_FALSE}"
 
-    hyprland::config::add "350" "${SCRIPT_DIR_a35d2bad}/cavasik.conf" || return "${SHELL_FALSE}"
+    hyprland::config::add "350" "${SCRIPT_DIR_a35d2bad}/hyprland/cavasik.conf" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -117,6 +117,10 @@ function cavasik::trait::dependencies() {
     # "pamac:vim"
     # "custom:vim"   自定义，也就是通过本脚本进行安装
     local apps=()
+
+    # 以背景图方式运行
+    apps+=("custom:hyprland-plugins")
+
     array::print apps
     return "${SHELL_TRUE}"
 }
