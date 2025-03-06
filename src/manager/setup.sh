@@ -172,7 +172,7 @@ function manager::setup::_clear_child_process() {
 # EXIT
 # 正常退出还是异常退出都会调用
 function manager::setup::signal::handler::EXIT() {
-    local code="$?"
+    local code="$1"
     linfo "EXIT signal handler start"
 
     linfo "script exit, pid=$$, exit code=${code}"
@@ -216,8 +216,22 @@ function manager::setup::signal::handler::TERM() {
 }
 
 function manager::setup::signal::register() {
-    trap manager::setup::signal::handler::EXIT EXIT
-    trap manager::setup::signal::handler::INT INT
-    trap manager::setup::signal::handler::QUIT QUIT
-    trap manager::setup::signal::handler::TERM TERM
+    # 问题描述：
+    # 输入 root 密码时，按下 Ctrl+C 触发 INT 信号，但是程序并没有退出
+    # 原因：
+    # INT 的捕获函数没有 exit，捕获函数正常处理后只是返回了。所以程序没有退出
+    # 为什么程序运行其他过程中触发 INT 还是会退出？
+    # 是因为运行的子程序因为INT信号中断，导致子程序退出，代码很多地方检测子程序退出父程序也跟着退出，所以最后父程序也退出了。
+    # 而 read 命令不会触发子程序，所以不会退出
+
+    # https://unix.stackexchange.com/questions/512331/how-to-make-trap-know-if-the-exit-is-after-successful-program-finish-or-becaus
+    # INT QUIT TERM 等信号捕获时，$? 是0, 因为 $? 是上个命令的退出码，上个命令并没有执行错误
+    # 为什么不再捕获函数里执行 trap - INT; kill -INT $$
+    # 1. 捕获函数只处理业务逻辑，不处理信号特殊的用法
+    # 2. 放在一起也好维护，信号都这样处理，也不会漏处理
+    local status
+    trap 'status=$?; manager::setup::signal::handler::EXIT $status; exit $status' EXIT
+    trap 'manager::setup::signal::handler::INT; trap - INT; kill -INT $$' INT
+    trap 'manager::setup::signal::handler::QUIT; trap - QUIT; kill -QUIT $$' QUIT
+    trap 'manager::setup::signal::handler::TERM; trap - TERM; kill -TERM $$' TERM
 }
