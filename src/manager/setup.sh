@@ -177,6 +177,8 @@ function manager::setup::signal::handler::EXIT() {
 
     linfo "script exit, pid=$$, exit code=${code}"
 
+    manager::setup::_clear_child_process || return "$SHELL_FALSE"
+
     if string::is_not_empty "${ROOT_PASSWORD}"; then
         manager::setup::disable_no_password "${ROOT_PASSWORD}" || return "$SHELL_FALSE"
     fi
@@ -188,8 +190,6 @@ function manager::setup::signal::handler::EXIT() {
 function manager::setup::signal::handler::INT() {
     linfo "INT signal handler start"
 
-    manager::setup::_clear_child_process || return "$SHELL_FALSE"
-
     linfo "INT signal handler success"
 
     return "$SHELL_TRUE"
@@ -198,8 +198,6 @@ function manager::setup::signal::handler::INT() {
 function manager::setup::signal::handler::QUIT() {
     linfo "QUIT signal handler start"
 
-    manager::setup::_clear_child_process || return "$SHELL_FALSE"
-
     linfo "QUIT signal handler success"
 
     return "$SHELL_TRUE"
@@ -207,8 +205,6 @@ function manager::setup::signal::handler::QUIT() {
 
 function manager::setup::signal::handler::TERM() {
     linfo "TERM signal handler start"
-
-    manager::setup::_clear_child_process || return "$SHELL_FALSE"
 
     linfo "TERM signal handler success"
 
@@ -230,7 +226,7 @@ function manager::setup::signal::register() {
     # 1. 捕获函数只处理业务逻辑，不处理信号特殊的用法
     # 2. 放在一起也好维护，信号都这样处理，也不会漏处理
     local status
-    trap 'status=$?; manager::setup::signal::handler::EXIT $status; exit $status' EXIT
+    trap 'status=$?; trap - INT QUIT TERM; manager::setup::signal::handler::EXIT $status; exit $status' EXIT
     trap 'manager::setup::signal::handler::INT; trap - INT; kill -INT $$' INT
     trap 'manager::setup::signal::handler::QUIT; trap - QUIT; kill -QUIT $$' QUIT
     trap 'manager::setup::signal::handler::TERM; trap - TERM; kill -TERM $$' TERM
