@@ -507,7 +507,7 @@ SUBCOMMAND:
 * [ ] https://github.com/Slackadays/Clipboard[部署 Clipboard]，只能用于命令行？？还没想好怎么使用
 * [ ] 将项目的名称 `bsos` 从代码中剥离
 * [ ] 将 `wallust` 颜色主题应用到 `GTK` ，覆盖 `GTK` 默认的颜色主题里的部分颜色。
-* [ ] 检查输入的 `root` 密码是否正确
+* [*] 检查输入的 `root` 密码是否正确
 * [ ] `dev` 命令支持 `uninstall` 子命令
 
 ## 引用

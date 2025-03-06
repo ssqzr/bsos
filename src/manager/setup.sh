@@ -26,11 +26,19 @@ function manager::setup::input_root_password() {
     # 执行 su 需要输入密码
 
     local -n password_58016c37="$1"
+
     while true; do
         printf_blue "Please input your root password: "
+
         read -r -s -e password_58016c37
+
         if [ -z "$password_58016c37" ]; then
             lwarn --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "password is required to continue."
+            continue
+        fi
+
+        if ! printf "%s" "$password_58016c37" | su - root -c /bin/true; then
+            println_red "Invalid password, please try again."
             continue
         fi
         break
