@@ -10,7 +10,7 @@ function fish::fzf::setup
     else
         set dir "$HOME/.config"
     end
-    set -x FZF_DEFAULT_OPTS_FILE "$dir/fzf/fzfrc"
+    set -gx FZF_DEFAULT_OPTS_FILE "$dir/fzf/fzfrc"
     # Set up fzf key bindings and fuzzy completion
     fzf --fish | source
 end

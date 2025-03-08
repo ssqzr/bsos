@@ -11,7 +11,7 @@ function fish::starship::setup
         set dir "$HOME/.config"
     end
 
-    set -x STARSHIP_CONFIG "$dir/starship/starship.toml"
+    set -gx STARSHIP_CONFIG "$dir/starship/starship.toml"
     starship init fish | source
 end
 
