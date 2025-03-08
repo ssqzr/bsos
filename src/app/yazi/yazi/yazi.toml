@@ -13,15 +13,17 @@ vscode = [
 ]
 
 [open]
-rules = [
+prepend_rules = [
     { mime = "text/*", use = [
         "open",
         "edit",
         "vscode",
+        "reveal",
     ] },
     { mime = "inode/directory", use = [
         "open",
         "vscode",
+        "reveal",
     ] },
 ]
 
