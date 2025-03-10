@@ -261,6 +261,9 @@ function hyprland::trait::features() {
     # 截图
     apps+=("custom:satty")
 
+    # 输入法
+    apps+=("custom:fcitx5")
+
     array::print apps
     return "${SHELL_TRUE}"
 }
