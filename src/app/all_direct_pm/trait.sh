@@ -113,6 +113,7 @@ function all_direct_pm::trait::dependencies() {
     apps+=("flatpak:net.agalwood.Motrix")
     apps+=("pacman:fd")
     apps+=("pacman:bottom")
+    apps+=("pacman:nfs-utils")
     array::print apps
     return "${SHELL_TRUE}"
 }
