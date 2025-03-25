@@ -76,26 +76,33 @@ function git::trait::post_install() {
     if [ -z "${username}" ]; then
         lwarn "git username is empty, not auto set it"
     else
-        cmd::run_cmd_with_history -- git config --global user.name "${username}"
+        cmd::run_cmd_with_history -- git config --global user.name "${username}" || return "$SHELL_FALSE"
     fi
 
     if [ -z "${email}" ]; then
         lwarn "git email is empty, not auto set it"
     else
-        cmd::run_cmd_with_history -- git config --global user.email "${email}"
+        cmd::run_cmd_with_history -- git config --global user.email "${email}" || return "$SHELL_FALSE"
     fi
 
     if [ -z "${http_proxy}" ]; then
         lwarn "git http_proxy is empty, not auto set it"
     else
-        cmd::run_cmd_with_history -- git config --global http.proxy "${http_proxy}"
+        cmd::run_cmd_with_history -- git config --global http.proxy "${http_proxy}" || return "$SHELL_FALSE"
     fi
 
     if [ -z "${https_proxy}" ]; then
         lwarn "git https_proxy is empty, not auto set it"
     else
-        cmd::run_cmd_with_history -- git config --global https.proxy "${https_proxy}"
+        cmd::run_cmd_with_history -- git config --global https.proxy "${https_proxy}" || return "$SHELL_FALSE"
     fi
+
+    # 解决中文乱码问题
+    cmd::run_cmd_with_history -- git config --global core.quotepath false || return "$SHELL_FALSE"
+    # 修改默认的编辑器为 vim
+    cmd::run_cmd_with_history -- git config --global core.editor "vim" || return "$SHELL_FALSE"
+    # 修改 pull 的默认行为为 rebase
+    cmd::run_cmd_with_history -- git config --global pull.rebase true || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
