@@ -248,7 +248,7 @@ function hyprland::trait::features() {
     local apps=()
 
     # 状态栏
-    apps+=("custom:anyrun" "custom:ags")
+    apps+=("custom:anyrun")
 
     # hyprfocus 插件
     apps+=("custom:hyprfocus")
@@ -263,6 +263,8 @@ function hyprland::trait::features() {
 
     # 输入法
     apps+=("custom:fcitx5")
+
+    apps+=("custom:cavasik")
 
     array::print apps
     return "${SHELL_TRUE}"
