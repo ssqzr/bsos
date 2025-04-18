@@ -99,3 +99,24 @@ Window 5f053ae33290 -> _crx_nngceckbapebfimnlniiiahkandclblb:
 windowrulev2 = xxxx, class: ^chrome.*, initialTitle: ^(_crx_.*)$
 ----
 
+### 切换输入法，输入法状态提示没有出现在光标处
+
+升级 chrome 后出现了这个问题，在输入法切换时，输入法状态提示没有出现在光标处，而是出现在窗口左上角或者左侧边缘中间的位置。
+
+第一次输入出现候选词的位置也是如此，但是继续输入时，候选词会自动出现在光标处。
+
+相关问题记录：
+
+- https://issues.chromium.org/issues/362191728[Wayland text-input-v3: Input window shown at the top-left corner of window first time after input field is focused]
+- https://github.com/labwc/labwc/issues/2170[Input in chromuim by text-input-v3, the pop windows will blink one time. ]
+
+[source]
+----
+--wayland-text-input-v3=disable
+----
+
+设置启动项参数 `--wayland-text-input-v3=disable` 并没有生效。
+
+目前是在 `chrome://flags/#wayland-text-input-v3` 手动设置为 `Disabled`。
+
+[.red]#FIXME: 后续持续关注这个问题。#
