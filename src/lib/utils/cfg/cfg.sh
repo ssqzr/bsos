@@ -103,18 +103,19 @@ function cfg::utils::_write_ref() {
 function cfg::utils::_read_data() {
     local -n return_data_ref_556e8434="$1"
     shift
-    local data_556e8434="$1"
+    local -n data_556e8434="$1"
     shift
     local filepath_556e8434="$1"
     shift
 
-    if string::is_empty "$data_556e8434" && string::is_empty "$filepath_556e8434"; then
+    # 数据可能有但是是空字符串，所以判断原始变量是否初始化
+    if [ ! -v "${!data_556e8434}" ] && string::is_empty "$filepath_556e8434"; then
         lerror "param data_ref_name or filepath is required"
         return "${SHELL_FALSE}"
     fi
 
-    if string::is_empty "$data_556e8434"; then
-        fs::file::read "$filepath_556e8434" return_data_ref_556e8434 || return "${SHELL_FALSE}"
+    if [ ! -v "${!data_556e8434}" ]; then
+        fs::file::read "$filepath_556e8434" "${!return_data_ref_556e8434}" || return "${SHELL_FALSE}"
         return "${SHELL_TRUE}"
     fi
 
@@ -126,27 +127,63 @@ function cfg::utils::_read_data() {
 
 function cfg::utils::_write_data() {
     # 虽然定义的变量都不是引用 但是函数内部会使用引用，所以变量名不能重复
+    local is_sudo_96af4982="${SHELL_FALSE}"
+    local is_write_file="${SHELL_FALSE}"
+    local filepath_96af4982
+    local write_data_ref_name_96af4982
+    local data_96af4982
+    local param_96af4982
 
-    # result_data_ref_name_92ce72a8 可能为空，如果定义 local -n result_data_ref_92ce72a8 ，那么判断不出来为空的场景
-    local result_data_ref_name_92ce72a8="$1"
-    shift
-    local filepath_92ce72a8="$1"
-    shift
-    local new_data_92ce72a8="$1"
-    shift
+    for param_96af4982 in "$@"; do
+        case "$param_96af4982" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param_96af4982" is_sudo_96af4982 || return "$SHELL_FALSE"
+            ;;
+        --write-file=*)
+            parameter::parse_bool --default=y --option="$param_96af4982" is_write_file || return "$SHELL_FALSE"
+            ;;
+        --filepath=*)
+            parameter::parse_string --option="$param_96af4982" filepath_96af4982 || return "${SHELL_FALSE}"
+            ;;
+        --write-data-ref=*)
+            parameter::parse_string --option="$param_96af4982" write_data_ref_name_96af4982 || return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -v data_96af4982 ]; then
+                data_96af4982="$param_96af4982"
+                continue
+            fi
 
-    if string::is_not_empty "$result_data_ref_name_92ce72a8"; then
-        cfg::utils::_write_ref "$result_data_ref_name_92ce72a8" new_data_92ce72a8 || return "${SHELL_FALSE}"
+            lerror "invalid param: $param_96af4982"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    if [ ! -v data_96af4982 ]; then
+        lerror "param data is required"
+        return "${SHELL_FALSE}"
     fi
 
-    if string::is_not_empty "$filepath_92ce72a8"; then
-        fs::file::write --force "$filepath_92ce72a8" "${new_data_92ce72a8}" || return "${SHELL_FALSE}"
+    if [ "${is_write_file}" == "${SHELL_TRUE}" ] && string::is_empty "$filepath_96af4982"; then
+        lerror "param filepath is required when write file"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_not_empty "$write_data_ref_name_96af4982"; then
+        cfg::utils::_write_ref "$write_data_ref_name_96af4982" data_96af4982 || return "${SHELL_FALSE}"
+    fi
+
+    if [ "${is_write_file}" == "${SHELL_TRUE}" ]; then
+        fs::file::write --sudo="$(string::print_yes_no "$is_sudo_96af4982")" --force "$filepath_96af4982" "${data_96af4982}" || return "${SHELL_FALSE}"
     fi
 
     return "${SHELL_TRUE}"
 }
 
 function cfg::utils::_parse_common_parameter() {
+    local -n is_sudo_7cc07bcb="$1"
+    shift
     local -n type_7cc07bcb="$1"
     shift
     local -n path_7cc07bcb="$1"
@@ -165,14 +202,17 @@ function cfg::utils::_parse_common_parameter() {
 
     for param_7cc07bcb in "${remain_param_7cc07bcb[@]}"; do
         case "$param_7cc07bcb" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param_7cc07bcb" "${!is_sudo_7cc07bcb}" || return "$SHELL_FALSE"
+            ;;
         --type=*)
             parameter::parse_string --default="${__default_type_11590d6c}" --option="$param_7cc07bcb" "${!type_7cc07bcb}" || return "${SHELL_FALSE}"
             ;;
         --filepath=*)
-            parameter::parse_string --option="$param_7cc07bcb" filepath_7cc07bcb || return "${SHELL_FALSE}"
+            parameter::parse_string --option="$param_7cc07bcb" "${!filepath_7cc07bcb}" || return "${SHELL_FALSE}"
             ;;
         --data=*)
-            parameter::parse_string --option="$param_7cc07bcb" data_7cc07bcb || return "${SHELL_FALSE}"
+            parameter::parse_string --option="$param_7cc07bcb" "${!data_7cc07bcb}" || return "${SHELL_FALSE}"
             ;;
         -*)
             temp_params_7cc07bcb+=("$param_7cc07bcb")
@@ -188,11 +228,13 @@ function cfg::utils::_parse_common_parameter() {
         esac
     done
 
+    # 判断原始变量是否初始化
     if [ ! -v path_7cc07bcb ]; then
         lerror "param path is required"
         return "${SHELL_FALSE}"
     fi
 
+    # 判断原始变量是否初始化
     if [ ! -v data_7cc07bcb ] && [ ! -v filepath_7cc07bcb ]; then
         lerror "param data or filepath is required"
         return "${SHELL_FALSE}"
@@ -226,18 +268,20 @@ function cfg::utils::_parse_common_parameter() {
 # 获取 map 中指定 path 的值
 # 说明：
 # 可选参数：
-#   --type                  string              指定配置类型，默认为 json
-#   --filepath              string              指定配置文件路径
-#   --data                  string              指定原始配置数据
-#   --comment               string              指定注释的字符串
+#   --sudo                          string              指定是否使用 sudo
+#   --type                          string              指定配置类型，默认为 json
+#   --filepath                      string              指定配置文件路径
+#   --data                          string              指定原始配置数据
+#   --comment                       string              指定注释的字符串
 # 位置参数：
-#   path                    string              JSONPath
-#   value                   string引用           指定返回值的变量的引用
+#   path                            string              JSONPath
+#   value                           string引用           指定返回值的变量的引用
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::map::get() {
+    local is_sudo_9f1f6f02="${SHELL_FALSE}"
     local type_9f1f6f02
     local data_9f1f6f02
     local filepath_9f1f6f02
@@ -249,7 +293,7 @@ function cfg::map::get() {
     local extra_params_9f1f6f02=()
 
     remain_param_9f1f6f02=("$@")
-    cfg::utils::_parse_common_parameter type_9f1f6f02 path_9f1f6f02 data_9f1f6f02 filepath_9f1f6f02 remain_param_9f1f6f02 || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_9f1f6f02 type_9f1f6f02 path_9f1f6f02 data_9f1f6f02 filepath_9f1f6f02 remain_param_9f1f6f02 || return "${SHELL_FALSE}"
 
     for param_9f1f6f02 in "${remain_param_9f1f6f02[@]}"; do
         case "$param_9f1f6f02" in
@@ -277,7 +321,7 @@ function cfg::map::get() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_9f1f6f02 "$data_9f1f6f02" "$filepath_9f1f6f02" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_9f1f6f02 data_9f1f6f02 "$filepath_9f1f6f02" || return "${SHELL_FALSE}"
 
     value_9f1f6f02=$("cfg::trait::$type_9f1f6f02::map::get" "$path_9f1f6f02" "$data_9f1f6f02" "${extra_params_9f1f6f02[@]}") || return "${SHELL_FALSE}"
 
@@ -288,6 +332,7 @@ function cfg::map::get() {
 # 判断 map 中是否存在指定 path
 # 说明：
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -299,6 +344,7 @@ function cfg::map::get() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::map::is_exists() {
+    local is_sudo_0794c0f0="${SHELL_FALSE}"
     local type_0794c0f0
     local path_0794c0f0
     local data_0794c0f0
@@ -309,7 +355,7 @@ function cfg::map::is_exists() {
     local extra_params_0794c0f0=()
 
     remain_param_0794c0f0=("$@")
-    cfg::utils::_parse_common_parameter type_0794c0f0 path_0794c0f0 data_0794c0f0 filepath_0794c0f0 remain_param_0794c0f0 || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_0794c0f0 type_0794c0f0 path_0794c0f0 data_0794c0f0 filepath_0794c0f0 remain_param_0794c0f0 || return "${SHELL_FALSE}"
 
     for param_0794c0f0 in "${remain_param_0794c0f0[@]}"; do
         case "$param_0794c0f0" in
@@ -327,7 +373,7 @@ function cfg::map::is_exists() {
         esac
     done
 
-    cfg::utils::_read_data data_0794c0f0 "$data_0794c0f0" "$filepath_0794c0f0" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_0794c0f0 data_0794c0f0 "$filepath_0794c0f0" || return "${SHELL_FALSE}"
 
     "cfg::trait::$type_0794c0f0::map::is_exists" "$path_0794c0f0" "$data_0794c0f0" "${extra_params_0794c0f0[@]}" || return "${SHELL_FALSE}"
 
@@ -343,8 +389,10 @@ function cfg::map::is_not_exists() {
 # 说明：
 # 1. 如果 map 中不存在指定 path，会创建相应的 path
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
+#   --write-file                    bool                是否将修改后的配置数据写入文件，默认为 false
 #   --data                          string              指定配置数据
 #   --result-data-ref               string 引用          保存修改后的配置数据的变量的引用
 #   --result-value-ref              string 引用          保存旧的值的变量的引用
@@ -357,9 +405,11 @@ function cfg::map::is_not_exists() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::map::update() {
+    local is_sudo_57a86f5d="${SHELL_FALSE}"
     local type_57a86f5d
     local data_57a86f5d
     local filepath_57a86f5d
+    local is_write_file_57a86f5d="${SHELL_FALSE}"
     local result_data_ref_name_57a86f5d
     local result_ref_name_57a86f5d
     local path_57a86f5d
@@ -376,10 +426,13 @@ function cfg::map::update() {
     local extra_params_57a86f5d=()
 
     remain_param_57a86f5d=("$@")
-    cfg::utils::_parse_common_parameter type_57a86f5d path_57a86f5d data_57a86f5d filepath_57a86f5d remain_param_57a86f5d || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_57a86f5d type_57a86f5d path_57a86f5d data_57a86f5d filepath_57a86f5d remain_param_57a86f5d || return "${SHELL_FALSE}"
 
     for param_57a86f5d in "${remain_param_57a86f5d[@]}"; do
         case "$param_57a86f5d" in
+        --write-file | --write-file=*)
+            parameter::parse_bool --default=y --option="$param_57a86f5d" is_write_file_57a86f5d || return "$SHELL_FALSE"
+            ;;
         --comment=*)
             extra_params_57a86f5d+=("$param_57a86f5d")
             ;;
@@ -411,7 +464,7 @@ function cfg::map::update() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_57a86f5d "$data_57a86f5d" "$filepath_57a86f5d" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_57a86f5d data_57a86f5d "$filepath_57a86f5d" || return "${SHELL_FALSE}"
 
     "cfg::trait::$type_57a86f5d::map::update" --old-value-ref=result_shadow_57a86f5d result_data_shadow_57a86f5d "${path_57a86f5d}" "${value_57a86f5d}" "${data_57a86f5d}" "${extra_params_57a86f5d[@]}" || return "${SHELL_FALSE}"
 
@@ -419,7 +472,7 @@ function cfg::map::update() {
         cfg::utils::_write_ref result_ref_57a86f5d result_shadow_57a86f5d || return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_write_data "$result_data_ref_name_57a86f5d" "$filepath_57a86f5d" "$result_data_shadow_57a86f5d" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_57a86f5d")" --write-file="$(string::print_yes_no "$is_write_file_57a86f5d")" --write-data-ref="$result_data_ref_name_57a86f5d" --filepath="$filepath_57a86f5d" "$result_data_shadow_57a86f5d" || return "${SHELL_FALSE}"
 
     linfo "map update path success. path=${path_57a86f5d}, value=${value_57a86f5d}, old_value=${old_value_57a86f5d}"
     return "${SHELL_TRUE}"
@@ -429,6 +482,7 @@ function cfg::map::update() {
 # 说明：
 #   1. path 不存在时，返回失败
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -442,6 +496,7 @@ function cfg::map::update() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::map::pop() {
+    local is_sudo_0985aadb="${SHELL_FALSE}"
     local type_0985aadb
     local filepath_0985aadb
     local data_0985aadb
@@ -458,7 +513,7 @@ function cfg::map::pop() {
     local extra_params_0985aadb=()
 
     remain_param_0985aadb=("$@")
-    cfg::utils::_parse_common_parameter type_0985aadb path_0985aadb data_0985aadb filepath_0985aadb remain_param_0985aadb || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_0985aadb type_0985aadb path_0985aadb data_0985aadb filepath_0985aadb remain_param_0985aadb || return "${SHELL_FALSE}"
 
     for param_0985aadb in "${remain_param_0985aadb[@]}"; do
         case "$param_0985aadb" in
@@ -483,7 +538,7 @@ function cfg::map::pop() {
         esac
     done
 
-    cfg::utils::_read_data data_0985aadb "$data_0985aadb" "$filepath_0985aadb" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_0985aadb data_0985aadb "$filepath_0985aadb" || return "${SHELL_FALSE}"
 
     "cfg::trait::$type_0985aadb::map::pop" --old-value-ref=result_shadow_0985aadb result_data_shadow_0985aadb "${path_0985aadb}" "${data_0985aadb}" "${extra_params_0985aadb[@]}" || return "${SHELL_FALSE}"
 
@@ -491,7 +546,7 @@ function cfg::map::pop() {
         cfg::utils::_write_ref result_ref_0985aadb result_shadow_0985aadb || return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_write_data "$result_data_ref_name_0985aadb" "$filepath_0985aadb" "$result_data_shadow_0985aadb" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_0985aadb")" --write-data-ref="$result_data_ref_name_0985aadb" --filepath="$filepath_0985aadb" "$result_data_shadow_0985aadb" || return "${SHELL_FALSE}"
 
     linfo "map pop path success. path=${path_0985aadb}, value=${result_shadow_0985aadb}"
     return "${SHELL_TRUE}"
@@ -501,6 +556,7 @@ function cfg::map::pop() {
 # 说明：
 #   1. path 不存在时，返回成功
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -514,6 +570,7 @@ function cfg::map::pop() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::map::delete() {
+    local is_sudo_192676fa="${SHELL_FALSE}"
     local type_192676fa
     local filepath_192676fa
     local result_data_ref_name_192676fa
@@ -531,7 +588,7 @@ function cfg::map::delete() {
     local extra_params_192676fa=()
 
     remain_param_192676fa=("$@")
-    cfg::utils::_parse_common_parameter type_192676fa path_192676fa data_192676fa filepath_192676fa remain_param_192676fa || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_192676fa type_192676fa path_192676fa data_192676fa filepath_192676fa remain_param_192676fa || return "${SHELL_FALSE}"
 
     for param_192676fa in "${remain_param_192676fa[@]}"; do
         case "$param_192676fa" in
@@ -557,7 +614,7 @@ function cfg::map::delete() {
         esac
     done
 
-    cfg::utils::_read_data data_192676fa "$data_192676fa" "$filepath_192676fa" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_192676fa data_192676fa "$filepath_192676fa" || return "${SHELL_FALSE}"
 
     if ! "cfg::trait::$type_192676fa::map::is_exists" "${path_192676fa}" "${data_192676fa}" "${extra_params_192676fa[@]}"; then
         linfo "delete path success, path=(${path_192676fa}) not exists, ignore delete"
@@ -573,7 +630,7 @@ function cfg::map::delete() {
         cfg::utils::_write_ref result_ref_192676fa result_shadow_192676fa || return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_write_data result_data_ref_192676fa "$filepath_192676fa" "$result_data_shadow_192676fa" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_192676fa")" --write-data-ref="$result_data_ref_name_192676fa" --filepath="$filepath_192676fa" "$result_data_shadow_192676fa" || return "${SHELL_FALSE}"
 
     linfo "map delete path success. path=${path_192676fa}, value=${result_shadow_192676fa}"
     return "${SHELL_TRUE}"
@@ -585,6 +642,7 @@ function cfg::map::delete() {
 # 说明：
 #   1. 当 path 不存在时，返回空数组
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -598,6 +656,7 @@ function cfg::map::delete() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::all() {
+    local is_sudo_21234601="${SHELL_FALSE}"
     local type_21234601
     local data_21234601
     local filepath_21234601
@@ -610,7 +669,7 @@ function cfg::array::all() {
     local param_21234601
 
     remain_param_21234601=("$@")
-    cfg::utils::_parse_common_parameter type_21234601 path_21234601 data_21234601 filepath_21234601 remain_param_21234601 || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_21234601 type_21234601 path_21234601 data_21234601 filepath_21234601 remain_param_21234601 || return "${SHELL_FALSE}"
 
     for param_21234601 in "${remain_param_21234601[@]}"; do
         case "$param_21234601" in
@@ -641,7 +700,7 @@ function cfg::array::all() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_21234601 "$data_21234601" "$filepath_21234601" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_21234601 data_21234601 "$filepath_21234601" || return "${SHELL_FALSE}"
 
     "cfg::trait::${type_21234601}::array::all" "${!all_21234601}" "${path_21234601}" "${data_21234601}" "${extra_params_21234601[@]}" || return "${SHELL_FALSE}"
 
@@ -653,6 +712,7 @@ function cfg::array::all() {
 # 说明：
 #   1. 当 path 不存在时，认为数组为空数组，输出长度为 0
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -666,6 +726,7 @@ function cfg::array::all() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::length() {
+    local is_sudo_1a406daa="${SHELL_FALSE}"
     local type_1a406daa
     local data_1a406daa
     local filepath_1a406daa
@@ -681,7 +742,7 @@ function cfg::array::length() {
     local param_1a406daa
 
     remain_param_1a406daa=("$@")
-    cfg::utils::_parse_common_parameter type_1a406daa path_1a406daa data_1a406daa filepath_1a406daa remain_param_1a406daa || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_1a406daa type_1a406daa path_1a406daa data_1a406daa filepath_1a406daa remain_param_1a406daa || return "${SHELL_FALSE}"
 
     for param_1a406daa in "${remain_param_1a406daa[@]}"; do
         case "$param_1a406daa" in
@@ -725,6 +786,7 @@ function cfg::array::length() {
 #   2. 当 index 为正数且超过数组长度时，返回失败
 #   3. 当 index 为负数时，可以从数组尾部开始计算，比如 -1 表示最后一个元素。负数会循环，所以不会超过数组范围
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -739,6 +801,7 @@ function cfg::array::length() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::get() {
+    local is_sudo_62d33794="${SHELL_FALSE}"
     local type_62d33794
     local filepath_62d33794
     local data_62d33794
@@ -756,7 +819,7 @@ function cfg::array::get() {
     local extra_params_62d33794=()
 
     remain_param_62d33794=("$@")
-    cfg::utils::_parse_common_parameter type_62d33794 path_62d33794 data_62d33794 filepath_62d33794 remain_param_62d33794 || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_62d33794 type_62d33794 path_62d33794 data_62d33794 filepath_62d33794 remain_param_62d33794 || return "${SHELL_FALSE}"
 
     for param_62d33794 in "${remain_param_62d33794[@]}"; do
         case "$param_62d33794" in
@@ -807,7 +870,7 @@ function cfg::array::get() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_62d33794 "$data_62d33794" "$filepath_62d33794" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_62d33794 data_62d33794 "$filepath_62d33794" || return "${SHELL_FALSE}"
 
     "cfg::trait::${type_62d33794}::array::all" items_62d33794 "${path_62d33794}" "${data_62d33794}" "${extra_params_62d33794[@]}" || return "${SHELL_FALSE}"
 
@@ -827,21 +890,23 @@ function cfg::array::get() {
 # 说明：
 #   1. 当 path 不存在时，会创建新的数组
 # 可选参数：
-#   --type                      string              指定配置类型，默认为 json
-#   --filepath                  string              指定配置文件路径
-#   --data                      string              指定配置数据
-#   --result-data-ref           string 引用         保存修改后的配置数据的变量的引用
-#   --result-value-ref          string 引用         保存旧的值
-#   --separator                 string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','
-#   --comment                   string              指定注释的字符串
+#   --sudo                          string              指定是否使用 sudo
+#   --type                          string              指定配置类型，默认为 json
+#   --filepath                      string              指定配置文件路径
+#   --data                          string              指定配置数据
+#   --result-data-ref               string 引用         保存修改后的配置数据的变量的引用
+#   --result-value-ref              string 引用         保存旧的值
+#   --separator                     string              用于某些配置格式将字符串解析数组时的分隔符，默认为 ','
+#   --comment                       string              指定注释的字符串
 # 位置参数：
-#   path                        string              JSONPath
-#   new                         数组引用             新的数组的引用
+#   path                            string              JSONPath
+#   new                             数组引用             新的数组的引用
 # 标准输出： 无
 # 返回值：
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::update_all() {
+    local is_sudo_321b1217="${SHELL_FALSE}"
     local type_321b1217
     local data_321b1217
     local filepath_321b1217
@@ -861,7 +926,7 @@ function cfg::array::update_all() {
     local extra_params_321b1217=()
 
     remain_param_321b1217=("$@")
-    cfg::utils::_parse_common_parameter type_321b1217 path_321b1217 data_321b1217 filepath_321b1217 remain_param_321b1217 "$@" || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_321b1217 type_321b1217 path_321b1217 data_321b1217 filepath_321b1217 remain_param_321b1217 "$@" || return "${SHELL_FALSE}"
 
     for param_321b1217 in "${remain_param_321b1217[@]}"; do
         case "$param_321b1217" in
@@ -898,11 +963,11 @@ function cfg::array::update_all() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_321b1217 "$data_321b1217" "$filepath_321b1217" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_321b1217 data_321b1217 "$filepath_321b1217" || return "${SHELL_FALSE}"
 
     "cfg::trait::${type_321b1217}::array::update_all" --old-value-ref=result_shadow_321b1217 result_data_shadow_321b1217 "${path_321b1217}" "${!new_321b1217}" "${data_321b1217}" "${extra_params_321b1217[@]}" || return "${SHELL_FALSE}"
 
-    cfg::utils::_write_data "$result_data_ref_name_321b1217" "$filepath_321b1217" "$result_data_shadow_321b1217" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_321b1217")" --write-data-ref="$result_data_ref_name_321b1217" --filepath="$filepath_321b1217" "$result_data_shadow_321b1217" || return "${SHELL_FALSE}"
 
     if string::is_not_empty "$result_ref_name_321b1217" && [ -v result_shadow_321b1217 ]; then
         cfg::utils::_write_ref "$result_ref_name_321b1217" result_shadow_321b1217 || return "${SHELL_FALSE}"
@@ -915,6 +980,7 @@ function cfg::array::update_all() {
 # 说明：
 #   1. 当 path 不存在时，数组不存在，删除失败
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -930,6 +996,7 @@ function cfg::array::update_all() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::remove_at() {
+    local is_sudo_9f528442="${SHELL_FALSE}"
     local type_9f528442
     local data_9f528442
     local filepath_9f528442
@@ -949,7 +1016,7 @@ function cfg::array::remove_at() {
     local extra_params_9f528442=()
 
     remain_param_9f528442=("$@")
-    cfg::utils::_parse_common_parameter type_9f528442 path_9f528442 data_9f528442 filepath_9f528442 remain_param_9f528442 || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_9f528442 type_9f528442 path_9f528442 data_9f528442 filepath_9f528442 remain_param_9f528442 || return "${SHELL_FALSE}"
 
     for param_9f528442 in "${remain_param_9f528442[@]}"; do
         case "$param_9f528442" in
@@ -995,7 +1062,7 @@ function cfg::array::remove_at() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_9f528442 "$data_9f528442" "$filepath_9f528442" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_9f528442 data_9f528442 "$filepath_9f528442" || return "${SHELL_FALSE}"
 
     "cfg::trait::${type_9f528442}::array::all" items_9f528442 "${path_9f528442}" "${data_9f528442}" "${extra_params_9f528442[@]}" || return "${SHELL_FALSE}"
 
@@ -1013,7 +1080,7 @@ function cfg::array::remove_at() {
 
     "cfg::trait::${type_9f528442}::array::update_all" result_data_shadow_9f528442 "${path_9f528442}" items_9f528442 "${data_9f528442}" "${extra_params_9f528442[@]}" || return "${SHELL_FALSE}"
 
-    cfg::utils::_write_data "${result_data_ref_name_9f528442}" "${filepath_9f528442}" "${result_data_shadow_9f528442}" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_9f528442")" --write-data-ref="$result_data_ref_name_9f528442" --filepath="$filepath_9f528442" "$result_data_shadow_9f528442" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -1023,6 +1090,7 @@ function cfg::array::remove_at() {
 #   1. 当 path 不存在时，数组不存在，删除成功
 #   2. 数组中没有相等的元素时，删除成功
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -1037,6 +1105,7 @@ function cfg::array::remove_at() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::remove() {
+    local is_sudo_3441cf8e="${SHELL_FALSE}"
     local type_3441cf8e
     local filepath_3441cf8e
     local data_3441cf8e
@@ -1056,7 +1125,7 @@ function cfg::array::remove() {
     local extra_params_3441cf8e=()
 
     remain_param_3441cf8e=("$@")
-    cfg::utils::_parse_common_parameter type_3441cf8e path_3441cf8e data_3441cf8e filepath_3441cf8e remain_param_3441cf8e || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_3441cf8e type_3441cf8e path_3441cf8e data_3441cf8e filepath_3441cf8e remain_param_3441cf8e || return "${SHELL_FALSE}"
 
     for param_3441cf8e in "${remain_param_3441cf8e[@]}"; do
         case "$param_3441cf8e" in
@@ -1091,7 +1160,7 @@ function cfg::array::remove() {
         return "${SHELL_FALSE}"
     fi
 
-    cfg::utils::_read_data data_3441cf8e "$data_3441cf8e" "$filepath_3441cf8e" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_3441cf8e data_3441cf8e "$filepath_3441cf8e" || return "${SHELL_FALSE}"
 
     if [ -R result_data_ref_3441cf8e ]; then
         # 先赋值原始的数据，保证有一些不需要修改的场景直接返回正确时，也需要返回配置数据
@@ -1114,7 +1183,7 @@ function cfg::array::remove() {
 
     "cfg::trait::${type_3441cf8e}::array::update_all" result_data_shadow_3441cf8e "${path_3441cf8e}" items_3441cf8e "${data_3441cf8e}" "--comment=${comment_3441cf8e}" "${extra_params_3441cf8e[@]}" || return "${SHELL_FALSE}"
 
-    cfg::utils::_write_data result_data_ref_3441cf8e "${filepath_3441cf8e}" "${result_data_shadow_3441cf8e}" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_3441cf8e")" --write-data-ref="$result_data_ref_name_3441cf8e" --filepath="$filepath_3441cf8e" "$result_data_shadow_3441cf8e" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -1123,6 +1192,7 @@ function cfg::array::remove() {
 # 说明：
 #   1. 当 path 不存在时，数组不存在，删除成功
 # 可选参数：
+#   --sudo                          string              指定是否使用 sudo
 #   --type                          string              指定配置类型，默认为 json
 #   --filepath                      string              指定配置文件路径
 #   --data                          string              指定配置数据
@@ -1137,6 +1207,7 @@ function cfg::array::remove() {
 #   ${SHELL_TRUE} 成功
 #   ${SHELL_FALSE} 失败
 function cfg::array::clear() {
+    local is_sudo_0c36228e="${SHELL_FALSE}"
     local type_0c36228e
     local data_0c36228e
     local filepath_0c36228e
@@ -1156,7 +1227,7 @@ function cfg::array::clear() {
     local param_0c36228e
 
     remain_param_0c36228e=("$@")
-    cfg::utils::_parse_common_parameter type_0c36228e path_0c36228e data_0c36228e filepath_0c36228e remain_param_0c36228e || return "${SHELL_FALSE}"
+    cfg::utils::_parse_common_parameter is_sudo_0c36228e type_0c36228e path_0c36228e data_0c36228e filepath_0c36228e remain_param_0c36228e || return "${SHELL_FALSE}"
 
     for param_0c36228e in "${remain_param_0c36228e[@]}"; do
         case "$param_0c36228e" in
@@ -1184,7 +1255,7 @@ function cfg::array::clear() {
         esac
     done
 
-    cfg::utils::_read_data data_0c36228e "$data_0c36228e" "$filepath_0c36228e" || return "${SHELL_FALSE}"
+    cfg::utils::_read_data data_0c36228e data_0c36228e "$filepath_0c36228e" || return "${SHELL_FALSE}"
 
     if ! "cfg::trait::$type_0c36228e::map::is_exists" "${path_0c36228e}" "${data_0c36228e}" "--comment=${comment_0c36228e}"; then
         linfo "path in data not exists, path=${path_0c36228e}"
@@ -1203,7 +1274,7 @@ function cfg::array::clear() {
 
     "cfg::trait::${type_0c36228e}::map::pop" --old-value-ref=result_shadow_0c36228e result_data_shadow_0c36228e "${path_0c36228e}" "${data_0c36228e}" "--comment=${comment_0c36228e}" || return "${SHELL_FALSE}"
 
-    cfg::utils::_write_data result_data_ref_0c36228e "${filepath_0c36228e}" "${result_data_shadow_0c36228e}" || return "${SHELL_FALSE}"
+    cfg::utils::_write_data --sudo="$(string::print_yes_no "$is_sudo_0c36228e")" --write-data-ref="$result_data_ref_name_0c36228e" --filepath="$filepath_0c36228e" "$result_data_shadow_0c36228e" || return "${SHELL_FALSE}"
 
     if string::is_not_empty "${result_ref_name_0c36228e}"; then
         string::split_with items_0c36228e "${result_shadow_0c36228e}" "${separator_0c36228e}" || return "${SHELL_FALSE}"

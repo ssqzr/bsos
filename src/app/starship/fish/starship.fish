@@ -11,9 +11,12 @@ function fish::starship::setup
         set dir "$HOME/.config"
     end
 
-    set -gx STARSHIP_CONFIG "$dir/starship/starship.toml"
-    starship init fish | source
-end
+    if status is-interactive
+        # Commands to run in interactive sessions can go here
+        set -gx STARSHIP_CONFIG "$dir/starship/starship.toml"
+        starship init fish | source
+    end
 
+end
 
 fish::starship::setup
