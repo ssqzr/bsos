@@ -99,6 +99,17 @@ function hyprpaper::wallpaper::bing_wallpaper_download() {
     return "$SHELL_TRUE"
 }
 
+# 一直调用 bing_wallpaper_download 直到下载成功
+function hyprpaper::wallpaper::bing_wallpaper_download_wrapper() {
+    while true; do
+        if hyprpaper::wallpaper::bing_wallpaper_download "$@"; then
+            return "$SHELL_TRUE"
+        fi
+        lerror "call bing_wallpaper_download failed, sleep 1s..."
+        sleep 1
+    done
+}
+
 function hyprpaper::wallpaper::clean_old_file() {
     local wallpaper_dir
     local today
@@ -219,7 +230,7 @@ function hyprpaper::wallpaper::main() {
         if fs::path::is_exists "${filepath}"; then
             linfo "wallpaper $filepath exist, skip download"
         else
-            hyprpaper::wallpaper::bing_wallpaper_download "${index}" "${filepath}" || return "$SHELL_FALSE"
+            hyprpaper::wallpaper::bing_wallpaper_download_wrapper "${index}" "${filepath}" || return "$SHELL_FALSE"
         fi
         cmd::run_cmd_with_history -- hyprctl -q hyprpaper preload "${filepath}"
         cmd::run_cmd_with_history -- hyprctl -q hyprpaper wallpaper "${name},contain:${filepath}"
