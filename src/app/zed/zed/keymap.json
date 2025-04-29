@@ -1,0 +1,79 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+    {
+        "context": "Workspace",
+        "bindings": {
+            // "shift shift": "file_finder::Toggle"
+        }
+    },
+    {
+        "context": "Editor",
+        "bindings": {
+            // "j k": ["workspace::SendKeystrokes", "escape"]
+            "alt-i": "editor::MoveUp",
+            "alt-k": "editor::MoveDown",
+            "alt-j": "editor::MoveLeft",
+            "alt-l": "editor::MoveRight",
+            "alt-h": "editor::MoveToPreviousWordStart",
+            "alt-;": "editor::MoveToNextWordEnd",
+            "alt-g": "editor::MoveToBeginningOfLine",
+            "alt-'": "editor::MoveToEndOfLine"
+        }
+    },
+    {
+        "context": "Picker || menu",
+        "bindings": {
+            "alt-i": "menu::SelectPrevious",
+            "alt-k": "menu::SelectNext"
+        }
+    },
+    // {
+    //     "context": "Editor && (showing_code_actions || showing_completions)",
+    //     "bindings": {
+    //         "alt-i": "menu::SelectPrevious",
+    //         "alt-k": "menu::SelectNext"
+    //     }
+    // }
+    {
+        "context": "Terminal",
+        "bindings": {
+            "alt-i": [
+                "terminal::SendKeystroke",
+                "alt-i"
+            ],
+            "alt-k": [
+                "terminal::SendKeystroke",
+                "alt-k"
+            ],
+            "alt-j": [
+                "terminal::SendKeystroke",
+                "alt-j"
+            ],
+            "alt-l": [
+                "terminal::SendKeystroke",
+                "alt-l"
+            ],
+            "alt-h": [
+                "terminal::SendKeystroke",
+                "alt-h"
+            ],
+            "alt-;": [
+                "terminal::SendKeystroke",
+                "alt-;"
+            ]
+        }
+    },
+    {
+        "context": "Editor && mode == full",
+        "bindings": {
+            "ctrl-enter": "editor::NewlineBelow",
+            "ctrl-shift-enter": "editor::NewlineAbove"
+        }
+    }
+]

@@ -1,0 +1,109 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+    "icon_theme": "Catppuccin Latte",
+    "ssh_connections": [
+    {
+      "host": "192.168.2.83",
+      "username": "ubuntu",
+      "projects": [
+        {
+          "paths": [
+            "~/frappe/frappe_bench/apps/erpnext"
+          ]
+        }
+      ]
+    }
+  ],
+    "ui_font_size": 16,
+    "buffer_font_size": 16,
+    "buffer_font_family": "Hack Nerd Font",
+    "buffer_font_fallbacks": [
+        "FiraMono Nerd Font",
+        "JetBrainsMono Nerd Font",
+        "Source Code Pro",
+        "Noto Sans CJK SC"
+    ],
+    "ui_font_family": "Hack Nerd Font",
+    "ui_font_fallbacks": [
+        "FiraMono Nerd Font",
+        "JetBrainsMono Nerd Font",
+        "Source Code Pro",
+        "Noto Sans CJK SC",
+        "DroidSansM Nerd Font Mono"
+    ],
+    "theme": {
+        "mode": "system",
+        "light": "One Dark",
+        "dark": "One Dark"
+    },
+    "tabs": {
+        "close_position": "right",
+        "file_icons": true,
+        "git_status": true,
+        "activate_on_close": "history",
+        "show_close_button": "hover",
+        "show_diagnostics": "all"
+    },
+    "tab_size": 4,
+    "preferred_line_length": 80,
+    "soft_wrap": "none",
+    "format_on_save": "on",
+    "always_treat_brackets_as_autoclosed": true,
+    "show_whitespaces": "boundary",
+    "terminal": {
+        "blinking": "terminal_controlled",
+        "copy_on_select": true,
+        "env": {},
+        "font_size": 12,
+        "line_height": "comfortable",
+        "option_as_meta": false,
+        "button": true,
+        "shell": "system",
+        "toolbar": {
+            "breadcrumbs": true
+        },
+        "working_directory": "current_project_directory",
+        "scrollbar": {
+            "show": null
+        }
+    },
+    "diagnostics": {
+        "inline": {
+            "enabled": true
+        }
+    },
+    "languages": {
+        "Python": {
+            "language_servers": ["pyright", "ruff"]
+            // Or, if there are other language servers you want to use with Python
+            // "language_servers": ["pyright", "ruff"]
+        }
+    },
+    "lsp": {
+        "pylsp": {
+            "plugins": {
+                "autopep8": {
+                    "enabled": true
+                },
+                "flake8": {
+                    "enabled": true
+                }
+            }
+        },
+        "ruff": {
+            "initialization_options": {
+                "settings": {
+                    // Ruff server settings goes here
+                    "lineLength": 80
+                }
+            }
+        }
+    }
+}
