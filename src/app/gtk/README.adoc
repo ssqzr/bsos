@@ -41,6 +41,10 @@ gtk-cursor-theme-name=Bibata-Modern-Amber
 gtk-cursor-theme-name=Bibata-Modern-Amber
 ----
 
+最近在 `hyprland` 发现这个配置： https://wiki.hypr.land/Configuring/Variables/#cursor[sync_gsettings_theme]。
+
+应该可以解决这个问题。
+
 ## 输入法
 
 对于 GTK 应用程序，如果运行在 X11 或者 Xwayland 下，需要指定其输入法。
