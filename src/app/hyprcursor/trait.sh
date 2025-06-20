@@ -48,6 +48,8 @@ function hyprcursor::trait::do_install() {
 # 安装的后置操作，比如写配置文件
 function hyprcursor::trait::post_install() {
     hyprland::config::add "350" "${SCRIPT_DIR_f5e86b89}/hyprland/hyprcursor.conf" || return "${SHELL_FALSE}"
+
+    fs::directory::copy --force "${SCRIPT_DIR_f5e86b89}/hyprcursor" "${XDG_CONFIG_HOME}/hyprcursor" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -66,6 +68,8 @@ function hyprcursor::trait::do_uninstall() {
 # 卸载的后置操作，比如删除临时文件
 function hyprcursor::trait::post_uninstall() {
     hyprland::config::remove "350" "hyprcursor.conf" || return "${SHELL_FALSE}"
+
+    fs::directory::safe_delete "${XDG_CONFIG_HOME}/hyprcursor" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 

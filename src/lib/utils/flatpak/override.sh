@@ -775,7 +775,7 @@ function flatpak::override::environment::allow() {
 
     ldebug "param scope=$scope, app=$app, name=$name, value=$value"
 
-    flatpak::override::permission::set --scope="$scope" --app="$app" --policy=allow "env" "$name=$value" || return "$SHELL_FALSE"
+    flatpak::override::permission::set --scope="$scope" --app="$app" --policy=allow "env" "$name='$value'" || return "$SHELL_FALSE"
 
     return "$SHELL_TRUE"
 }

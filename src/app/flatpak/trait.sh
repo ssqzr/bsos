@@ -46,8 +46,6 @@ function flatpak::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function flatpak::trait::post_install() {
-    flatpak::override::environment::allow --scope=user "XCURSOR_THEME" "Bibata-Modern-Amber" || return "${SHELL_FALSE}"
-    flatpak::override::environment::allow --scope=user "XCURSOR_SIZE" "24" || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
@@ -64,9 +62,6 @@ function flatpak::trait::do_uninstall() {
 
 # 卸载的后置操作，比如删除临时文件
 function flatpak::trait::post_uninstall() {
-    flatpak::override::environment::allow_unset --scope=user XCURSOR_THEME || return "${SHELL_FALSE}"
-    flatpak::override::environment::allow_unset --scope=user XCURSOR_SIZE || return "${SHELL_FALSE}"
-
     return "${SHELL_TRUE}"
 }
 
