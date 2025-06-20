@@ -1,0 +1,6 @@
+# fifc 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://github.com/gazorby/fifc[官方文档]
+
