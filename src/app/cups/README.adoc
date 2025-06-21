@@ -1,0 +1,11 @@
+# cups 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.archlinuxcn.org/zh-hk/CUPS[官方文档]
+
+
+## 参考
+
+https://openprinting.github.io/downloads/[OpenPrinting的Filter、PPD的下载地址]
+
