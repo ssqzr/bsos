@@ -42,7 +42,7 @@ function manager::app::is_custom() {
     manager::app::is_package_name_valid "$pm_app" || return "$SHELL_FALSE"
 
     local package_manager
-    package_manager=$(manager::app::parse_package_manager "$pm_app")
+    package_manager=$(manager::app::parse_package_manager "$pm_app") || return "$SHELL_FALSE"
     if [ "$package_manager" == "custom" ]; then
         return "$SHELL_TRUE"
     fi
@@ -63,7 +63,7 @@ function manager::app::app_directory() {
     fi
 
     local app_name
-    app_name=$(manager::app::parse_app_name "$pm_app")
+    app_name=$(manager::app::parse_app_name "$pm_app") || return "$SHELL_FALSE"
     echo "${SRC_ROOT_DIR}/app/${app_name}"
 }
 
@@ -82,7 +82,7 @@ function manager::app::run_custom_manager() {
     fi
 
     local app_name
-    app_name=$(manager::app::parse_app_name "$pm_app")
+    app_name=$(manager::app::parse_app_name "$pm_app") || return "$SHELL_FALSE"
 
     if manager::app::is_not_custom "$pm_app"; then
         lerror "app(${pm_app}) is not custom, sub_command=${sub_command}"
@@ -211,8 +211,8 @@ function manager::app::do_command_use_pm() {
         return "$SHELL_TRUE"
     fi
 
-    package_manager_a55aa4b0=$(manager::app::parse_package_manager "$pm_app_a55aa4b0")
-    package_a55aa4b0=$(manager::app::parse_app_name "$pm_app_a55aa4b0")
+    package_manager_a55aa4b0=$(manager::app::parse_package_manager "$pm_app_a55aa4b0") || return "$SHELL_FALSE"
+    package_a55aa4b0=$(manager::app::parse_app_name "$pm_app_a55aa4b0") || return "$SHELL_FALSE"
 
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_a55aa4b0}${pm_app_a55aa4b0}: use ${package_manager_a55aa4b0} do command(${command_a55aa4b0})"
 
@@ -339,6 +339,8 @@ function manager::app::do_command() {
     fi
 
     linfo --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_0c1cd5f7}${pm_app_0c1cd5f7}: start do command(${command_0c1cd5f7})..."
+
+    manager::app::is_package_name_valid "$pm_app_0c1cd5f7" || return "$SHELL_FALSE"
 
     if array::is_contain "${!apps_0c1cd5f7}" "${pm_app_0c1cd5f7}"; then
         lsuccess --handler="+${LOG_HANDLER_STREAM}" --stream-handler-formatter="${LOG_HANDLER_STREAM_FORMATTER}" "${level_indent_0c1cd5f7}${pm_app_0c1cd5f7}: has been done command(${command_0c1cd5f7}). not do again."
