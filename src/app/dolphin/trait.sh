@@ -46,6 +46,7 @@ function dolphin::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function dolphin::trait::post_install() {
+    cmd::run_cmd_with_history -- xdg-mime default org.kde.dolphin.desktop inode/directory || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
 
