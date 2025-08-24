@@ -49,3 +49,5 @@ source "${SCRIPT_DIR_cd871afe}/math/math.sh"
 source "${SCRIPT_DIR_cd871afe}/swap.sh"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR_cd871afe}/lock.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR_cd871afe}/mkinitcpio.sh"

@@ -1,0 +1,6 @@
+# nvidia 安装说明文档
+include::../../../doc/base.adoc[]
+
+
+https://wiki.hypr.land/Nvidia/[官方文档]
+
