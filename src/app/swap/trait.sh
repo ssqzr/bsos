@@ -19,7 +19,9 @@ function swap::trait::memory::size_byte() {
 }
 
 function swap::trait::swap::filepath() {
-    echo "/swapfile"
+    local filepath
+    filepath=$(config::app::map::get "$PM_APP_NAME" "swap_filepath") || return "${SHELL_FALSE}"
+    echo "${filepath}"
     return "${SHELL_TRUE}"
 }
 
@@ -84,6 +86,11 @@ function swap::trait::description() {
 # 安装向导，和用户交互相关的，然后将得到的结果写入配置
 # 后续安装的时候会用到的配置
 function swap::trait::install_guide() {
+    local swap_filepath="/swapfile"
+    swap_filepath=$(tui::input_required "filepath" "config swap filepath: " "${swap_filepath}") || return "$SHELL_FALSE"
+
+    # 写入配置文件
+    config::app::map::set "$PM_APP_NAME" "swap_filepath" "${swap_filepath}" || return "$SHELL_FALSE"
     return "${SHELL_TRUE}"
 }
 
