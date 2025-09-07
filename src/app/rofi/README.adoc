@@ -8,11 +8,13 @@ include::../../../doc/base.adoc[]
 
 ## 问题记录
 
-### 原生wayland的支持
+### [.line-through]#原生wayland的支持#
 
 目前有一个仓库支持wayland的： https://aur.archlinux.org/packages/rofi-lbonn-wayland-git[rofi-lbonn-wayland-git]
 
 对应的 `Archlinux` 的包是 `rofi-wayland` 。
+
+[.green]#2.0.0 官方版本已经原生支持 `wayland` 。#
 
 [#rofi-focus]
 ### rofi 焦点问题
