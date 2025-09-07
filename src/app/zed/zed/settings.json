@@ -8,19 +8,6 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
     "icon_theme": "Catppuccin Latte",
-    "ssh_connections": [
-    {
-      "host": "192.168.2.83",
-      "username": "ubuntu",
-      "projects": [
-        {
-          "paths": [
-            "~/frappe/frappe_bench/apps/erpnext"
-          ]
-        }
-      ]
-    }
-  ],
     "ui_font_size": 16,
     "buffer_font_size": 16,
     "buffer_font_family": "Hack Nerd Font",
@@ -55,8 +42,25 @@
     "preferred_line_length": 80,
     "soft_wrap": "none",
     "format_on_save": "on",
+    "autosave": "on_focus_change",
+    "restore_on_startup": "none",
     "always_treat_brackets_as_autoclosed": true,
     "show_whitespaces": "boundary",
+    "active_pane_modifiers": {
+        "magnification": 1.0,
+        "border_size": 3.0,
+        "inactive_opacity": 0.8
+    },
+    "wrap_guides": [
+        80,
+        120
+    ],
+    "minimap": {
+        "show": "auto",
+        "thumb": "always",
+        "thumb_border": "left_open",
+        "current_line_highlight": null
+    },
     "terminal": {
         "blinking": "terminal_controlled",
         "copy_on_select": true,
@@ -79,9 +83,33 @@
             "enabled": true
         }
     },
+    "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true,
+        "show_background": false,
+        "edit_debounce_ms": 700,
+        "scroll_debounce_ms": 50,
+        "toggle_on_modifiers_press": {
+            "control": true,
+            "shift": true,
+            "alt": true,
+            "platform": true,
+            "function": true
+        }
+    },
+    "preview_tabs": {
+        "enabled": true,
+        "enable_preview_from_file_finder": true,
+        "enable_preview_from_code_navigation": true
+    },
     "languages": {
         "Python": {
-            "language_servers": ["pyright", "ruff"]
+            "language_servers": [
+                "pyright",
+                "ruff"
+            ]
             // Or, if there are other language servers you want to use with Python
             // "language_servers": ["pyright", "ruff"]
         }
