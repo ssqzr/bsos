@@ -173,10 +173,76 @@ function fs::path::random_path() {
         parent=$(fs::path::realpath "$parent") || return "$SHELL_FALSE"
     fi
 
-    random_name=$(string::gen_random "$name" "" "$suffix") || return "$SHELL_FALSE"
-    path="$parent/$random_name"
+    while true; do
+        random_name=$(string::gen_random "$name" "" "$suffix") || return "$SHELL_FALSE"
+        path="$parent/$random_name"
+        if fs::path::is_not_exists "$path";then
+            break
+        fi
+    done
+    
     echo "$path"
     return "$SHELL_TRUE"
+}
+
+
+function fs::path::relative_path(){
+    local base_path="$1"
+    shift
+    local path="$1"
+    shift
+
+    local relative_path
+
+    if string::is_empty "${base_path}";then
+        lerror "param base_path is required and can not empty"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_empty "${path}";then
+        lerror "param path is required and can not empty"
+        return "${SHELL_FALSE}"
+    fi
+
+    base_path="$(fs::path::realpath "${base_path}")" || return "${SHELL_FALSE}"
+    path="$(fs::path::realpath "${path}")" || return "${SHELL_FALSE}"
+
+    if string::is_not_starts_with "${path}" "${base_path}";then
+        lerror "base_path(${base_path}) is not base directory of path(${path})"
+        return "${SHELL_FALSE}"
+    fi
+
+    relative_path="${path#"${base_path}"}"
+
+    if string::is_starts_with "${relative_path}" "/";then
+        relative_path="${relative_path:1}"
+    fi
+
+    echo "$relative_path"
+    return "${SHELL_TRUE}"
+}
+
+
+function fs::path::join(){
+    local base_path="$1"
+    shift
+    local relative_path="$1"
+    shift
+
+    local path
+
+    if string::is_empty "${base_path}";then
+        lerror "param base_path is required and can not empty"
+        return "${SHELL_FALSE}"
+    fi
+
+    base_path="$(fs::path::realpath "${base_path}")" || return "${SHELL_FALSE}"
+
+    path="${base_path}/${relative_path}"
+    path="$(fs::path::realpath "${path}")" || return "${SHELL_FALSE}"
+
+    echo "$path"
+    return "${SHELL_TRUE}"
 }
 
 ################################################### 下面是测试代码 ###################################################
@@ -193,4 +259,34 @@ function TEST::fs::path::realpath() {
     # 测试 ~
     utest::assert_equal "$(fs::path::realpath $'~/a/b/c')" "${HOME}/a/b/c"
 
+}
+
+
+function TEST::fs::path::relative_path() {
+    local relative_path
+    utest::assert_equal "$(fs::path::relative_path "/a/b/c" "/a/b/c/d/e/f")" "d/e/f"
+    utest::assert_equal "$(fs::path::relative_path "/a/b/c/" "/a/b/c/d/e/f")" "d/e/f"
+
+    utest::assert_equal "$(fs::path::relative_path "/a/b/c" "/a/b/c")" ""
+    utest::assert_equal "$(fs::path::relative_path "/a/b/c/" "/a/b/c")" ""
+    utest::assert_equal "$(fs::path::relative_path "/a/b/c" "/a/b/c/")" ""
+
+    relative_path="$(fs::path::relative_path "/a/b/c" "/a/b/d/e/f")"
+    utest::assert_fail $?
+
+    relative_path="$(fs::path::relative_path "/a/b/c" "/a/b/d/e/f/")"
+    utest::assert_fail $?
+}
+
+
+function TEST::fs::path::join() {
+    
+    utest::assert_equal "$(fs::path::join "/a/b/c/" "")" "/a/b/c"
+    utest::assert_equal "$(fs::path::join "/a/b/c/" "./")" "/a/b/c"
+    utest::assert_equal "$(fs::path::join "/a/b/c/" "../")" "/a/b"
+
+    utest::assert_equal "$(fs::path::join "/a/b/c" "/d/e/f")" "/a/b/c/d/e/f"
+    utest::assert_equal "$(fs::path::join "/a/b/c/" "/d/e/f")" "/a/b/c/d/e/f"
+    utest::assert_equal "$(fs::path::join "/a/b/c" "d/e/f")" "/a/b/c/d/e/f"
+    utest::assert_equal "$(fs::path::join "/a/b/c/" "/d/e/f")" "/a/b/c/d/e/f"
 }

@@ -426,6 +426,8 @@ function fs::directory::move() {
     cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cp -r "{{$src}}" "{{$temp_dst_filepath}}"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "copy directory($src) to target temp directory($temp_dst_filepath) failed"
+        # 删除可能残留的目录
+        fs::directory::safe_delete --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "${temp_dst_filepath}"
         return "$SHELL_FALSE"
     fi
     ldebug "copy directory($src) to target temp directory($temp_dst_filepath) success"
@@ -561,6 +563,8 @@ function fs::directory::copy() {
     cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cp -r "{{$src}}" "{{$temp_dst_filepath}}"
     if [ $? -ne "$SHELL_TRUE" ]; then
         lerror "copy directory($src) to target temp directory($temp_dst_filepath) failed"
+        # 删除可能残留的目录
+        fs::directory::safe_delete --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "${temp_dst_filepath}"
         return "$SHELL_FALSE"
     fi
     ldebug "copy directory($src) to target temp directory($temp_dst_filepath) success"
@@ -590,5 +594,155 @@ function fs::directory::copy() {
     fi
 
     linfo "copy src directory($src) to target($dst) success"
+    return "$SHELL_TRUE"
+}
+
+
+function fs::directory::batch_copy_items() {
+    # 将目录下的所有文件批量一个一个的拷贝到目标目录
+    local src
+    local dst
+    local is_sudo
+    local password
+    local is_force="$SHELL_FALSE"
+    local backup_filepath
+    local temp_dst_filepath
+    local items
+    local temp_src
+    local temp_dst
+    local relative_path
+    local param
+
+    ldebug "params=$*"
+
+    for param in "$@"; do
+        case "$param" in
+        -s | -s=* | --sudo | --sudo=*)
+            parameter::parse_bool --default=y --option="$param" is_sudo || return "$SHELL_FALSE"
+            ;;
+        -p=* | --password=*)
+            parameter::parse_string --option="$param" password || return "$SHELL_FALSE"
+            ;;
+        --force | --force=*)
+            parameter::parse_bool --default=y --option="$param" is_force || return "$SHELL_FALSE"
+            ;;
+        -*)
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        *)
+            if [ ! -v src ]; then
+                src="$param"
+                continue
+            fi
+
+            if [ ! -v dst ]; then
+                dst="$param"
+                continue
+            fi
+
+            lerror "unknown parameter $param"
+            return "$SHELL_FALSE"
+            ;;
+        esac
+    done
+
+    if [ ! -v src ]; then
+        lerror "copy directory failed, param src is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$src"; then
+        lerror "copy directory failed, param src is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if [ ! -v dst ]; then
+        lerror "copy directory failed, param dst is not set"
+        return "$SHELL_FALSE"
+    fi
+
+    if string::is_empty "$dst"; then
+        lerror "copy directory failed, param dst is empty"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_not_exists "$src"; then
+        ldebug "copy directory($src) failed, it does not exist"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_not_directory "$src"; then
+        lerror "copy directory($src) failed, it is not directory"
+        return "$SHELL_FALSE"
+    fi
+
+    if fs::path::is_exists "$dst"; then
+        # 存在，检查是否是目录
+        if fs::path::is_not_directory "$dst"; then
+            lerror "copy directory($src) to target($dst) failed, target is exists and not directory"
+            return "$SHELL_FALSE"
+        fi
+    fi
+
+    if fs::path::is_not_exists "$dst"; then
+        fs::directory::copy --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "$src" "$dst" || return "${SHELL_FALSE}"
+        return "${SHELL_TRUE}"
+    fi
+
+    # 目标目录存在
+    backup_filepath="$(fs::path::random_path --path="$dst" --suffix="backup")" || return "$SHELL_FALSE"
+    temp_dst_filepath="$(fs::path::random_path --path="$dst")" || return "$SHELL_FALSE"
+
+    # 先拷贝到临时目录下，再将需要拷贝的文件也拷贝到临时目录下，再进行移动操作
+    fs::directory::copy --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "$dst" "$temp_dst_filepath" || return "${SHELL_FALSE}"
+
+    ldebug "copy dst(${dst} to temp_dst_filepath(${temp_dst_filepath}) success)"
+
+    temp_src="$(find "${src}")"
+    array::readarray "items" < <(echo "$temp_src") || return "${SHELL_FALSE}"
+    for temp_src in "${items[@]}"; do
+        relative_path="$(fs::path::relative_path "${src}" "${temp_src}")" || return "${SHELL_FALSE}"
+        ldebug "temp_src=${temp_src}, relative_path=${relative_path}"
+
+        temp_dst="$(fs::path::join "$temp_dst_filepath" "${relative_path}")" || return "${SHELL_FALSE}"
+
+        ldebug "src filepath=${temp_src}, temp_dst=${temp_dst}"
+
+        if fs::path::is_directory "${temp_src}";then
+            fs::directory::create_recursive --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "${temp_dst}" || return "${SHELL_FALSE}"
+            continue
+        fi
+
+        # 是文件
+        if fs::path::is_exists "${temp_dst}";then
+            if [ "$is_force" -ne "$SHELL_TRUE" ]; then
+                lerror "copy file($temp_src) to target($temp_dst) failed, target is exists"
+                return "$SHELL_FALSE"
+            fi
+        fi
+
+        cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- cp -f "{{$temp_src}}" "{{$temp_dst}}"
+        if [ $? -ne "$SHELL_TRUE" ]; then
+            lerror "copy file($temp_src) to target temp file($temp_dst) failed"
+            return "$SHELL_FALSE"
+        fi
+    done
+
+
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv "{{$dst}}" "{{$backup_filepath}}" || return "$SHELL_FALSE"
+
+    cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv "{{$temp_dst_filepath}}" "{{$dst}}" || return "$SHELL_FALSE"
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "mv directory($temp_dst_filepath) to target directory($dst) failed"
+        # 回滚
+        cmd::run_cmd_with_history --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" -- mv "{{$backup_filepath}}" "{{$dst}}"
+        return "$SHELL_FALSE"
+    fi
+
+    # 删除备份的
+    fs::directory::safe_delete --sudo="$(string::print_yes_no "$is_sudo")" --password="$password" "${backup_filepath}" || return "${SHELL_FALSE}"
+
+    linfo "batch copy src directory($src) all items to target($dst) success"
     return "$SHELL_TRUE"
 }

@@ -46,6 +46,9 @@ function dolphin::trait::do_install() {
 
 # 安装的后置操作，比如写配置文件
 function dolphin::trait::post_install() {
+    fs::directory::batch_copy_items --force "${SCRIPT_DIR_953879b6}/dolphin/config" "${HOME}/.var/app/$(dolphin::trait::package_name)/config" || return "${SHELL_FALSE}"
+    fs::directory::batch_copy_items --force "${SCRIPT_DIR_953879b6}/dolphin/konsole" "${HOME}/.var/app/$(dolphin::trait::package_name)/data/konsole" || return "${SHELL_FALSE}"
+
     cmd::run_cmd_with_history -- xdg-mime default org.kde.dolphin.desktop inode/directory || return "${SHELL_FALSE}"
     return "${SHELL_TRUE}"
 }
