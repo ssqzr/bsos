@@ -51,8 +51,24 @@ function hyprpaper::wallpaper::bing_wallpaper_filepath() {
 
 function hyprpaper::wallpaper::bing_wallpaper_url() {
     local index="$1"
+    shift
+    local monitor_name="$1"
+    shift
     local url
     local temp_str
+
+    local monitor_width
+    local resolution
+
+    monitor_width="$(hyprctl monitors -j | yq ".[] | select(.name == \"$monitor_name\")|.width")" || return "$SHELL_FALSE"
+    linfo "monitor(${monitor_name}) width=$monitor_width"
+
+    if math::gt "$monitor_width" 1920; then
+        resolution="UHD"
+    else
+        resolution="1920x1080"
+    fi
+    linfo "resolution=$resolution"
 
     # https://stackoverflow.com/questions/10639914/is-there-a-way-to-get-bings-photo-of-the-day
     temp_str=$(curl -s -k -L "https://www.bing.com/HPImageArchive.aspx?format=js&idx=${index}&n=1&mkt=zh-cn")
@@ -61,26 +77,31 @@ function hyprpaper::wallpaper::bing_wallpaper_url() {
         return "$SHELL_FALSE"
     fi
 
-    url=$(echo "$temp_str" | yq '.images[0].url') || return "$SHELL_FALSE"
+    url=$(echo "$temp_str" | yq '.images[0].urlbase') || return "$SHELL_FALSE"
 
     if [ -z "$url" ] || [ "$url" == "null" ]; then
         lerror "get bing.com wallpaper image url failed"
         return "$SHELL_FALSE"
     fi
 
-    url="https://www.bing.com${url}"
+    url="https://www.bing.com${url}_${resolution}.jpg"
+    linfo "bing wallpaper download url=$url"
     echo "$url"
 }
 
 function hyprpaper::wallpaper::bing_wallpaper_download() {
     local index="$1"
-    local filepath="$2"
+    shift
+    local monitor_name="$1"
+    shift
+    local filepath="$1"
+    shift
     local tmp_filepath="${filepath}.tmp"
 
     local url
     local wallpaper_dir
 
-    url=$(hyprpaper::wallpaper::bing_wallpaper_url "$index") || return "$SHELL_FALSE"
+    url=$(hyprpaper::wallpaper::bing_wallpaper_url "$index" "${monitor_name}") || return "$SHELL_FALSE"
 
     # 使用curl总是出现命令执行完，立即检测文件不存在的情况
     # cmd::run_cmd_with_history -- curl -s -k -L -o "$filepath" "'$url'" || return "$SHELL_FALSE"
@@ -230,10 +251,10 @@ function hyprpaper::wallpaper::main() {
         if fs::path::is_exists "${filepath}"; then
             linfo "wallpaper $filepath exist, skip download"
         else
-            hyprpaper::wallpaper::bing_wallpaper_download_wrapper "${index}" "${filepath}" || return "$SHELL_FALSE"
+            hyprpaper::wallpaper::bing_wallpaper_download_wrapper "${index}" "${name}" "${filepath}" || return "$SHELL_FALSE"
         fi
         cmd::run_cmd_with_history -- hyprctl -q hyprpaper preload "${filepath}"
-        cmd::run_cmd_with_history -- hyprctl -q hyprpaper wallpaper "${name},contain:${filepath}"
+        cmd::run_cmd_with_history -- hyprctl -q hyprpaper wallpaper "${name},${filepath}"
         # 应用所有显示器
         # cmd::run_cmd_with_history -- hyprctl -q hyprpaper wallpaper "${filepath}"
 
