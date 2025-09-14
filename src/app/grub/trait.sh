@@ -12,14 +12,22 @@ source "$SRC_ROOT_DIR/lib/package_manager/manager.sh"
 source "$SRC_ROOT_DIR/lib/config/config.sh"
 
 function grub::theme::unset() {
-    local theme="$1"
-    if [ -z "${theme}" ]; then
-        lerror "param theme is empty"
-        return "$SHELL_FALSE"
-    fi
+    local theme
     local grub_default_config_file="/etc/default/grub"
     local grub_theme_dir="/boot/grub/themes"
+    local available_themes=("whitesur-whitesur-1080p" "whitesur-whitesur-2k")
 
+    theme="$(cat /etc/default/grub |grep -E "^GRUB_THEME=" | awk -F '/' '{print $5}')"
+
+    if string::is_empty "${theme}";then
+        return "${SHELL_TRUE}"
+    fi
+
+    if array::is_not_contain available_themes "${theme}";then
+        # 不是我们设置的，不处理
+        return "${SHELL_TRUE}"
+    fi
+    
     # 删除我们设置的 GRUB_THEME 字段
     cmd::run_cmd_with_history --sudo -- sed -i "'/^GRUB_THEME=.*${theme}.*/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
 
@@ -27,7 +35,7 @@ function grub::theme::unset() {
     cmd::run_cmd_with_history --sudo -- sed -i "'s/^# __backup__flag__ GRUB_THEME=\\(.*\\)/GRUB_THEME=\\1/g'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
 
     # 删除我们设置的 GRUB_GFXMODE 字段
-    cmd::run_cmd_with_history --sudo -- sed -i "'/^GRUB_GFXMODE=1920x1080,auto/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- sed -i "'/^GRUB_GFXMODE=.*,auto/d'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
     # 还原以前的 GRUB_GFXMODE
     cmd::run_cmd_with_history --sudo -- sed -i "'s/^# __backup__flag__ GRUB_GFXMODE=\\(.*\\)/GRUB_GFXMODE=\\1/g'" "'$grub_default_config_file'" || return "${SHELL_FALSE}"
 
@@ -37,15 +45,41 @@ function grub::theme::unset() {
 }
 
 function grub::theme::set() {
-    local theme="$1"
-    if [ -z "${theme}" ]; then
-        lerror "param theme is empty"
-        return "$SHELL_FALSE"
-    fi
+    local monitors
+    local main_monitor
     local grub_default_config_file="/etc/default/grub"
     local grub_theme_dir="/boot/grub/themes"
+    local theme="whitesur-whitesur-1080p"
+    local resolution_width="1920"
+    local resolution_height="1080"
+    local gfx_mode="1920x1080,auto"
 
-    grub::theme::unset "${theme}" || return "${SHELL_FALSE}"
+    if hyprland::hyprctl::instance::is_can_connect;then
+        hyprland::hyprctl::instance::monitors::sort_by_distance monitors || return "${SHELL_FALSE}"
+        main_monitor="${monitors[0]}"
+        resolution_width="$(hyprland::hyprctl::instance::monitors::resolution::width "${main_monitor}")"
+        resolution_height="$(hyprland::hyprctl::instance::monitors::resolution::height "${main_monitor}")"
+        case "${resolution_width}x${resolution_height}" in
+        1920x1080)
+            theme="whitesur-whitesur-1080p"
+            gfx_mode="1920x1080,auto"
+            ;;
+        3440x1440)
+            # 测试效果并不好，还是用1080p
+            # theme="whitesur-whitesur-2k"
+            # # https://github.com/vinceliuice/grub2-themes/issues/173
+            # gfx_mode="3440x1440x32"
+            theme="whitesur-whitesur-1080p"
+            gfx_mode="1920x1080,auto"
+            ;;
+        *)
+            theme="whitesur-whitesur-1080p"
+            gfx_mode="1920x1080,auto"
+            ;;
+        esac
+    fi
+
+    grub::theme::unset || return "${SHELL_FALSE}"
 
     fs::directory::copy --sudo --force "/usr/share/grub/themes/${theme}" "${grub_theme_dir}/${theme}" || return "${SHELL_FALSE}"
     # 备份 GRUB_THEME 字段
@@ -57,7 +91,7 @@ function grub::theme::set() {
     # 备份 GRUB_GFXMODE 字段
     cmd::run_cmd_with_history --sudo -- sed -i "'s/^GRUB_GFXMODE=\\(.*\\)/# __backup__flag__ GRUB_GFXMODE=\\1/g'" "'${grub_default_config_file}'" || return "${SHELL_FALSE}"
     # 设置 GRUB_GFXMODE 字段
-    cmd::run_cmd_with_history --sudo -- echo "'GRUB_GFXMODE=1920x1080,auto'" ">>" "${grub_default_config_file}" || return "${SHELL_FALSE}"
+    cmd::run_cmd_with_history --sudo -- echo "'GRUB_GFXMODE=${gfx_mode}'" ">>" "${grub_default_config_file}" || return "${SHELL_FALSE}"
 
     return "${SHELL_TRUE}"
 }
@@ -107,7 +141,7 @@ function grub::trait::post_install() {
 
     cmd::run_cmd_with_history --sudo -- sed -i "'s/^#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g'" "/etc/default/grub" || return "${SHELL_FALSE}"
 
-    grub::theme::set "whitesur-whitesur-1080p" || return "${SHELL_FALSE}"
+    grub::theme::set || return "${SHELL_FALSE}"
 
     grub::mkconfig || return "${SHELL_FALSE}"
 
@@ -179,7 +213,7 @@ function grub::trait::dependencies() {
     apps+=("pacman:os-prober")
 
     # 主题
-    apps+=("yay:grub-theme-whitesur-whitesur-1080p-git")
+    apps+=("yay:grub-theme-whitesur-whitesur-1080p-git" "yay:grub-theme-whitesur-whitesur-2k-git")
 
     array::print apps
     return "${SHELL_TRUE}"

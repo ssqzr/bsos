@@ -421,6 +421,220 @@ function hyprland::hyprctl::instance::monitors() {
     return "$SHELL_TRUE"
 }
 
+# 获取所有显示器的id列表
+# 列表通过距离原点的距离进行排序
+function hyprland::hyprctl::instance::monitors::sort_by_distance() {
+    local -n monitors_name_44c8c1ef
+
+    local monitors_44c8c1ef
+    local monitor_count_44c8c1ef
+    local index_44c8c1ef
+    local id_44c8c1ef
+    local name_44c8c1ef
+    local description_44c8c1ef
+    local temp_44c8c1ef
+    local distance_44c8c1ef=0
+    local x_44c8c1ef
+    local y_44c8c1ef
+    local min_index_44c8c1ef=0
+    local min_distance_44c8c1ef=-1
+
+    local instance_params_44c8c1ef=()
+    local instance_44c8c1ef
+    local param_44c8c1ef
+
+    for param_44c8c1ef in "$@"; do
+        case "$param_44c8c1ef" in
+        --instance=*)
+            parameter::parse_string --option="$param_44c8c1ef" instance_44c8c1ef || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param_44c8c1ef"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -R monitors_name_44c8c1ef ]; then
+                monitors_name_44c8c1ef="${param_44c8c1ef}"
+                continue
+            fi
+            lerror "invalid param: $param_44c8c1ef"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    if [ ! -R monitors_name_44c8c1ef ]; then
+        lerror "param monitors_name is required"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_not_empty "$instance_44c8c1ef"; then
+        instance_params_44c8c1ef+=("-i" "$instance_44c8c1ef")
+    fi
+
+    monitors_44c8c1ef="$(hyprctl monitors -j "${instance_params_44c8c1ef[@]}")" || return "$SHELL_FALSE"
+    monitor_count_44c8c1ef=$(echo "$monitors_44c8c1ef" | yq 'length')
+
+    temp_44c8c1ef=()
+    for ((index_44c8c1ef = 0; index_44c8c1ef < monitor_count_44c8c1ef; index_44c8c1ef++)); do
+        id_44c8c1ef="$(echo "$monitors_44c8c1ef" | yq ".[${index_44c8c1ef}].id")" || return "$SHELL_FALSE"
+        name_44c8c1ef="$(echo "$monitors_44c8c1ef" | yq ".[${index_44c8c1ef}].name")" || return "$SHELL_FALSE"
+        description_44c8c1ef="$(echo "$monitors_44c8c1ef" | yq ".[${index_44c8c1ef}].description")" || return "$SHELL_FALSE"
+        x_44c8c1ef="$(echo "$monitors_44c8c1ef" | yq ".[${index_44c8c1ef}].x")" || return "$SHELL_FALSE"
+        y_44c8c1ef="$(echo "$monitors_44c8c1ef" | yq ".[${index_44c8c1ef}].y")" || return "$SHELL_FALSE"
+        distance_44c8c1ef=$((x_44c8c1ef * x_44c8c1ef + y_44c8c1ef * y_44c8c1ef))
+
+        array::rpush temp_44c8c1ef "${id_44c8c1ef}::${name_44c8c1ef}::${description_44c8c1ef}::${distance_44c8c1ef}" || return "$SHELL_FALSE"
+    done
+
+    # 按照距离进行排序
+    monitors_44c8c1ef=()
+    while array::is_not_empty temp_44c8c1ef; do
+        min_index_44c8c1ef=0
+        min_distance_44c8c1ef=-1
+        monitor_count_44c8c1ef=$(array::length temp_44c8c1ef) || return "$SHELL_FALSE"
+        for ((index_44c8c1ef = 0; index_44c8c1ef < monitor_count_44c8c1ef; index_44c8c1ef++)); do
+            distance_44c8c1ef="$(echo "${temp_44c8c1ef[$index_44c8c1ef]}" | awk -F "::" '{print $4}')"
+            if [ "$min_distance_44c8c1ef" -lt 0 ] || [ "$distance_44c8c1ef" -lt "$min_distance_44c8c1ef" ]; then
+                min_index_44c8c1ef="$index_44c8c1ef"
+                min_distance_44c8c1ef="$distance_44c8c1ef"
+            fi
+        done
+
+        array::rpush monitors_44c8c1ef "${temp_44c8c1ef[$min_index_44c8c1ef]}" || return "$SHELL_FALSE"
+        array::remove_at REF_PLACEHOLDER temp_44c8c1ef "$min_index_44c8c1ef" || return "$SHELL_FALSE"
+    done
+
+    linfo "sorted monitors: $(array::join_with monitors_44c8c1ef ', ')"
+
+    monitors_name_44c8c1ef=()
+    for temp_44c8c1ef in "${monitors_44c8c1ef[@]}"; do
+        name_44c8c1ef="$(echo "$temp_44c8c1ef" | awk -F "::" '{print $2}')"
+        array::rpush "${!monitors_name_44c8c1ef}" "$name_44c8c1ef" || return "$SHELL_FALSE"
+    done
+
+    return "$SHELL_TRUE"
+}
+
+
+# 获取 hyprland 实例的指定 monitor 分辨率的宽度
+# 说明：
+# 位置参数：
+#   monitor_name                    需要获取的 monitor 的 ID
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 获取的 monitors 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
+function hyprland::hyprctl::instance::monitors::resolution::width() {
+    local instance
+
+    local monitor_name
+
+    local value
+    local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -v monitor_name ]; then
+                monitor_name="$param"
+                continue
+            fi
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    if string::is_empty "$monitor_name"; then
+        lerror "param monitor_name is required"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_not_empty "$instance"; then
+        instance_params+=("-i" "$instance")
+    fi
+
+    value=$(hyprctl -j monitors "${instance_params[@]}" | yq ".[] | select(.name == \"${monitor_name}\").width")
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "get hyprland monitors failed, instance=${instance}, monitor_name=${monitor_name}, err=${value}"
+        return "$SHELL_FALSE"
+    fi
+
+    echo "$value"
+
+    return "$SHELL_TRUE"
+}
+
+# 获取 hyprland 实例的指定 monitor 分辨率的高度
+# 说明：
+# 位置参数：
+#   monitor_name                    需要获取的 monitor 的 ID
+# 可选参数：
+#   --instance=<INSTANCE>           hyprland 实例的ID，如果没有指定则使用当前实例。
+# 标准输出： 获取的 monitors 信息
+# 返回值：
+# ${SHELL_TRUE} 成功
+# ${SHELL_FALSE} 失败
+function hyprland::hyprctl::instance::monitors::resolution::height() {
+    local instance
+
+    local monitor_name
+
+    local value
+    local instance_params=()
+    local param
+
+    for param in "$@"; do
+        case "$param" in
+        --instance=*)
+            parameter::parse_string --option="$param" instance || return "${SHELL_FALSE}"
+            ;;
+        -*)
+            lerror "invalid option: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        *)
+            if [ ! -v monitor_name ]; then
+                monitor_name="$param"
+                continue
+            fi
+            lerror "invalid param: $param"
+            return "${SHELL_FALSE}"
+            ;;
+        esac
+    done
+
+    if string::is_empty "$monitor_name"; then
+        lerror "param monitor_name is required"
+        return "${SHELL_FALSE}"
+    fi
+
+    if string::is_not_empty "$instance"; then
+        instance_params+=("-i" "$instance")
+    fi
+
+    value=$(hyprctl -j monitors "${instance_params[@]}" | yq ".[] | select(.name == \"${monitor_name}\").height")
+    if [ $? -ne "$SHELL_TRUE" ]; then
+        lerror "get hyprland monitors failed, instance=${instance}, monitor_name=${monitor_name}, err=${value}"
+        return "$SHELL_FALSE"
+    fi
+
+    echo "$value"
+
+    return "$SHELL_TRUE"
+}
+
 # 获取 hyprland 实例的 plugin 列表
 # 说明：
 # 位置参数：
